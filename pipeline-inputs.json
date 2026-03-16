@@ -1,0 +1,166 @@
+{
+  "friendlyInputs": [
+    {
+      "id": "projectType",
+      "label": "Project Type",
+      "type": "select",
+      "required": true,
+      "description": "What kind of project are you creating?",
+      "options": [
+        { "value": "Short Film", "label": "Short Film (under 40 min)" },
+        { "value": "Feature Film", "label": "Feature Film (full-length movie)" },
+        { "value": "TV Pilot", "label": "TV Pilot (first episode of a new series)" },
+        { "value": "TV Episode", "label": "TV Episode (episode of existing series)" },
+        { "value": "Commercial", "label": "Commercial / Advertisement" }
+      ],
+      "placeholder": "Select a project type..."
+    },
+    {
+      "id": "storyIdea",
+      "label": "Story Idea",
+      "type": "textarea",
+      "required": true,
+      "description": "Describe your story in a few sentences. What happens? Who are the main characters?",
+      "placeholder": "Example: A retired detective receives a mysterious letter that leads her back to an unsolved case from 30 years ago. As she investigates, she discovers the truth hits closer to home than she ever imagined.",
+      "rows": 4
+    },
+    {
+      "id": "title",
+      "label": "Working Title",
+      "type": "text",
+      "required": false,
+      "description": "A title for your project (we can generate one if you leave this blank)",
+      "placeholder": "Example: The Last Letter"
+    },
+    {
+      "id": "genre",
+      "label": "Genre",
+      "type": "text",
+      "required": false,
+      "description": "What genre(s) is your project? You can list multiple separated by commas.",
+      "placeholder": "Example: Drama, Mystery, Thriller"
+    },
+    {
+      "id": "mood",
+      "label": "Mood / Tone",
+      "type": "text",
+      "required": false,
+      "description": "How should your project feel? What emotions should it evoke?",
+      "placeholder": "Example: Dark and suspenseful, with moments of warmth"
+    },
+    {
+      "id": "targetAudience",
+      "label": "Target Audience",
+      "type": "text",
+      "required": false,
+      "description": "Who is this project for?",
+      "placeholder": "Example: Adults 25-54, fans of crime dramas"
+    },
+    {
+      "id": "visualStyle",
+      "label": "Visual Style",
+      "type": "text",
+      "required": false,
+      "description": "How should your project look? This affects the generated concept art.",
+      "placeholder": "Example: Cinematic noir, moody lighting, muted colors"
+    },
+    {
+      "id": "length",
+      "label": "Approximate Length",
+      "type": "text",
+      "required": false,
+      "description": "How long should your project be? Leave blank for a default based on project type.",
+      "placeholder": "Example: 90 minutes, 30 min, 2 hours"
+    },
+    {
+      "id": "authorName",
+      "label": "Your Name",
+      "type": "text",
+      "required": false,
+      "description": "Your name for the screenplay credits",
+      "placeholder": "Example: Jane Smith"
+    },
+    {
+      "id": "additionalNotes",
+      "label": "Additional Notes",
+      "type": "textarea",
+      "required": false,
+      "description": "Any other details, requirements, or creative direction",
+      "placeholder": "Example: The story should be set in the Pacific Northwest. Include a subplot about family reconciliation.",
+      "rows": 3
+    }
+  ],
+  "conditionalInputs": {
+    "tv": {
+      "showWhen": ["TV Pilot", "TV Episode"],
+      "inputs": [
+        {
+          "id": "seriesName",
+          "label": "Series Name",
+          "type": "text",
+          "required": false,
+          "description": "The name of the TV series",
+          "placeholder": "Example: Cold Case Files"
+        },
+        {
+          "id": "seasonNumber",
+          "label": "Season Number",
+          "type": "text",
+          "required": false,
+          "description": "Which season is this episode in?",
+          "placeholder": "Example: 1"
+        },
+        {
+          "id": "episodeNumber",
+          "label": "Episode Number",
+          "type": "text",
+          "required": false,
+          "description": "Which episode number is this?",
+          "placeholder": "Example: 1"
+        }
+      ]
+    },
+    "commercial": {
+      "showWhen": ["Commercial"],
+      "inputs": [
+        {
+          "id": "brandName",
+          "label": "Brand Name",
+          "type": "text",
+          "required": false,
+          "description": "The brand being advertised",
+          "placeholder": "Example: Acme Corp"
+        },
+        {
+          "id": "productName",
+          "label": "Product Name",
+          "type": "text",
+          "required": false,
+          "description": "The specific product or service",
+          "placeholder": "Example: SuperWidget 3000"
+        },
+        {
+          "id": "spotLength",
+          "label": "Spot Length",
+          "type": "select",
+          "required": false,
+          "description": "How long is the commercial?",
+          "options": [
+            { "value": "6", "label": "6 seconds (bumper)" },
+            { "value": "15", "label": "15 seconds" },
+            { "value": "30", "label": "30 seconds (standard)" },
+            { "value": "60", "label": "60 seconds" }
+          ]
+        },
+        {
+          "id": "callToAction",
+          "label": "Call to Action",
+          "type": "text",
+          "required": false,
+          "description": "What should viewers do after watching?",
+          "placeholder": "Example: Visit acme.com or call 1-800-ACME"
+        }
+      ]
+    }
+  }
+}

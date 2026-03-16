@@ -1,0 +1,1353 @@
+{
+  "version": "2.0",
+  "id": "comp-screenplay-generator",
+  "name": "Comprehensive Screenplay Generator",
+  "description": "Generate complete screenplay packages with metadata, characters, locations, scenes, elements, assets, and previsualization",
+  "nodes": [
+    {
+      "id": "var-project-type",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 50
+      },
+      "label": "Project Type",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "projectType",
+        "description": "What kind of project? (Short Film, Feature Film, TV Pilot, TV Episode, Commercial)",
+        "required": true,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-story-idea",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 120
+      },
+      "label": "Story Idea",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "storyIdea",
+        "description": "Describe your story in a few sentences",
+        "required": true,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-title",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 190
+      },
+      "label": "Working Title",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "title",
+        "description": "A title for your project (optional - we can generate one)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-genre",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 260
+      },
+      "label": "Genre",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "genre",
+        "description": "Genre(s) like Drama, Comedy, Horror, Thriller (separate with commas)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-mood",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 330
+      },
+      "label": "Mood / Tone",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "mood",
+        "description": "How should it feel? (e.g., Dark and suspenseful, Light and fun)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-audience",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 400
+      },
+      "label": "Target Audience",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "targetAudience",
+        "description": "Who is this for? (e.g., Adults, Families, Teens)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-visual-style",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 470
+      },
+      "label": "Visual Style",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "visualStyle",
+        "description": "How should it look? (e.g., Cinematic, Animated, Documentary style)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-length",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 540
+      },
+      "label": "Approximate Length",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "length",
+        "description": "How long? (e.g., 15 minutes, 2 hours)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-author",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 610
+      },
+      "label": "Your Name",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "authorName",
+        "description": "Your name for the screenplay credits",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-series-name",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 680
+      },
+      "label": "Series Name (TV only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "seriesName",
+        "description": "For TV projects: the name of the series",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-season",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 750
+      },
+      "label": "Season Number (TV only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "seasonNumber",
+        "description": "For TV projects: which season?",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-episode",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 820
+      },
+      "label": "Episode Number (TV only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "episodeNumber",
+        "description": "For TV projects: which episode?",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-brand",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 890
+      },
+      "label": "Brand Name (Commercials only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "brandName",
+        "description": "For commercials: the brand being advertised",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-product",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 960
+      },
+      "label": "Product Name (Commercials only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "productName",
+        "description": "For commercials: the specific product or service",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-spot-length",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 1030
+      },
+      "label": "Spot Length (Commercials only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "spotLength",
+        "description": "For commercials: length in seconds (6, 15, 30, 60)",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-cta",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 1100
+      },
+      "label": "Call to Action (Commercials only)",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "callToAction",
+        "description": "For commercials: what should viewers do?",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "var-notes",
+      "workflowId": "__variable__",
+      "position": {
+        "x": 50,
+        "y": 1170
+      },
+      "label": "Additional Notes",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "",
+        "exposeAsInput": true,
+        "inputName": "additionalNotes",
+        "description": "Any other details, requirements, or creative direction",
+        "required": false,
+        "generationPrompt": ""
+      }
+    },
+    {
+      "id": "node-3",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 499,
+        "y": 375
+      },
+      "label": "Input Validation",
+      "scriptFile": {
+        "file": "input-validation.ts",
+        "description": "Validates and combines all inputs into internal format",
+        "inputs": [
+          {
+            "name": "projectType",
+            "type": "string",
+            "description": "What type of project? (e.g., \"Short Film\", \"TV Episode\")"
+          },
+          {
+            "name": "storyIdea",
+            "type": "string",
+            "description": "Your story idea in a few sentences"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "description": "Working title for your project (optional)"
+          },
+          {
+            "name": "genre",
+            "type": "string",
+            "description": "Main genre (e.g., \"Drama\", \"Comedy\", \"Horror\")"
+          },
+          {
+            "name": "mood",
+            "type": "string",
+            "description": "The feeling/tone (e.g., \"Dark and suspenseful\", \"Light and fun\")"
+          },
+          {
+            "name": "targetAudience",
+            "type": "string",
+            "description": "Who is this for? (e.g., \"Adults\", \"Families\", \"Teens\")"
+          },
+          {
+            "name": "visualStyle",
+            "type": "string",
+            "description": "How should it look? (e.g., \"Cinematic\", \"Animated\", \"Documentary\")"
+          },
+          {
+            "name": "length",
+            "type": "string",
+            "description": "Approximate length (e.g., \"15 minutes\", \"30 minutes\", \"2 hours\")"
+          },
+          {
+            "name": "authorName",
+            "type": "string",
+            "description": "Your name (for credits)"
+          },
+          {
+            "name": "seriesName",
+            "type": "string",
+            "description": "Series name (only for TV projects)"
+          },
+          {
+            "name": "seasonNumber",
+            "type": "string",
+            "description": "Season number (only for TV projects)"
+          },
+          {
+            "name": "episodeNumber",
+            "type": "string",
+            "description": "Episode number (only for TV projects)"
+          },
+          {
+            "name": "brandName",
+            "type": "string",
+            "description": "Brand name (only for commercials)"
+          },
+          {
+            "name": "productName",
+            "type": "string",
+            "description": "Product name (only for commercials)"
+          },
+          {
+            "name": "spotLength",
+            "type": "string",
+            "description": "Commercial length in seconds (only for commercials)"
+          },
+          {
+            "name": "callToAction",
+            "type": "string",
+            "description": "What should viewers do? (only for commercials)"
+          },
+          {
+            "name": "additionalNotes",
+            "type": "string",
+            "description": "Any other details or requirements"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Validated and normalized ScriptGeneratorInput"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-4",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 793,
+        "y": 96
+      },
+      "label": "Metadata Generation",
+      "scriptFile": {
+        "file": "metadata-generation.ts",
+        "description": "Generate complete ScriptMetadata including title, logline, author, runtime, genre, tone, audience",
+        "inputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Validated script input"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Complete ScriptMetadata object"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-5",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 1150,
+        "y": 207
+      },
+      "label": "Character Generation",
+      "scriptFile": {
+        "file": "character-generation.ts",
+        "description": "Generate CharacterDefinition array with id, name, age, description, voice, wardrobe",
+        "inputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Validated script input"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Array of CharacterDefinition objects"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-6",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 1151,
+        "y": 401
+      },
+      "label": "Location Generation",
+      "scriptFile": {
+        "file": "location-generation.ts",
+        "description": "Generate LocationDefinition array with id, name, description, recurring flag",
+        "inputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Validated script input"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Array of LocationDefinition objects"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-7",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 1500,
+        "y": 227
+      },
+      "label": "Section Structure",
+      "scriptFile": {
+        "file": "section-structure.ts",
+        "description": "Generate ScriptSection array supporting all types with nested children for container sections",
+        "inputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Validated script input"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Location definitions"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "sections",
+            "type": "string",
+            "description": "Array of ScriptSection objects"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-8",
+      "workflowId": "__for_each__",
+      "position": {
+        "x": 1850,
+        "y": 224
+      },
+      "label": "Process Each Section",
+      "forEachNode": {
+        "itemVariable": "section",
+        "maxIterations": 100
+      }
+    },
+    {
+      "id": "node-9",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 2200,
+        "y": 259
+      },
+      "label": "Scene Content Generation",
+      "scriptFile": {
+        "file": "scene-content-generation.ts",
+        "description": "For SceneSection, generate SceneHeading, synopsis, beats, duration, locationId",
+        "inputs": [
+          {
+            "name": "section",
+            "type": "string",
+            "description": "Current section to process"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Available characters"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Available locations"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "processedSection",
+            "type": "string",
+            "description": "Section with scene content generated"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-10",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 2200,
+        "y": 399
+      },
+      "label": "Element Generation",
+      "scriptFile": {
+        "file": "element-generation.ts",
+        "description": "Generate ScriptElement array for all scene beats supporting action, dialogue, transitions, shots, etc.",
+        "inputs": [
+          {
+            "name": "processedSections",
+            "type": "string",
+            "description": "All processed sections with scene content"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Array of ScriptElement objects"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-11",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 1138,
+        "y": 552
+      },
+      "label": "Production Metadata",
+      "scriptFile": {
+        "file": "production-metadata.ts",
+        "description": "Generate ProductionMetadata and RevisionMetadata with format, budget, platform, revision info",
+        "inputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Validated script input"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "productionMetadata",
+            "type": "string",
+            "description": "ProductionMetadata object"
+          },
+          {
+            "name": "revisionMetadata",
+            "type": "string",
+            "description": "RevisionMetadata object"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-12",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 2550,
+        "y": 252
+      },
+      "label": "Asset Collection",
+      "scriptFile": {
+        "file": "asset-collection.ts",
+        "description": "Create AssetCollection with character headshots, location landscapes, and shot previs frames",
+        "inputs": [
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Location definitions"
+          },
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Script elements"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "assetCollection",
+            "type": "string",
+            "description": "Complete AssetCollection object"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-13",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 2900,
+        "y": 263
+      },
+      "label": "Previs Generation",
+      "scriptFile": {
+        "file": "previs-generation.ts",
+        "description": "Create PrevisualizationPlan with shots for each ShotElement in scene beats",
+        "inputs": [
+          {
+            "name": "processedSections",
+            "type": "string",
+            "description": "Sections with scene content"
+          },
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Script elements"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Location definitions"
+          },
+          {
+            "name": "assetCollection",
+            "type": "string",
+            "description": "Asset collection"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "previsualizationPlan",
+            "type": "string",
+            "description": "Complete PrevisualizationPlan object"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-14",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 3250,
+        "y": 274
+      },
+      "label": "Rule Enforcement",
+      "scriptFile": {
+        "file": "rule-enforcement.ts",
+        "description": "Validate against ScriptGeneratorRules for dialogue, headshots, landscapes, previs requirements",
+        "inputs": [
+          {
+            "name": "generatorRules",
+            "type": "string",
+            "description": "Generator rules configuration"
+          },
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Script input"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Location definitions"
+          },
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Script elements"
+          },
+          {
+            "name": "assetCollection",
+            "type": "string",
+            "description": "Asset collection"
+          },
+          {
+            "name": "previsualizationPlan",
+            "type": "string",
+            "description": "Previsualization plan"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "validationResults",
+            "type": "string",
+            "description": "Rule validation results and any corrections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-15",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 3600,
+        "y": 300
+      },
+      "label": "Final Assembly",
+      "scriptFile": {
+        "file": "final-assembly.ts",
+        "description": "Assemble complete GeneratedScriptPackage with input, script, assets, previsualizations",
+        "inputs": [
+          {
+            "name": "validatedInput",
+            "type": "string",
+            "description": "Original script input"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Location definitions"
+          },
+          {
+            "name": "processedSections",
+            "type": "string",
+            "description": "Script sections"
+          },
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Script elements"
+          },
+          {
+            "name": "productionMetadata",
+            "type": "string",
+            "description": "Production metadata"
+          },
+          {
+            "name": "revisionMetadata",
+            "type": "string",
+            "description": "Revision metadata"
+          },
+          {
+            "name": "assetCollection",
+            "type": "string",
+            "description": "Asset collection"
+          },
+          {
+            "name": "previsualizationPlan",
+            "type": "string",
+            "description": "Previsualization plan"
+          },
+          {
+            "name": "validationResults",
+            "type": "string",
+            "description": "Rule validation results"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "scriptPackage",
+            "type": "string",
+            "description": "Complete GeneratedScriptPackage"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-16",
+      "workflowId": "__output__",
+      "position": {
+        "x": 3950,
+        "y": 300
+      },
+      "label": "Output",
+      "outputNode": {
+        "ports": [
+          {
+            "name": "scriptPackage",
+            "type": "string",
+            "description": "Complete GeneratedScriptPackage JSON"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-var-1",
+      "sourceNodeId": "var-project-type",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "projectType"
+    },
+    {
+      "id": "edge-var-2",
+      "sourceNodeId": "var-story-idea",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "storyIdea"
+    },
+    {
+      "id": "edge-var-3",
+      "sourceNodeId": "var-title",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "title"
+    },
+    {
+      "id": "edge-var-4",
+      "sourceNodeId": "var-genre",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "genre"
+    },
+    {
+      "id": "edge-var-5",
+      "sourceNodeId": "var-mood",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "mood"
+    },
+    {
+      "id": "edge-var-6",
+      "sourceNodeId": "var-audience",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "targetAudience"
+    },
+    {
+      "id": "edge-var-7",
+      "sourceNodeId": "var-visual-style",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "visualStyle"
+    },
+    {
+      "id": "edge-var-8",
+      "sourceNodeId": "var-length",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "length"
+    },
+    {
+      "id": "edge-var-9",
+      "sourceNodeId": "var-author",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "authorName"
+    },
+    {
+      "id": "edge-var-10",
+      "sourceNodeId": "var-series-name",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "seriesName"
+    },
+    {
+      "id": "edge-var-11",
+      "sourceNodeId": "var-season",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "seasonNumber"
+    },
+    {
+      "id": "edge-var-12",
+      "sourceNodeId": "var-episode",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "episodeNumber"
+    },
+    {
+      "id": "edge-var-13",
+      "sourceNodeId": "var-brand",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "brandName"
+    },
+    {
+      "id": "edge-var-14",
+      "sourceNodeId": "var-product",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "productName"
+    },
+    {
+      "id": "edge-var-15",
+      "sourceNodeId": "var-spot-length",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "spotLength"
+    },
+    {
+      "id": "edge-var-16",
+      "sourceNodeId": "var-cta",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "callToAction"
+    },
+    {
+      "id": "edge-var-17",
+      "sourceNodeId": "var-notes",
+      "sourcePort": "value",
+      "targetNodeId": "node-3",
+      "targetPort": "additionalNotes"
+    },
+    {
+      "id": "edge-2",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-4",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-3",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-5",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-4",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-5",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-5",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-6",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-6",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-6",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-7",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-7",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-8",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-7",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-9",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-7",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-10",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-7",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-11",
+      "sourceNodeId": "node-7",
+      "sourcePort": "sections",
+      "targetNodeId": "node-8",
+      "targetPort": "items"
+    },
+    {
+      "id": "edge-12",
+      "sourceNodeId": "node-8",
+      "sourcePort": "current_item",
+      "targetNodeId": "node-9",
+      "targetPort": "section"
+    },
+    {
+      "id": "edge-13",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-9",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-14",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-9",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-15",
+      "sourceNodeId": "node-8",
+      "sourcePort": "results",
+      "targetNodeId": "node-10",
+      "targetPort": "processedSections"
+    },
+    {
+      "id": "edge-16",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-10",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-17",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-11",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-18",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-11",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-19",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-12",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-20",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-12",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-21",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-12",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-22",
+      "sourceNodeId": "node-10",
+      "sourcePort": "elements",
+      "targetNodeId": "node-12",
+      "targetPort": "elements"
+    },
+    {
+      "id": "edge-23",
+      "sourceNodeId": "node-8",
+      "sourcePort": "results",
+      "targetNodeId": "node-13",
+      "targetPort": "processedSections"
+    },
+    {
+      "id": "edge-24",
+      "sourceNodeId": "node-10",
+      "sourcePort": "elements",
+      "targetNodeId": "node-13",
+      "targetPort": "elements"
+    },
+    {
+      "id": "edge-25",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-13",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-26",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-13",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-27",
+      "sourceNodeId": "node-12",
+      "sourcePort": "assetCollection",
+      "targetNodeId": "node-13",
+      "targetPort": "assetCollection"
+    },
+    {
+      "id": "edge-29",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-14",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-30",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-14",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-31",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-14",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-32",
+      "sourceNodeId": "node-10",
+      "sourcePort": "elements",
+      "targetNodeId": "node-14",
+      "targetPort": "elements"
+    },
+    {
+      "id": "edge-33",
+      "sourceNodeId": "node-12",
+      "sourcePort": "assetCollection",
+      "targetNodeId": "node-14",
+      "targetPort": "assetCollection"
+    },
+    {
+      "id": "edge-34",
+      "sourceNodeId": "node-13",
+      "sourcePort": "previsualizationPlan",
+      "targetNodeId": "node-14",
+      "targetPort": "previsualizationPlan"
+    },
+    {
+      "id": "edge-35",
+      "sourceNodeId": "node-3",
+      "sourcePort": "validatedInput",
+      "targetNodeId": "node-15",
+      "targetPort": "validatedInput"
+    },
+    {
+      "id": "edge-36",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-15",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-37",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-15",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-38",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-15",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-39",
+      "sourceNodeId": "node-8",
+      "sourcePort": "results",
+      "targetNodeId": "node-15",
+      "targetPort": "processedSections"
+    },
+    {
+      "id": "edge-40",
+      "sourceNodeId": "node-10",
+      "sourcePort": "elements",
+      "targetNodeId": "node-15",
+      "targetPort": "elements"
+    },
+    {
+      "id": "edge-41",
+      "sourceNodeId": "node-11",
+      "sourcePort": "productionMetadata",
+      "targetNodeId": "node-15",
+      "targetPort": "productionMetadata"
+    },
+    {
+      "id": "edge-42",
+      "sourceNodeId": "node-11",
+      "sourcePort": "revisionMetadata",
+      "targetNodeId": "node-15",
+      "targetPort": "revisionMetadata"
+    },
+    {
+      "id": "edge-43",
+      "sourceNodeId": "node-12",
+      "sourcePort": "assetCollection",
+      "targetNodeId": "node-15",
+      "targetPort": "assetCollection"
+    },
+    {
+      "id": "edge-44",
+      "sourceNodeId": "node-13",
+      "sourcePort": "previsualizationPlan",
+      "targetNodeId": "node-15",
+      "targetPort": "previsualizationPlan"
+    },
+    {
+      "id": "edge-45",
+      "sourceNodeId": "node-14",
+      "sourcePort": "validationResults",
+      "targetNodeId": "node-15",
+      "targetPort": "validationResults"
+    },
+    {
+      "id": "edge-46",
+      "sourceNodeId": "node-15",
+      "sourcePort": "scriptPackage",
+      "targetNodeId": "node-16",
+      "targetPort": "scriptPackage"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2026-03-16T20:18:52.175Z",
+    "viewport": {
+      "panX": -1235.6391213811003,
+      "panY": -96.3546014748353,
+      "zoom": 1.4681927710843374
+    }
+  },
+  "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"
+}

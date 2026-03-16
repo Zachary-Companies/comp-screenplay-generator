@@ -1,0 +1,16 @@
+{
+  "name": "comp-screenplay-generator",
+  "version": "1.0.0",
+  "description": "Generate complete screenplay packages with metadata, characters, locations, scenes, elements, assets, and previsualization",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit --pretty",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

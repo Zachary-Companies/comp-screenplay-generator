@@ -1,0 +1,69 @@
+{
+  "pipelineName": "Comprehensive Screenplay Generator",
+  "description": "Generate complete screenplay packages with metadata, characters, locations, scenes, elements, assets, and previsualization",
+  "items": [
+    {
+      "id": "scaffold",
+      "task": "Scaffold pipeline directory",
+      "status": "done",
+      "category": "implement",
+      "addedAt": "2026-03-16T00:00:00Z",
+      "completedAt": "2026-03-16T00:00:00Z"
+    },
+    {
+      "id": "implement-nodes",
+      "task": "Implement all node scripts",
+      "status": "done",
+      "category": "implement",
+      "addedAt": "2026-03-16T00:00:00Z",
+      "completedAt": "2026-03-16T00:00:00Z"
+    },
+    {
+      "id": "write-tests",
+      "task": "Write tests for each node",
+      "status": "done",
+      "category": "test",
+      "addedAt": "2026-03-16T00:00:00Z",
+      "completedAt": "2026-03-16T00:00:00Z"
+    },
+    {
+      "id": "fix-tests",
+      "task": "Fix failing tests - updated test fixtures and test inputs to match script interfaces",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-16T00:00:00Z",
+      "completedAt": "2026-03-16T00:00:00Z"
+    },
+    {
+      "id": "run-tests",
+      "task": "Run tests and verify they pass",
+      "status": "done",
+      "category": "test",
+      "addedAt": "2026-03-16T00:00:00Z",
+      "completedAt": "2026-03-16T00:00:00Z"
+    },
+    {
+      "id": "user-friendly-inputs",
+      "task": "Break down inputs for non-technical users - replaced single JSON blob with 17 individual user-friendly inputs",
+      "status": "done",
+      "category": "implement",
+      "addedAt": "2026-03-16T14:30:00Z",
+      "completedAt": "2026-03-16T14:31:00Z"
+    },
+    {
+      "id": "e2e-test",
+      "task": "Test full pipeline end-to-end",
+      "status": "pending",
+      "category": "test",
+      "addedAt": "2026-03-16T00:00:00Z"
+    },
+    {
+      "id": "remove-orphaned-nodes",
+      "task": "Remove 12 orphaned/disconnected nodes from pipeline graph - moved unused .ts files to _orphaned_nodes/",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-16T19:49:18.649Z",
+      "completedAt": "2026-03-16T19:49:18.650Z"
+    }
+  ]
+}
