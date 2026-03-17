@@ -8,8 +8,8 @@
       "id": "var-project-type",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 50
+        "x": -248,
+        "y": -254
       },
       "label": "Project Type",
       "variableNode": {
@@ -19,15 +19,30 @@
         "inputName": "projectType",
         "description": "What kind of project? (Short Film, Feature Film, TV Pilot, TV Episode, Commercial)",
         "required": true,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "Short Film",
+          "Feature Film",
+          "TV Pilot",
+          "TV Episode",
+          "TV Series Bible",
+          "Web Series Episode",
+          "Commercial",
+          "Music Video",
+          "Documentary Short",
+          "Corporate Video",
+          "Training Video",
+          "Educational Content"
+        ]
       }
     },
     {
       "id": "var-story-idea",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 120
+        "x": -208,
+        "y": 87
       },
       "label": "Story Idea",
       "variableNode": {
@@ -44,8 +59,8 @@
       "id": "var-title",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 190
+        "x": -233,
+        "y": 249
       },
       "label": "Working Title",
       "variableNode": {
@@ -62,8 +77,8 @@
       "id": "var-genre",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 260
+        "x": -244,
+        "y": -85
       },
       "label": "Genre",
       "variableNode": {
@@ -73,15 +88,30 @@
         "inputName": "genre",
         "description": "Genre(s) like Drama, Comedy, Horror, Thriller (separate with commas)",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "combobox",
+        "options": [
+          "Drama",
+          "Comedy",
+          "Horror",
+          "Thriller",
+          "Action",
+          "Romance",
+          "Sci-Fi",
+          "Fantasy",
+          "Mystery",
+          "Documentary",
+          "Animation",
+          "Adventure"
+        ]
       }
     },
     {
       "id": "var-mood",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 330
+        "x": -225,
+        "y": 394
       },
       "label": "Mood / Tone",
       "variableNode": {
@@ -91,15 +121,30 @@
         "inputName": "mood",
         "description": "How should it feel? (e.g., Dark and suspenseful, Light and fun)",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "Dark and suspenseful",
+          "Light and fun",
+          "Dramatic and emotional",
+          "Comedic and upbeat",
+          "Mysterious and intriguing",
+          "Romantic and heartwarming",
+          "Intense and thrilling",
+          "Whimsical and playful",
+          "Gritty and realistic",
+          "Inspiring and uplifting",
+          "Eerie and unsettling",
+          "Nostalgic and bittersweet"
+        ]
       }
     },
     {
       "id": "var-audience",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 400
+        "x": -224,
+        "y": 538
       },
       "label": "Target Audience",
       "variableNode": {
@@ -109,15 +154,28 @@
         "inputName": "targetAudience",
         "description": "Who is this for? (e.g., Adults, Families, Teens)",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "General Audiences",
+          "Adults (18+)",
+          "Young Adults (16-25)",
+          "Teens (13-17)",
+          "Families",
+          "Children (8-12)",
+          "Mature Audiences (21+)",
+          "All Ages",
+          "Professionals/Corporate",
+          "Students/Educational"
+        ]
       }
     },
     {
       "id": "var-visual-style",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 470
+        "x": -231,
+        "y": 685
       },
       "label": "Visual Style",
       "variableNode": {
@@ -127,15 +185,30 @@
         "inputName": "visualStyle",
         "description": "How should it look? (e.g., Cinematic, Animated, Documentary style)",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "Cinematic",
+          "Documentary Style",
+          "Animated",
+          "Music Video Style",
+          "Commercial/Advertisement",
+          "Mockumentary",
+          "Found Footage",
+          "Art House/Experimental",
+          "Television/Broadcast",
+          "Social Media/Vertical",
+          "Corporate/Professional",
+          "Educational/Training"
+        ]
       }
     },
     {
       "id": "var-length",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 540
+        "x": -495,
+        "y": 322
       },
       "label": "Approximate Length",
       "variableNode": {
@@ -145,15 +218,30 @@
         "inputName": "length",
         "description": "How long? (e.g., 15 minutes, 2 hours)",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "30 seconds",
+          "1 minute",
+          "2 minutes",
+          "5 minutes",
+          "10 minutes",
+          "15 minutes",
+          "30 minutes",
+          "1 hour",
+          "90 minutes",
+          "2 hours",
+          "2.5 hours",
+          "3 hours"
+        ]
       }
     },
     {
       "id": "var-author",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 610
+        "x": -510,
+        "y": 462
       },
       "label": "Your Name",
       "variableNode": {
@@ -170,8 +258,8 @@
       "id": "var-series-name",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 680
+        "x": -514,
+        "y": 598
       },
       "label": "Series Name (TV only)",
       "variableNode": {
@@ -188,8 +276,8 @@
       "id": "var-season",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 750
+        "x": -537,
+        "y": 731
       },
       "label": "Season Number (TV only)",
       "variableNode": {
@@ -206,8 +294,8 @@
       "id": "var-episode",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 820
+        "x": -517,
+        "y": 874
       },
       "label": "Episode Number (TV only)",
       "variableNode": {
@@ -224,8 +312,8 @@
       "id": "var-brand",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 890
+        "x": -535,
+        "y": 1027
       },
       "label": "Brand Name (Commercials only)",
       "variableNode": {
@@ -242,8 +330,8 @@
       "id": "var-product",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 960
+        "x": -226,
+        "y": 827
       },
       "label": "Product Name (Commercials only)",
       "variableNode": {
@@ -253,15 +341,20 @@
         "inputName": "productName",
         "description": "For commercials: the specific product or service",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "the specific product",
+          "service"
+        ]
       }
     },
     {
       "id": "var-spot-length",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 1030
+        "x": -221,
+        "y": 962
       },
       "label": "Spot Length (Commercials only)",
       "variableNode": {
@@ -271,15 +364,22 @@
         "inputName": "spotLength",
         "description": "For commercials: length in seconds (6, 15, 30, 60)",
         "required": false,
-        "generationPrompt": ""
+        "generationPrompt": "",
+        "inputControl": "select",
+        "options": [
+          "6",
+          "15",
+          "30",
+          "60"
+        ]
       }
     },
     {
       "id": "var-cta",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 1100
+        "x": -231,
+        "y": 1110
       },
       "label": "Call to Action (Commercials only)",
       "variableNode": {
@@ -296,8 +396,8 @@
       "id": "var-notes",
       "workflowId": "__variable__",
       "position": {
-        "x": 50,
-        "y": 1170
+        "x": -273,
+        "y": 1312
       },
       "label": "Additional Notes",
       "variableNode": {
@@ -319,7 +419,7 @@
       },
       "label": "Input Validation",
       "scriptFile": {
-        "file": "input-validation.ts",
+        "file": "src/input-validation.ts",
         "description": "Validates and combines all inputs into internal format",
         "inputs": [
           {
@@ -421,12 +521,12 @@
       "id": "node-4",
       "workflowId": "__script_file__",
       "position": {
-        "x": 793,
-        "y": 96
+        "x": 777,
+        "y": -192
       },
       "label": "Metadata Generation",
       "scriptFile": {
-        "file": "metadata-generation.ts",
+        "file": "src/metadata-generation.ts",
         "description": "Generate complete ScriptMetadata including title, logline, author, runtime, genre, tone, audience",
         "inputs": [
           {
@@ -448,12 +548,12 @@
       "id": "node-5",
       "workflowId": "__script_file__",
       "position": {
-        "x": 1150,
-        "y": 207
+        "x": 1109,
+        "y": 147
       },
       "label": "Character Generation",
       "scriptFile": {
-        "file": "character-generation.ts",
+        "file": "src/character-generation.ts",
         "description": "Generate CharacterDefinition array with id, name, age, description, voice, wardrobe",
         "inputs": [
           {
@@ -485,7 +585,7 @@
       },
       "label": "Location Generation",
       "scriptFile": {
-        "file": "location-generation.ts",
+        "file": "src/location-generation.ts",
         "description": "Generate LocationDefinition array with id, name, description, recurring flag",
         "inputs": [
           {
@@ -517,7 +617,7 @@
       },
       "label": "Section Structure",
       "scriptFile": {
-        "file": "section-structure.ts",
+        "file": "src/section-structure.ts",
         "description": "Generate ScriptSection array supporting all types with nested children for container sections",
         "inputs": [
           {
@@ -554,8 +654,8 @@
       "id": "node-8",
       "workflowId": "__for_each__",
       "position": {
-        "x": 1850,
-        "y": 224
+        "x": 1832,
+        "y": 44
       },
       "label": "Process Each Section",
       "forEachNode": {
@@ -567,12 +667,12 @@
       "id": "node-9",
       "workflowId": "__script_file__",
       "position": {
-        "x": 2200,
-        "y": 259
+        "x": 2205,
+        "y": 139
       },
       "label": "Scene Content Generation",
       "scriptFile": {
-        "file": "scene-content-generation.ts",
+        "file": "src/scene-content-generation.ts",
         "description": "For SceneSection, generate SceneHeading, synopsis, beats, duration, locationId",
         "inputs": [
           {
@@ -604,12 +704,12 @@
       "id": "node-10",
       "workflowId": "__script_file__",
       "position": {
-        "x": 2200,
-        "y": 399
+        "x": 2199,
+        "y": 371
       },
       "label": "Element Generation",
       "scriptFile": {
-        "file": "element-generation.ts",
+        "file": "src/element-generation.ts",
         "description": "Generate ScriptElement array for all scene beats supporting action, dialogue, transitions, shots, etc.",
         "inputs": [
           {
@@ -641,7 +741,7 @@
       },
       "label": "Production Metadata",
       "scriptFile": {
-        "file": "production-metadata.ts",
+        "file": "src/production-metadata.ts",
         "description": "Generate ProductionMetadata and RevisionMetadata with format, budget, platform, revision info",
         "inputs": [
           {
@@ -673,12 +773,12 @@
       "id": "node-12",
       "workflowId": "__script_file__",
       "position": {
-        "x": 2550,
-        "y": 252
+        "x": 2559,
+        "y": 236
       },
       "label": "Asset Collection",
       "scriptFile": {
-        "file": "asset-collection.ts",
+        "file": "src/asset-collection.ts",
         "description": "Create AssetCollection with character headshots, location landscapes, and shot previs frames",
         "inputs": [
           {
@@ -706,7 +806,7 @@
           {
             "name": "assetCollection",
             "type": "string",
-            "description": "Complete AssetCollection object"
+            "description": "Complete AssetCollection object with saved asset IDs"
           }
         ]
       }
@@ -720,7 +820,7 @@
       },
       "label": "Previs Generation",
       "scriptFile": {
-        "file": "previs-generation.ts",
+        "file": "src/previs-generation.ts",
         "description": "Create PrevisualizationPlan with shots for each ShotElement in scene beats",
         "inputs": [
           {
@@ -731,7 +831,7 @@
           {
             "name": "elements",
             "type": "string",
-            "description": "Script elements"
+            "description": "Script elements (includes shot elements)"
           },
           {
             "name": "characters",
@@ -767,7 +867,7 @@
       },
       "label": "Rule Enforcement",
       "scriptFile": {
-        "file": "rule-enforcement.ts",
+        "file": "src/rule-enforcement.ts",
         "description": "Validate against ScriptGeneratorRules for dialogue, headshots, landscapes, previs requirements",
         "inputs": [
           {
@@ -824,7 +924,7 @@
       },
       "label": "Final Assembly",
       "scriptFile": {
-        "file": "final-assembly.ts",
+        "file": "src/final-assembly.ts",
         "description": "Assemble complete GeneratedScriptPackage with input, script, assets, previsualizations",
         "inputs": [
           {
@@ -1342,12 +1442,11 @@
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-16T20:18:52.175Z",
+    "updatedAt": "2026-03-17T16:58:36.159Z",
     "viewport": {
-      "panX": -1235.6391213811003,
-      "panY": -96.3546014748353,
-      "zoom": 1.4681927710843374
+      "panX": 282.55000000000007,
+      "panY": 364.8,
+      "zoom": 0.3
     }
-  },
-  "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"
+  }
 }

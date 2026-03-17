@@ -19,7 +19,8 @@ describe('Input Validation', () => {
       authorName: 'Jane Doe',
     }, context);
     
-    const validated = JSON.parse(result.validatedInput);
+    // validatedInput is returned as an object, not a JSON string
+    const validated = result.validatedInput as any;
     
     expect(validated.kind).toBe('short-film');
     expect(validated.concept).toBe('A lonely astronaut discovers a message from Earth that changes everything.');
@@ -38,21 +39,21 @@ describe('Input Validation', () => {
       projectType: 'movie',
       storyIdea: 'An epic adventure story.',
     }, context);
-    expect(JSON.parse(result1.validatedInput).kind).toBe('feature-film');
+    expect((result1.validatedInput as any).kind).toBe('feature-film');
     
     // Test "TV Episode" -> "tv-episode"
     const result2 = await execute({
       projectType: 'TV Episode',
       storyIdea: 'A detective solves a case.',
     }, context);
-    expect(JSON.parse(result2.validatedInput).kind).toBe('tv-episode');
+    expect((result2.validatedInput as any).kind).toBe('tv-episode');
     
     // Test "ad" -> "commercial"
     const result3 = await execute({
       projectType: 'ad',
       storyIdea: 'A product showcase.',
     }, context);
-    expect(JSON.parse(result3.validatedInput).kind).toBe('commercial');
+    expect((result3.validatedInput as any).kind).toBe('commercial');
   });
 
   it('should parse length in various formats', async () => {
@@ -64,7 +65,7 @@ describe('Input Validation', () => {
       storyIdea: 'A story.',
       length: '2 hours',
     }, context);
-    expect(JSON.parse(result1.validatedInput).targetRuntimeMinutes).toBe(120);
+    expect((result1.validatedInput as any).targetRuntimeMinutes).toBe(120);
     
     // Test "90 minutes"
     const result2 = await execute({
@@ -72,7 +73,7 @@ describe('Input Validation', () => {
       storyIdea: 'A story.',
       length: '90 minutes',
     }, context);
-    expect(JSON.parse(result2.validatedInput).targetRuntimeMinutes).toBe(90);
+    expect((result2.validatedInput as any).targetRuntimeMinutes).toBe(90);
     
     // Test "1.5 hours"
     const result3 = await execute({
@@ -80,7 +81,7 @@ describe('Input Validation', () => {
       storyIdea: 'A story.',
       length: '1.5 hours',
     }, context);
-    expect(JSON.parse(result3.validatedInput).targetRuntimeMinutes).toBe(90);
+    expect((result3.validatedInput as any).targetRuntimeMinutes).toBe(90);
   });
 
   it('should set default lengths based on project type', async () => {
@@ -91,21 +92,21 @@ describe('Input Validation', () => {
       projectType: 'Commercial',
       storyIdea: 'A product ad.',
     }, context);
-    expect(JSON.parse(result1.validatedInput).targetRuntimeMinutes).toBe(0.5);
+    expect((result1.validatedInput as any).targetRuntimeMinutes).toBe(0.5);
     
     // Short film default
     const result2 = await execute({
       projectType: 'Short Film',
       storyIdea: 'A short story.',
     }, context);
-    expect(JSON.parse(result2.validatedInput).targetRuntimeMinutes).toBe(15);
+    expect((result2.validatedInput as any).targetRuntimeMinutes).toBe(15);
     
     // Feature film default
     const result3 = await execute({
       projectType: 'Feature Film',
       storyIdea: 'A long story.',
     }, context);
-    expect(JSON.parse(result3.validatedInput).targetRuntimeMinutes).toBe(100);
+    expect((result3.validatedInput as any).targetRuntimeMinutes).toBe(100);
   });
 
   it('should handle TV series metadata', async () => {
@@ -119,7 +120,7 @@ describe('Input Validation', () => {
       episodeNumber: '5',
     }, context);
     
-    const validated = JSON.parse(result.validatedInput);
+    const validated = result.validatedInput as any;
     expect(validated.seriesMetadata).toEqual({
       seriesTitle: 'Cold Case Files',
       seasonNumber: 2,
@@ -139,7 +140,7 @@ describe('Input Validation', () => {
       callToAction: 'Visit freshco.com',
     }, context);
     
-    const validated = JSON.parse(result.validatedInput);
+    const validated = result.validatedInput as any;
     expect(validated.commercialMetadata).toEqual({
       brandName: 'FreshCo',
       productName: 'Sparkling Water',
@@ -148,29 +149,38 @@ describe('Input Validation', () => {
     });
   });
 
-  it('should reject missing required fields', async () => {
+  it('should handle validation errors gracefully with fallback', async () => {
     const { context } = createMockContext();
     
-    // Missing project type
-    await expect(execute({
+    // Missing project type - returns fallback with error in notes
+    const result1 = await execute({
       projectType: '',
       storyIdea: 'A story.',
-    }, context)).rejects.toThrow('Please select a project type');
+    }, context);
+    const validated1 = result1.validatedInput as any;
+    expect(validated1.kind).toBe('short-film'); // fallback
+    expect(validated1.notes).toContain('Please select a project type');
     
-    // Missing story idea
-    await expect(execute({
+    // Missing story idea - returns fallback with error in notes
+    const result2 = await execute({
       projectType: 'Short Film',
       storyIdea: '',
-    }, context)).rejects.toThrow('Please describe your story idea');
+    }, context);
+    const validated2 = result2.validatedInput as any;
+    expect(validated2.notes).toContain('Please describe your story idea');
   });
 
-  it('should reject invalid project types', async () => {
+  it('should handle invalid project types with fallback', async () => {
     const { context } = createMockContext();
     
-    await expect(execute({
+    const result = await execute({
       projectType: 'podcast',
       storyIdea: 'A story.',
-    }, context)).rejects.toThrow('isn\'t a recognized project type');
+    }, context);
+    
+    const validated = result.validatedInput as any;
+    expect(validated.kind).toBe('short-film'); // fallback
+    expect(validated.notes).toContain("isn't a recognized project type");
   });
 
   it('should handle optional fields gracefully', async () => {
@@ -181,7 +191,7 @@ describe('Input Validation', () => {
       storyIdea: 'A minimal story.',
     }, context);
     
-    const validated = JSON.parse(result.validatedInput);
+    const validated = result.validatedInput as any;
     expect(validated.title).toBeNull();
     expect(validated.genre).toEqual([]);
     expect(validated.tone).toEqual([]);

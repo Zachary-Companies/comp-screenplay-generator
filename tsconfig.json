@@ -10,8 +10,8 @@
     "declaration": false
   },
   "include": [
-    "*.ts",
-    "woodbury.d.ts"
+    "woodbury.d.ts",
+    "src/**/*.ts"
   ],
   "exclude": [
     ".build"

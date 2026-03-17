@@ -1,6 +1,11 @@
 /// <reference path="./woodbury.d.ts" />
 
 /**
+ * Final Assembly Node
+ * 
+ * Assembles all generated components into a complete GeneratedScriptPackage.
+ * Handles nested section structures (acts containing scenes, etc.)
+ * 
  * @input validatedInput: object - Original script input
  * @input metadata: object - Script metadata
  * @input characters: object[] - Character definitions
@@ -51,12 +56,16 @@ export async function execute(
     context.log(`Assets: ${assets.assets?.length || 0}`);
     context.log(`Previs shots: ${previs.shots?.length || 0}`);
 
+    // Populate section children arrays with their corresponding elements
+    // Elements are generated per-section in order, so we distribute them back
+    const populatedSections = populateSectionChildren(scriptSections, scriptElements, context);
+
     // Assemble the complete ScriptDocument
     const scriptDocument = {
       metadata: scriptMetadata,
       characters: characterDefinitions,
       locations: locationDefinitions,
-      sections: scriptSections,
+      sections: populatedSections,
       elements: scriptElements,
       productionMetadata: prodMetadata,
       revisionMetadata: revMetadata
@@ -78,7 +87,7 @@ export async function execute(
 
     return { scriptPackage };
 
-  } catch (error) {
+  } catch (error: any) {
     context.log(`Error assembling script package: ${error.message}`);
 
     // Return a minimal error package
@@ -107,4 +116,109 @@ export async function execute(
 
     return { scriptPackage: errorPackage };
   }
+}
+
+/**
+ * Recursively flatten nested sections to extract all scene sections
+ */
+function flattenScenes(sections: any[]): any[] {
+  const scenes: any[] = [];
+  
+  for (const section of sections) {
+    if (section.type === 'scene') {
+      scenes.push(section);
+    }
+    
+    // Recursively process children
+    if (Array.isArray(section.children) && section.children.length > 0) {
+      const childScenes = flattenScenes(section.children);
+      scenes.push(...childScenes);
+    }
+  }
+  
+  return scenes;
+}
+
+/**
+ * Populates the children array of each scene section with its corresponding elements.
+ * Handles nested section structures (acts containing scenes, etc.)
+ * 
+ * The element-generation node creates elements in order, processing each section's beats
+ * sequentially. This function distributes those elements back to their parent sections.
+ */
+function populateSectionChildren(sections: any[], elements: any[], context: ScriptContext): any[] {
+  if (!elements || elements.length === 0) {
+    context.log('No elements to distribute to sections');
+    return sections;
+  }
+
+  // Get all scene sections (including nested ones)
+  const allScenes = flattenScenes(sections);
+  
+  if (allScenes.length === 0) {
+    context.log('No scene sections found');
+    return sections;
+  }
+
+  // Count how many beats each scene has to estimate element distribution
+  const sceneBeatCounts = allScenes.map(s => {
+    const beats = s.beats || [];
+    return Array.isArray(beats) ? beats.length : 0;
+  });
+  
+  const totalBeats = sceneBeatCounts.reduce((sum, count) => sum + count, 0);
+  
+  context.log(`Distributing ${elements.length} elements across ${allScenes.length} scenes (${totalBeats} total beats)`);
+
+  // If we have beat counts, distribute elements proportionally
+  // Otherwise, distribute evenly
+  let elementIndex = 0;
+  
+  if (totalBeats > 0) {
+    // Distribute elements proportionally based on beat count
+    for (let i = 0; i < allScenes.length; i++) {
+      const scene = allScenes[i];
+      const beatCount = sceneBeatCounts[i];
+      
+      // Calculate how many elements this scene should get
+      // Use proportional distribution based on beats
+      const proportion = beatCount / totalBeats;
+      let elementsForScene = Math.round(elements.length * proportion);
+      
+      // Ensure we don't exceed remaining elements
+      elementsForScene = Math.min(elementsForScene, elements.length - elementIndex);
+      
+      // For the last scene, take all remaining elements
+      if (i === allScenes.length - 1) {
+        elementsForScene = elements.length - elementIndex;
+      }
+      
+      // Assign elements to this scene's children array
+      // Note: We're modifying the scene objects in place, which updates the nested structure
+      scene.children = elements.slice(elementIndex, elementIndex + elementsForScene);
+      elementIndex += elementsForScene;
+      
+      // Log element types for this scene
+      const dialogueCount = scene.children.filter((e: any) => e.type === 'dialogue').length;
+      const actionCount = scene.children.filter((e: any) => e.type === 'action').length;
+      const shotCount = scene.children.filter((e: any) => e.type === 'shot').length;
+      
+      context.log(`Scene "${scene.title}": ${scene.children.length} elements (${dialogueCount} dialogue, ${actionCount} action, ${shotCount} shots)`);
+    }
+  } else {
+    // No beat info - distribute evenly
+    const elementsPerScene = Math.ceil(elements.length / allScenes.length);
+    
+    for (let i = 0; i < allScenes.length; i++) {
+      const scene = allScenes[i];
+      const start = i * elementsPerScene;
+      const end = Math.min(start + elementsPerScene, elements.length);
+      
+      scene.children = elements.slice(start, end);
+      
+      context.log(`Scene "${scene.title}": ${scene.children.length} elements (even distribution)`);
+    }
+  }
+
+  return sections;
 }

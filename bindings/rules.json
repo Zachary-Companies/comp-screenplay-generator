@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "pipelineId": "comp-screenplay-generator",
+  "rules": [
+    {
+      "id": "rule-char-in-shot",
+      "name": "Character names in shot descriptions",
+      "enabled": true,
+      "type": "text-match",
+      "source": {
+        "entityType": "shot",
+        "field": "shotText"
+      },
+      "target": {
+        "entityType": "character",
+        "matchField": "displayName"
+      },
+      "relationship": "depicts",
+      "matchOptions": {
+        "caseSensitive": false,
+        "wholeWord": true
+      }
+    },
+    {
+      "id": "rule-location-in-shot",
+      "name": "Location names in shot descriptions",
+      "enabled": true,
+      "type": "text-match",
+      "source": {
+        "entityType": "shot",
+        "field": "shotText"
+      },
+      "target": {
+        "entityType": "location",
+        "matchField": "name"
+      },
+      "relationship": "set-in",
+      "matchOptions": {
+        "caseSensitive": false,
+        "wholeWord": true
+      }
+    }
+  ]
+}

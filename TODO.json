@@ -7,63 +7,119 @@
       "task": "Scaffold pipeline directory",
       "status": "done",
       "category": "implement",
-      "addedAt": "2026-03-16T00:00:00Z",
-      "completedAt": "2026-03-16T00:00:00Z"
+      "addedAt": "2026-03-15T00:00:00Z",
+      "completedAt": "2026-03-15T00:30:00Z"
     },
     {
       "id": "implement-nodes",
       "task": "Implement all node scripts",
       "status": "done",
       "category": "implement",
-      "addedAt": "2026-03-16T00:00:00Z",
-      "completedAt": "2026-03-16T00:00:00Z"
+      "addedAt": "2026-03-15T00:00:00Z",
+      "completedAt": "2026-03-15T01:00:00Z"
     },
     {
       "id": "write-tests",
       "task": "Write tests for each node",
       "status": "done",
       "category": "test",
-      "addedAt": "2026-03-16T00:00:00Z",
-      "completedAt": "2026-03-16T00:00:00Z"
+      "addedAt": "2026-03-15T00:00:00Z",
+      "completedAt": "2026-03-15T01:30:00Z"
     },
     {
       "id": "fix-tests",
       "task": "Fix failing tests - updated test fixtures and test inputs to match script interfaces",
       "status": "done",
       "category": "fix",
-      "addedAt": "2026-03-16T00:00:00Z",
-      "completedAt": "2026-03-16T00:00:00Z"
+      "addedAt": "2026-03-15T01:30:00Z",
+      "completedAt": "2026-03-15T02:00:00Z"
     },
     {
       "id": "run-tests",
       "task": "Run tests and verify they pass",
       "status": "done",
       "category": "test",
-      "addedAt": "2026-03-16T00:00:00Z",
-      "completedAt": "2026-03-16T00:00:00Z"
+      "addedAt": "2026-03-15T02:00:00Z",
+      "completedAt": "2026-03-15T02:15:00Z"
     },
     {
-      "id": "user-friendly-inputs",
+      "id": "simplify-inputs",
       "task": "Break down inputs for non-technical users - replaced single JSON blob with 17 individual user-friendly inputs",
       "status": "done",
       "category": "implement",
-      "addedAt": "2026-03-16T14:30:00Z",
-      "completedAt": "2026-03-16T14:31:00Z"
+      "addedAt": "2026-03-15T02:15:00Z",
+      "completedAt": "2026-03-15T03:00:00Z"
+    },
+    {
+      "id": "fix-orphaned-nodes",
+      "task": "Remove 12 orphaned/disconnected nodes from pipeline graph - moved unused .ts files to _orphaned_nodes/",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-15T03:00:00Z",
+      "completedAt": "2026-03-15T03:30:00Z"
+    },
+    {
+      "id": "fix-dialogue-previs",
+      "task": "Fix dialogue and previs generation - element-generation now explicitly generates dialogue/shot elements, previs-generation now correctly reads section.beats and falls back to generating previs from beats when no shot elements exist",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-15T03:30:00Z",
+      "completedAt": "2026-03-15T04:00:00Z"
+    },
+    {
+      "id": "fix-input-validation-tests",
+      "task": "Update input-validation tests to work with object outputs instead of JSON strings",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-15T04:00:00Z",
+      "completedAt": "2026-03-15T04:15:00Z"
+    },
+    {
+      "id": "fix-foreach-script-file",
+      "task": "Fix ForEach loop not executing __script_file__ nodes - added handler for v2 file-backed script nodes in executeForEachBodyNode function in composition-run.ts",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-15T04:15:00Z",
+      "completedAt": "2026-03-15T04:45:00Z"
+    },
+    {
+      "id": "fix-section-children",
+      "task": "Fix final-assembly to populate section children with elements - added populateSectionChildren function that distributes elements to their parent scene sections based on beat counts",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-15T04:45:00Z",
+      "completedAt": "2026-03-15T05:00:00Z"
+    },
+    {
+      "id": "fix-asset-collection-library",
+      "task": "Fix asset-collection to actually save assets to Woodbury library - now calls asset_collection_create to create collection and asset_save with correct parameters (file_path not path, collection slug not ID) to persist assets",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-16T16:30:00Z",
+      "completedAt": "2026-03-16T16:35:00Z"
+    },
+    {
+      "id": "fix-tags-split-bug",
+      "task": "Fix params.tags.split is not a function bug in creator-assets extension - added normalizeTags() helper that handles both string and array inputs for tags parameter",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-16T17:00:00Z",
+      "completedAt": "2026-03-16T17:05:00Z"
+    },
+    {
+      "id": "fix-nested-sections",
+      "task": "Fix zero elements bug - sections have nested structure (acts containing scenes) but ForEach only iterated top-level. Updated scene-content-generation, element-generation, previs-generation, and final-assembly to recursively process nested children",
+      "status": "done",
+      "category": "fix",
+      "addedAt": "2026-03-16T17:10:00Z",
+      "completedAt": "2026-03-16T17:15:00Z"
     },
     {
       "id": "e2e-test",
       "task": "Test full pipeline end-to-end",
       "status": "pending",
       "category": "test",
-      "addedAt": "2026-03-16T00:00:00Z"
-    },
-    {
-      "id": "remove-orphaned-nodes",
-      "task": "Remove 12 orphaned/disconnected nodes from pipeline graph - moved unused .ts files to _orphaned_nodes/",
-      "status": "done",
-      "category": "fix",
-      "addedAt": "2026-03-16T19:49:18.649Z",
-      "completedAt": "2026-03-16T19:49:18.650Z"
+      "addedAt": "2026-03-15T05:00:00Z"
     }
   ]
 }
