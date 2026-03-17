@@ -414,8 +414,8 @@
       "id": "node-3",
       "workflowId": "__script_file__",
       "position": {
-        "x": 499,
-        "y": 375
+        "x": 451,
+        "y": 331
       },
       "label": "Input Validation",
       "scriptFile": {
@@ -1442,11 +1442,12 @@
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-17T16:58:36.159Z",
+    "updatedAt": "2026-03-17T21:42:34.093Z",
     "viewport": {
-      "panX": 282.55000000000007,
-      "panY": 364.8,
-      "zoom": 0.3
+      "panX": -1419.989999151176,
+      "panY": 281.5953756047863,
+      "zoom": 1.7200000000000004
     }
-  }
+  },
+  "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"
 }
