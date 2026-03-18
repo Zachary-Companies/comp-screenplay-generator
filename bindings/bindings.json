@@ -3,6 +3,44 @@
   "pipelineId": "comp-screenplay-generator",
   "bindings": [
     {
+      "id": "bind-mmw7mx0m",
+      "type": "voice",
+      "source": {
+        "entityType": "character",
+        "entityId": "the-ferryman"
+      },
+      "target": {
+        "entityType": "voice",
+        "entityId": "L5Oo1OjjHdbIvJDQFgmN"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-18T15:42:45.670Z",
+      "updatedAt": "2026-03-18T15:42:45.670Z",
+      "metadata": {
+        "voiceName": "Bartholomeus Bösewicht - Grim and Gruesome (standard, male, middle_aged)"
+      }
+    },
+    {
+      "id": "bind-mmw7n8ur",
+      "type": "voice",
+      "source": {
+        "entityType": "character",
+        "entityId": "elena-vasquez"
+      },
+      "target": {
+        "entityType": "voice",
+        "entityId": "EXAVITQu4vr4xnSDxMaL"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-18T15:43:01.011Z",
+      "updatedAt": "2026-03-18T15:43:01.011Z",
+      "metadata": {
+        "voiceName": "Sarah - Mature, Reassuring, Confident (american, female, young)"
+      }
+    },
+    {
       "id": "bind-rule-char-in-shot-element_1-marcus-chen",
       "type": "depicts",
       "source": {
@@ -15,8 +53,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_3-marcus-chen",
@@ -31,8 +69,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_8-the-ferryman",
@@ -47,8 +85,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_13-the-ferryman",
@@ -63,8 +101,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_16-marcus-chen",
@@ -79,8 +117,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_18-marcus-chen",
@@ -95,8 +133,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_18-the-ferryman",
@@ -111,8 +149,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_23-marcus-chen",
@@ -127,8 +165,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_23-the-ferryman",
@@ -143,8 +181,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_27-marcus-chen",
@@ -159,8 +197,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_27-the-ferryman",
@@ -175,8 +213,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_34-elena-vasquez",
@@ -191,8 +229,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_39-elena-vasquez",
@@ -207,8 +245,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_44-marcus-chen",
@@ -223,8 +261,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_47-elena-vasquez",
@@ -239,8 +277,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_51-the-ferryman",
@@ -255,8 +293,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_54-marcus-chen",
@@ -271,8 +309,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_60-marcus-chen",
@@ -287,8 +325,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_63-marcus-chen",
@@ -303,8 +341,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_67-the-ferryman",
@@ -319,8 +357,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_71-marcus-chen",
@@ -335,8 +373,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_71-the-ferryman",
@@ -351,8 +389,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_73-the-ferryman",
@@ -367,8 +405,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_78-the-ferryman",
@@ -383,8 +421,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_82-elena-vasquez",
@@ -399,8 +437,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_89-marcus-chen",
@@ -415,8 +453,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_89-elena-vasquez",
@@ -431,8 +469,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_93-marcus-chen",
@@ -447,8 +485,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_93-elena-vasquez",
@@ -463,8 +501,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_97-marcus-chen",
@@ -479,8 +517,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_103-marcus-chen",
@@ -495,8 +533,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_103-the-ferryman",
@@ -511,8 +549,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_109-marcus-chen",
@@ -527,8 +565,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_115-marcus-chen",
@@ -543,8 +581,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_115-elena-vasquez",
@@ -559,8 +597,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_118-elena-vasquez",
@@ -575,8 +613,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_121-marcus-chen",
@@ -591,8 +629,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_124-marcus-chen",
@@ -607,8 +645,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_127-the-ferryman",
@@ -623,8 +661,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_127-elena-vasquez",
@@ -639,8 +677,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_131-marcus-chen",
@@ -655,8 +693,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_135-marcus-chen",
@@ -671,8 +709,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_135-elena-vasquez",
@@ -687,8 +725,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_137-marcus-chen",
@@ -703,8 +741,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_143-marcus-chen",
@@ -719,8 +757,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_149-marcus-chen",
@@ -735,8 +773,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_149-the-ferryman",
@@ -751,8 +789,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_157-elena-vasquez",
@@ -767,8 +805,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_162-marcus-chen",
@@ -783,8 +821,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_162-elena-vasquez",
@@ -799,8 +837,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_163-marcus-chen",
@@ -815,8 +853,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_168-marcus-chen",
@@ -831,8 +869,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_168-the-ferryman",
@@ -847,8 +885,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_168-elena-vasquez",
@@ -863,8 +901,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_172-marcus-chen",
@@ -879,8 +917,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_176-marcus-chen",
@@ -895,8 +933,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_182-marcus-chen",
@@ -911,8 +949,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_182-elena-vasquez",
@@ -927,8 +965,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_183-marcus-chen",
@@ -943,8 +981,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_190-marcus-chen",
@@ -959,8 +997,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_194-marcus-chen",
@@ -975,8 +1013,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_198-the-ferryman",
@@ -991,8 +1029,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_201-marcus-chen",
@@ -1007,8 +1045,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_201-the-ferryman",
@@ -1023,8 +1061,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_201-elena-vasquez",
@@ -1039,8 +1077,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_203-elena-vasquez",
@@ -1055,8 +1093,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_206-marcus-chen",
@@ -1071,8 +1109,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_206-the-ferryman",
@@ -1087,8 +1125,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_206-elena-vasquez",
@@ -1103,8 +1141,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_209-the-ferryman",
@@ -1119,8 +1157,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_213-marcus-chen",
@@ -1135,8 +1173,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_213-the-ferryman",
@@ -1151,8 +1189,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_216-marcus-chen",
@@ -1167,8 +1205,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_219-marcus-chen",
@@ -1183,8 +1221,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_219-elena-vasquez",
@@ -1199,8 +1237,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_223-the-ferryman",
@@ -1215,8 +1253,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_225-marcus-chen",
@@ -1231,8 +1269,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_227-marcus-chen",
@@ -1247,8 +1285,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_234-marcus-chen",
@@ -1263,8 +1301,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_237-the-ferryman",
@@ -1279,8 +1317,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_240-the-ferryman",
@@ -1295,8 +1333,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_246-marcus-chen",
@@ -1311,8 +1349,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_252-marcus-chen",
@@ -1327,8 +1365,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_252-elena-vasquez",
@@ -1343,8 +1381,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_258-marcus-chen",
@@ -1359,8 +1397,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_258-the-ferryman",
@@ -1375,8 +1413,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_258-elena-vasquez",
@@ -1391,8 +1429,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_259-marcus-chen",
@@ -1407,8 +1445,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_262-marcus-chen",
@@ -1423,8 +1461,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_267-marcus-chen",
@@ -1439,8 +1477,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_272-the-ferryman",
@@ -1455,8 +1493,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_275-marcus-chen",
@@ -1471,8 +1509,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_280-marcus-chen",
@@ -1487,8 +1525,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_280-the-ferryman",
@@ -1503,8 +1541,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_283-marcus-chen",
@@ -1519,8 +1557,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_283-the-ferryman",
@@ -1535,8 +1573,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_283-elena-vasquez",
@@ -1551,8 +1589,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_290-marcus-chen",
@@ -1567,8 +1605,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_297-marcus-chen",
@@ -1583,8 +1621,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_300-marcus-chen",
@@ -1599,8 +1637,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_304-the-ferryman",
@@ -1615,8 +1653,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_307-marcus-chen",
@@ -1631,8 +1669,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_311-marcus-chen",
@@ -1647,8 +1685,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_315-marcus-chen",
@@ -1663,8 +1701,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_315-elena-vasquez",
@@ -1679,8 +1717,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_319-marcus-chen",
@@ -1695,8 +1733,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_326-marcus-chen",
@@ -1711,8 +1749,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_326-elena-vasquez",
@@ -1727,8 +1765,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_329-the-ferryman",
@@ -1743,8 +1781,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_332-marcus-chen",
@@ -1759,8 +1797,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_332-the-ferryman",
@@ -1775,8 +1813,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_335-marcus-chen",
@@ -1791,8 +1829,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_338-marcus-chen",
@@ -1807,8 +1845,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_338-the-ferryman",
@@ -1823,8 +1861,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_343-marcus-chen",
@@ -1839,8 +1877,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_343-the-ferryman",
@@ -1855,8 +1893,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_346-marcus-chen",
@@ -1871,8 +1909,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_346-the-ferryman",
@@ -1887,8 +1925,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_350-elena-vasquez",
@@ -1903,8 +1941,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_354-elena-vasquez",
@@ -1919,8 +1957,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_358-the-ferryman",
@@ -1935,8 +1973,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_364-marcus-chen",
@@ -1951,8 +1989,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_380-the-ferryman",
@@ -1967,8 +2005,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_380-elena-vasquez",
@@ -1983,8 +2021,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_386-marcus-chen",
@@ -1999,8 +2037,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_390-marcus-chen",
@@ -2015,8 +2053,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_390-elena-vasquez",
@@ -2031,8 +2069,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_393-marcus-chen",
@@ -2047,8 +2085,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_393-elena-vasquez",
@@ -2063,8 +2101,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_399-marcus-chen",
@@ -2079,8 +2117,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_404-marcus-chen",
@@ -2095,8 +2133,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_404-the-ferryman",
@@ -2111,8 +2149,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_404-elena-vasquez",
@@ -2127,8 +2165,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_408-marcus-chen",
@@ -2143,8 +2181,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_416-marcus-chen",
@@ -2159,8 +2197,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_420-elena-vasquez",
@@ -2175,8 +2213,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_423-marcus-chen",
@@ -2191,8 +2229,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_423-the-ferryman",
@@ -2207,8 +2245,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_430-marcus-chen",
@@ -2223,8 +2261,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_431-marcus-chen",
@@ -2239,8 +2277,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_431-the-ferryman",
@@ -2255,8 +2293,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_434-marcus-chen",
@@ -2271,8 +2309,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_434-elena-vasquez",
@@ -2287,8 +2325,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_438-marcus-chen",
@@ -2303,8 +2341,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_438-elena-vasquez",
@@ -2319,8 +2357,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_439-marcus-chen",
@@ -2335,8 +2373,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_442-marcus-chen",
@@ -2351,8 +2389,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_442-elena-vasquez",
@@ -2367,8 +2405,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_446-the-ferryman",
@@ -2383,8 +2421,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_449-marcus-chen",
@@ -2399,8 +2437,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_449-the-ferryman",
@@ -2415,8 +2453,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_449-elena-vasquez",
@@ -2431,8 +2469,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_453-the-ferryman",
@@ -2447,8 +2485,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_455-marcus-chen",
@@ -2463,8 +2501,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_458-marcus-chen",
@@ -2479,8 +2517,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_458-the-ferryman",
@@ -2495,8 +2533,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_462-marcus-chen",
@@ -2511,8 +2549,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_467-marcus-chen",
@@ -2527,8 +2565,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_472-elena-vasquez",
@@ -2543,8 +2581,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_475-marcus-chen",
@@ -2559,8 +2597,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_479-marcus-chen",
@@ -2575,8 +2613,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_479-elena-vasquez",
@@ -2591,8 +2629,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_485-marcus-chen",
@@ -2607,8 +2645,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_490-elena-vasquez",
@@ -2623,8 +2661,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_493-marcus-chen",
@@ -2639,8 +2677,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_493-the-ferryman",
@@ -2655,8 +2693,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_493-elena-vasquez",
@@ -2671,8 +2709,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_496-elena-vasquez",
@@ -2687,8 +2725,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_500-marcus-chen",
@@ -2703,8 +2741,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_504-the-ferryman",
@@ -2719,8 +2757,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_507-marcus-chen",
@@ -2735,8 +2773,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_513-marcus-chen",
@@ -2751,8 +2789,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_513-the-ferryman",
@@ -2767,8 +2805,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_513-elena-vasquez",
@@ -2783,8 +2821,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_516-elena-vasquez",
@@ -2799,8 +2837,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_520-marcus-chen",
@@ -2815,8 +2853,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_520-elena-vasquez",
@@ -2831,8 +2869,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_521-marcus-chen",
@@ -2847,8 +2885,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_521-the-ferryman",
@@ -2863,8 +2901,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_525-marcus-chen",
@@ -2879,8 +2917,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_529-elena-vasquez",
@@ -2895,8 +2933,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_532-elena-vasquez",
@@ -2911,8 +2949,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_535-elena-vasquez",
@@ -2927,8 +2965,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_540-marcus-chen",
@@ -2943,8 +2981,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_543-elena-vasquez",
@@ -2959,8 +2997,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_547-marcus-chen",
@@ -2975,8 +3013,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_550-marcus-chen",
@@ -2991,8 +3029,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_552-marcus-chen",
@@ -3007,8 +3045,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_552-elena-vasquez",
@@ -3023,8 +3061,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_556-the-ferryman",
@@ -3039,8 +3077,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_556-elena-vasquez",
@@ -3055,8 +3093,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_559-marcus-chen",
@@ -3071,8 +3109,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_562-marcus-chen",
@@ -3087,8 +3125,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_566-marcus-chen",
@@ -3103,8 +3141,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_566-the-ferryman",
@@ -3119,8 +3157,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_566-elena-vasquez",
@@ -3135,8 +3173,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_573-elena-vasquez",
@@ -3151,8 +3189,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_577-marcus-chen",
@@ -3167,8 +3205,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_577-the-ferryman",
@@ -3183,8 +3221,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_577-elena-vasquez",
@@ -3199,8 +3237,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_578-marcus-chen",
@@ -3215,8 +3253,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_580-marcus-chen",
@@ -3231,8 +3269,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_580-elena-vasquez",
@@ -3247,8 +3285,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_584-marcus-chen",
@@ -3263,8 +3301,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_584-elena-vasquez",
@@ -3279,8 +3317,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_588-marcus-chen",
@@ -3295,8 +3333,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_588-elena-vasquez",
@@ -3311,8 +3349,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_593-the-ferryman",
@@ -3327,8 +3365,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_596-marcus-chen",
@@ -3343,8 +3381,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_596-the-ferryman",
@@ -3359,8 +3397,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-element_596-elena-vasquez",
@@ -3375,8 +3413,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_1-marcus-chen",
@@ -3391,8 +3429,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_3-marcus-chen",
@@ -3407,8 +3445,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_8-the-ferryman",
@@ -3423,8 +3461,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_13-the-ferryman",
@@ -3439,8 +3477,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_16-marcus-chen",
@@ -3455,8 +3493,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_18-marcus-chen",
@@ -3471,8 +3509,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_18-the-ferryman",
@@ -3487,8 +3525,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_23-marcus-chen",
@@ -3503,8 +3541,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_23-the-ferryman",
@@ -3519,8 +3557,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_34-elena-vasquez",
@@ -3535,8 +3573,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_39-elena-vasquez",
@@ -3551,8 +3589,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_44-marcus-chen",
@@ -3567,8 +3605,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_47-elena-vasquez",
@@ -3583,8 +3621,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_51-the-ferryman",
@@ -3599,8 +3637,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_54-marcus-chen",
@@ -3615,8 +3653,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_60-marcus-chen",
@@ -3631,8 +3669,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_63-marcus-chen",
@@ -3647,8 +3685,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_67-the-ferryman",
@@ -3663,8 +3701,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_71-marcus-chen",
@@ -3679,8 +3717,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_71-the-ferryman",
@@ -3695,8 +3733,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_73-the-ferryman",
@@ -3711,8 +3749,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_78-the-ferryman",
@@ -3727,8 +3765,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_82-elena-vasquez",
@@ -3743,8 +3781,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_89-marcus-chen",
@@ -3759,8 +3797,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_89-elena-vasquez",
@@ -3775,8 +3813,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_93-marcus-chen",
@@ -3791,8 +3829,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_93-elena-vasquez",
@@ -3807,8 +3845,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_97-marcus-chen",
@@ -3823,8 +3861,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_103-marcus-chen",
@@ -3839,8 +3877,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_103-the-ferryman",
@@ -3855,8 +3893,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_109-marcus-chen",
@@ -3871,8 +3909,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_115-marcus-chen",
@@ -3887,8 +3925,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_115-elena-vasquez",
@@ -3903,8 +3941,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_118-elena-vasquez",
@@ -3919,8 +3957,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_121-marcus-chen",
@@ -3935,8 +3973,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_124-marcus-chen",
@@ -3951,8 +3989,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_127-the-ferryman",
@@ -3967,8 +4005,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_127-elena-vasquez",
@@ -3983,8 +4021,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_131-marcus-chen",
@@ -3999,8 +4037,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_135-marcus-chen",
@@ -4015,8 +4053,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_135-elena-vasquez",
@@ -4031,8 +4069,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_137-marcus-chen",
@@ -4047,8 +4085,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_143-marcus-chen",
@@ -4063,8 +4101,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_149-marcus-chen",
@@ -4079,8 +4117,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_149-the-ferryman",
@@ -4095,8 +4133,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_157-elena-vasquez",
@@ -4111,8 +4149,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_162-marcus-chen",
@@ -4127,8 +4165,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_162-elena-vasquez",
@@ -4143,8 +4181,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_163-marcus-chen",
@@ -4159,8 +4197,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_168-marcus-chen",
@@ -4175,8 +4213,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_168-the-ferryman",
@@ -4191,8 +4229,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_168-elena-vasquez",
@@ -4207,8 +4245,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_172-marcus-chen",
@@ -4223,8 +4261,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_176-marcus-chen",
@@ -4239,8 +4277,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_182-marcus-chen",
@@ -4255,8 +4293,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_182-elena-vasquez",
@@ -4271,8 +4309,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_183-marcus-chen",
@@ -4287,8 +4325,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_190-marcus-chen",
@@ -4303,8 +4341,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_194-marcus-chen",
@@ -4319,8 +4357,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_198-the-ferryman",
@@ -4335,8 +4373,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_201-marcus-chen",
@@ -4351,8 +4389,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_201-the-ferryman",
@@ -4367,8 +4405,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_201-elena-vasquez",
@@ -4383,8 +4421,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_203-elena-vasquez",
@@ -4399,8 +4437,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_206-marcus-chen",
@@ -4415,8 +4453,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_206-the-ferryman",
@@ -4431,8 +4469,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_206-elena-vasquez",
@@ -4447,8 +4485,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_209-the-ferryman",
@@ -4463,8 +4501,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_213-marcus-chen",
@@ -4479,8 +4517,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_213-the-ferryman",
@@ -4495,8 +4533,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_216-marcus-chen",
@@ -4511,8 +4549,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_219-marcus-chen",
@@ -4527,8 +4565,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_219-elena-vasquez",
@@ -4543,8 +4581,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_223-the-ferryman",
@@ -4559,8 +4597,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_225-marcus-chen",
@@ -4575,8 +4613,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_227-marcus-chen",
@@ -4591,8 +4629,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_234-marcus-chen",
@@ -4607,8 +4645,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_237-the-ferryman",
@@ -4623,8 +4661,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_240-the-ferryman",
@@ -4639,8 +4677,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_246-marcus-chen",
@@ -4655,8 +4693,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_252-marcus-chen",
@@ -4671,8 +4709,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_252-elena-vasquez",
@@ -4687,8 +4725,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_258-marcus-chen",
@@ -4703,8 +4741,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_258-the-ferryman",
@@ -4719,8 +4757,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_258-elena-vasquez",
@@ -4735,8 +4773,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_259-marcus-chen",
@@ -4751,8 +4789,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_262-marcus-chen",
@@ -4767,8 +4805,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_267-marcus-chen",
@@ -4783,8 +4821,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_272-the-ferryman",
@@ -4799,8 +4837,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_275-marcus-chen",
@@ -4815,8 +4853,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_280-marcus-chen",
@@ -4831,8 +4869,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_280-the-ferryman",
@@ -4847,8 +4885,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_283-marcus-chen",
@@ -4863,8 +4901,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_283-the-ferryman",
@@ -4879,8 +4917,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_283-elena-vasquez",
@@ -4895,8 +4933,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_290-marcus-chen",
@@ -4911,8 +4949,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_297-marcus-chen",
@@ -4927,8 +4965,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_300-marcus-chen",
@@ -4943,8 +4981,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_304-the-ferryman",
@@ -4959,8 +4997,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_307-marcus-chen",
@@ -4975,8 +5013,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_311-marcus-chen",
@@ -4991,8 +5029,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_315-marcus-chen",
@@ -5007,8 +5045,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_315-elena-vasquez",
@@ -5023,8 +5061,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_319-marcus-chen",
@@ -5039,8 +5077,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_326-marcus-chen",
@@ -5055,8 +5093,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_326-elena-vasquez",
@@ -5071,8 +5109,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_329-the-ferryman",
@@ -5087,8 +5125,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_332-marcus-chen",
@@ -5103,8 +5141,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_332-the-ferryman",
@@ -5119,8 +5157,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_335-marcus-chen",
@@ -5135,8 +5173,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_338-marcus-chen",
@@ -5151,8 +5189,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_338-the-ferryman",
@@ -5167,8 +5205,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_343-marcus-chen",
@@ -5183,8 +5221,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_343-the-ferryman",
@@ -5199,8 +5237,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_346-marcus-chen",
@@ -5215,8 +5253,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_346-the-ferryman",
@@ -5231,8 +5269,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_350-elena-vasquez",
@@ -5247,8 +5285,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_354-elena-vasquez",
@@ -5263,8 +5301,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_358-the-ferryman",
@@ -5279,8 +5317,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_364-marcus-chen",
@@ -5295,8 +5333,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_380-the-ferryman",
@@ -5311,8 +5349,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_380-elena-vasquez",
@@ -5327,8 +5365,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_386-marcus-chen",
@@ -5343,8 +5381,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_390-marcus-chen",
@@ -5359,8 +5397,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_390-elena-vasquez",
@@ -5375,8 +5413,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_393-marcus-chen",
@@ -5391,8 +5429,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_393-elena-vasquez",
@@ -5407,8 +5445,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_399-marcus-chen",
@@ -5423,8 +5461,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_404-marcus-chen",
@@ -5439,8 +5477,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_404-the-ferryman",
@@ -5455,8 +5493,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_404-elena-vasquez",
@@ -5471,8 +5509,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_408-marcus-chen",
@@ -5487,8 +5525,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_416-marcus-chen",
@@ -5503,8 +5541,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_420-elena-vasquez",
@@ -5519,8 +5557,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_423-marcus-chen",
@@ -5535,8 +5573,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_423-the-ferryman",
@@ -5551,8 +5589,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_430-marcus-chen",
@@ -5567,8 +5605,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_431-marcus-chen",
@@ -5583,8 +5621,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_431-the-ferryman",
@@ -5599,8 +5637,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_434-marcus-chen",
@@ -5615,8 +5653,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_434-elena-vasquez",
@@ -5631,8 +5669,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_438-marcus-chen",
@@ -5647,8 +5685,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_438-elena-vasquez",
@@ -5663,8 +5701,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_439-marcus-chen",
@@ -5679,8 +5717,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_442-marcus-chen",
@@ -5695,8 +5733,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_442-elena-vasquez",
@@ -5711,8 +5749,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_446-the-ferryman",
@@ -5727,8 +5765,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_449-marcus-chen",
@@ -5743,8 +5781,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_449-the-ferryman",
@@ -5759,8 +5797,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_449-elena-vasquez",
@@ -5775,8 +5813,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_453-the-ferryman",
@@ -5791,8 +5829,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_455-marcus-chen",
@@ -5807,8 +5845,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_458-marcus-chen",
@@ -5823,8 +5861,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_458-the-ferryman",
@@ -5839,8 +5877,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_462-marcus-chen",
@@ -5855,8 +5893,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_467-marcus-chen",
@@ -5871,8 +5909,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_472-elena-vasquez",
@@ -5887,8 +5925,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_475-marcus-chen",
@@ -5903,8 +5941,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_479-marcus-chen",
@@ -5919,8 +5957,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_479-elena-vasquez",
@@ -5935,8 +5973,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_485-marcus-chen",
@@ -5951,8 +5989,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_490-elena-vasquez",
@@ -5967,8 +6005,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_493-marcus-chen",
@@ -5983,8 +6021,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_493-the-ferryman",
@@ -5999,8 +6037,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_493-elena-vasquez",
@@ -6015,8 +6053,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_496-elena-vasquez",
@@ -6031,8 +6069,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_500-marcus-chen",
@@ -6047,8 +6085,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_504-the-ferryman",
@@ -6063,8 +6101,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_507-marcus-chen",
@@ -6079,8 +6117,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_513-marcus-chen",
@@ -6095,8 +6133,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_513-the-ferryman",
@@ -6111,8 +6149,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_513-elena-vasquez",
@@ -6127,8 +6165,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_516-elena-vasquez",
@@ -6143,8 +6181,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_520-marcus-chen",
@@ -6159,8 +6197,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_520-elena-vasquez",
@@ -6175,8 +6213,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_521-marcus-chen",
@@ -6191,8 +6229,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_521-the-ferryman",
@@ -6207,8 +6245,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_525-marcus-chen",
@@ -6223,8 +6261,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_529-elena-vasquez",
@@ -6239,8 +6277,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_532-elena-vasquez",
@@ -6255,8 +6293,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_535-elena-vasquez",
@@ -6271,8 +6309,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_540-marcus-chen",
@@ -6287,8 +6325,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_543-elena-vasquez",
@@ -6303,8 +6341,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_547-marcus-chen",
@@ -6319,8 +6357,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_550-marcus-chen",
@@ -6335,8 +6373,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_552-marcus-chen",
@@ -6351,8 +6389,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_552-elena-vasquez",
@@ -6367,8 +6405,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_556-the-ferryman",
@@ -6383,8 +6421,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_556-elena-vasquez",
@@ -6399,8 +6437,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_559-marcus-chen",
@@ -6415,8 +6453,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_562-marcus-chen",
@@ -6431,8 +6469,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_566-marcus-chen",
@@ -6447,8 +6485,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_566-the-ferryman",
@@ -6463,8 +6501,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_566-elena-vasquez",
@@ -6479,8 +6517,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_573-elena-vasquez",
@@ -6495,8 +6533,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_577-marcus-chen",
@@ -6511,8 +6549,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_577-the-ferryman",
@@ -6527,8 +6565,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_577-elena-vasquez",
@@ -6543,8 +6581,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_578-marcus-chen",
@@ -6559,8 +6597,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_580-marcus-chen",
@@ -6575,8 +6613,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_580-elena-vasquez",
@@ -6591,8 +6629,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_584-marcus-chen",
@@ -6607,8 +6645,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_584-elena-vasquez",
@@ -6623,8 +6661,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_588-marcus-chen",
@@ -6639,8 +6677,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_588-elena-vasquez",
@@ -6655,8 +6693,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_593-the-ferryman",
@@ -6671,8 +6709,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_596-marcus-chen",
@@ -6687,8 +6725,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_596-the-ferryman",
@@ -6703,8 +6741,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-char-in-shot-previs_element_596-elena-vasquez",
@@ -6719,8 +6757,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-char-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_1-city-bridge",
@@ -6735,8 +6773,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_11-city-bridge",
@@ -6751,8 +6789,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_19-city-bridge",
@@ -6767,8 +6805,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_32-city-bridge",
@@ -6783,8 +6821,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_41-city-bridge",
@@ -6799,8 +6837,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_61-city-bridge",
@@ -6815,8 +6853,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_71-city-bridge",
@@ -6831,8 +6869,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_95-city-bridge",
@@ -6847,8 +6885,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_192-city-bridge",
@@ -6863,8 +6901,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_225-city-bridge",
@@ -6879,8 +6917,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_235-city-bridge",
@@ -6895,8 +6933,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_242-city-bridge",
@@ -6911,8 +6949,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_317-memory-corridor",
@@ -6927,8 +6965,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_327-memory-corridor",
@@ -6943,8 +6981,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_344-memory-corridor",
@@ -6959,8 +6997,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_352-memory-corridor",
@@ -6975,8 +7013,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_373-soul-processing-center",
@@ -6991,8 +7029,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_383-soul-processing-center",
@@ -7007,8 +7045,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_414-judgment-chamber",
@@ -7023,8 +7061,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_431-judgment-chamber",
@@ -7039,8 +7077,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_449-judgment-chamber",
@@ -7055,8 +7093,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_455-memory-corridor",
@@ -7071,8 +7109,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_482-memory-corridor",
@@ -7087,8 +7125,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_502-judgment-chamber",
@@ -7103,8 +7141,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_513-judgment-chamber",
@@ -7119,8 +7157,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_537-judgment-chamber",
@@ -7135,8 +7173,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_550-city-bridge",
@@ -7151,8 +7189,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-element_568-city-bridge",
@@ -7167,8 +7205,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_1-city-bridge",
@@ -7183,8 +7221,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_11-city-bridge",
@@ -7199,8 +7237,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_19-city-bridge",
@@ -7215,8 +7253,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_41-city-bridge",
@@ -7231,8 +7269,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_61-city-bridge",
@@ -7247,8 +7285,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_71-city-bridge",
@@ -7263,8 +7301,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_95-city-bridge",
@@ -7279,8 +7317,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_192-city-bridge",
@@ -7295,8 +7333,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_225-city-bridge",
@@ -7311,8 +7349,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_235-city-bridge",
@@ -7327,8 +7365,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_242-city-bridge",
@@ -7343,8 +7381,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_317-memory-corridor",
@@ -7359,8 +7397,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_327-memory-corridor",
@@ -7375,8 +7413,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_344-memory-corridor",
@@ -7391,8 +7429,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_352-memory-corridor",
@@ -7407,8 +7445,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_373-soul-processing-center",
@@ -7423,8 +7461,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_383-soul-processing-center",
@@ -7439,8 +7477,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_414-judgment-chamber",
@@ -7455,8 +7493,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_431-judgment-chamber",
@@ -7471,8 +7509,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_449-judgment-chamber",
@@ -7487,8 +7525,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_455-memory-corridor",
@@ -7503,8 +7541,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_482-memory-corridor",
@@ -7519,8 +7557,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_502-judgment-chamber",
@@ -7535,8 +7573,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_513-judgment-chamber",
@@ -7551,8 +7589,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_537-judgment-chamber",
@@ -7567,8 +7605,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_550-city-bridge",
@@ -7583,8 +7621,8 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
     },
     {
       "id": "bind-rule-location-in-shot-previs_element_568-city-bridge",
@@ -7599,8 +7637,27 @@
       },
       "confidence": 0.9,
       "origin": "auto:rule-location-in-shot",
-      "createdAt": "2026-03-17T23:16:04.182Z",
-      "updatedAt": "2026-03-17T23:16:04.182Z"
+      "createdAt": "2026-03-18T17:01:21.860Z",
+      "updatedAt": "2026-03-18T17:01:21.860Z"
+    },
+    {
+      "id": "bind-mmwbn2g5",
+      "type": "voice",
+      "source": {
+        "entityType": "character",
+        "entityId": "marcus-chen"
+      },
+      "target": {
+        "entityType": "voice",
+        "entityId": "JBFqnCBsd6RMkjVDRZzb"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-18T17:34:51.173Z",
+      "updatedAt": "2026-03-18T17:34:51.173Z",
+      "metadata": {
+        "voiceName": "George - Warm, Captivating Storyteller (british, male, middle_aged)"
+      }
     }
   ]
 }

@@ -1,4 +1,4 @@
-/// <reference path="./woodbury.d.ts" />
+/// <reference path="../woodbury.d.ts" />
 
 /**
  * Final Assembly Node
@@ -14,16 +14,17 @@
  * @input elements: object[] - Script elements
  * @input productionMetadata: object - Production metadata
  * @input revisionMetadata: object - Revision metadata
- * @input assetCollection: object - Asset collection
+ * @input assetCollection: object - Asset collection (may include dialogue audio)
  * @input previsualizationPlan: object - Previsualization plan
  * @input validationResults: object - Rule validation results
+ * @input dialogueAudio: object[] - Generated dialogue audio assets
  * @output scriptPackage: object - Complete GeneratedScriptPackage
  */
 export async function execute(
-  inputs: { validatedInput: any; metadata: any; characters: any[]; locations: any[]; processedSections: any[]; elements: any[]; productionMetadata: any; revisionMetadata: any; assetCollection: any; previsualizationPlan: any; validationResults: any },
+  inputs: { validatedInput: any; metadata: any; characters: any[]; locations: any[]; processedSections: any[]; elements: any[]; productionMetadata: any; revisionMetadata: any; assetCollection: any; previsualizationPlan: any; validationResults: any; dialogueAudio?: any[] },
   context: ScriptContext,
 ): Promise<{ scriptPackage: object }> {
-  const { validatedInput, metadata, characters, locations, processedSections, elements, productionMetadata, revisionMetadata, assetCollection, previsualizationPlan, validationResults } = inputs;
+  const { validatedInput, metadata, characters, locations, processedSections, elements, productionMetadata, revisionMetadata, assetCollection, previsualizationPlan, validationResults, dialogueAudio } = inputs;
 
   try {
     // Parse all input components (handle both string and object inputs)
@@ -46,6 +47,11 @@ export async function execute(
     const assets = typeof assetCollection === 'string' ? JSON.parse(assetCollection) : assetCollection;
     const previs = typeof previsualizationPlan === 'string' ? JSON.parse(previsualizationPlan) : previsualizationPlan;
     const valResults = typeof validationResults === 'string' ? JSON.parse(validationResults) : validationResults;
+    
+    // Parse dialogue audio (optional input)
+    const dialogueAudioAssets = Array.isArray(dialogueAudio)
+      ? dialogueAudio.map(audio => typeof audio === 'string' ? JSON.parse(audio) : audio)
+      : [];
 
     context.log('Assembling complete GeneratedScriptPackage');
     context.log(`Script title: ${scriptMetadata.title}`);
@@ -54,11 +60,15 @@ export async function execute(
     context.log(`Sections: ${scriptSections.length}`);
     context.log(`Elements: ${scriptElements.length}`);
     context.log(`Assets: ${assets.assets?.length || 0}`);
+    context.log(`Dialogue audio: ${dialogueAudioAssets.length}`);
     context.log(`Previs shots: ${previs.shots?.length || 0}`);
 
     // Populate section children arrays with their corresponding elements
     // Elements are generated per-section in order, so we distribute them back
     const populatedSections = populateSectionChildren(scriptSections, scriptElements, context);
+
+    // Link dialogue audio to their corresponding dialogue elements
+    const elementsWithAudio = linkDialogueAudio(scriptElements, dialogueAudioAssets, context);
 
     // Assemble the complete ScriptDocument
     const scriptDocument = {
@@ -66,7 +76,7 @@ export async function execute(
       characters: characterDefinitions,
       locations: locationDefinitions,
       sections: populatedSections,
-      elements: scriptElements,
+      elements: elementsWithAudio,
       productionMetadata: prodMetadata,
       revisionMetadata: revMetadata
     };
@@ -76,6 +86,7 @@ export async function execute(
       input: input,
       script: scriptDocument,
       assets: assets,
+      dialogueAudio: dialogueAudioAssets,
       previsualizations: previs,
       validationResults: valResults,
       generatedAt: new Date().toISOString(),
@@ -107,6 +118,7 @@ export async function execute(
         revisionMetadata: { color: "white", revisionDate: new Date().toISOString() }
       },
       assets: { id: "error", name: "Error", description: "Failed to generate assets", assets: [] },
+      dialogueAudio: [],
       previsualizations: { collectionName: "Error", shots: [] },
       validationResults: { valid: false, errors: [error.message] },
       generatedAt: new Date().toISOString(),
@@ -116,6 +128,41 @@ export async function execute(
 
     return { scriptPackage: errorPackage };
   }
+}
+
+/**
+ * Links dialogue audio assets to their corresponding dialogue elements.
+ * Adds audioPath and audioAssetId properties to dialogue elements that have audio.
+ */
+function linkDialogueAudio(elements: any[], dialogueAudio: any[], context: ScriptContext): any[] {
+  if (!dialogueAudio || dialogueAudio.length === 0) {
+    return elements;
+  }
+
+  // Build a map of dialogue element ID to audio asset
+  const audioMap = new Map<string, any>();
+  for (const audio of dialogueAudio) {
+    const dialogueElementId = audio.metadata?.dialogueElementId;
+    if (dialogueElementId) {
+      audioMap.set(dialogueElementId, audio);
+    }
+  }
+
+  context.log(`Linking ${audioMap.size} audio assets to dialogue elements`);
+
+  // Add audio references to dialogue elements
+  return elements.map(element => {
+    if (element.type === 'dialogue' && audioMap.has(element.id)) {
+      const audio = audioMap.get(element.id);
+      return {
+        ...element,
+        audioPath: audio.filePath,
+        audioAssetId: audio.libraryId || audio.id,
+        audioDuration: audio.metadata?.duration
+      };
+    }
+    return element;
+  });
 }
 
 /**

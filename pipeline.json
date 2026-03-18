@@ -970,7 +970,7 @@
           {
             "name": "assetCollection",
             "type": "string",
-            "description": "Asset collection"
+            "description": "Asset collection (may include dialogue audio)"
           },
           {
             "name": "previsualizationPlan",
@@ -981,6 +981,11 @@
             "name": "validationResults",
             "type": "string",
             "description": "Rule validation results"
+          },
+          {
+            "name": "dialogueAudio",
+            "type": "string",
+            "description": "Generated dialogue audio assets"
           }
         ],
         "outputs": [
@@ -1006,6 +1011,53 @@
             "name": "scriptPackage",
             "type": "string",
             "description": "Complete GeneratedScriptPackage JSON"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-17",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 2559,
+        "y": 500
+      },
+      "label": "Dialogue Audio Generation",
+      "scriptFile": {
+        "file": "src/dialogue-audio-generation.ts",
+        "description": "Generate audio files for dialogue elements using ElevenLabs TTS and save to asset library",
+        "inputs": [
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Script elements (includes dialogue elements)"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata (for collection naming)"
+          },
+          {
+            "name": "assetCollection",
+            "type": "string",
+            "description": "Existing asset collection to add audio to"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "dialogueAudio",
+            "type": "string",
+            "description": "Array of dialogue audio assets with file paths"
+          },
+          {
+            "name": "updatedAssetCollection",
+            "type": "string",
+            "description": "Asset collection with audio assets added"
           }
         ]
       }
@@ -1412,13 +1464,6 @@
       "targetPort": "revisionMetadata"
     },
     {
-      "id": "edge-43",
-      "sourceNodeId": "node-12",
-      "sourcePort": "assetCollection",
-      "targetNodeId": "node-15",
-      "targetPort": "assetCollection"
-    },
-    {
       "id": "edge-44",
       "sourceNodeId": "node-13",
       "sourcePort": "previsualizationPlan",
@@ -1438,16 +1483,57 @@
       "sourcePort": "scriptPackage",
       "targetNodeId": "node-16",
       "targetPort": "scriptPackage"
+    },
+    {
+      "id": "edge-47",
+      "sourceNodeId": "node-10",
+      "sourcePort": "elements",
+      "targetNodeId": "node-17",
+      "targetPort": "elements"
+    },
+    {
+      "id": "edge-48",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-17",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-49",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-17",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-50",
+      "sourceNodeId": "node-12",
+      "sourcePort": "assetCollection",
+      "targetNodeId": "node-17",
+      "targetPort": "assetCollection"
+    },
+    {
+      "id": "edge-51",
+      "sourceNodeId": "node-17",
+      "sourcePort": "dialogueAudio",
+      "targetNodeId": "node-15",
+      "targetPort": "dialogueAudio"
+    },
+    {
+      "id": "edge-52",
+      "sourceNodeId": "node-17",
+      "sourcePort": "updatedAssetCollection",
+      "targetNodeId": "node-15",
+      "targetPort": "assetCollection"
     }
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-17T21:42:34.093Z",
+    "updatedAt": "2026-03-18T16:06:07.743Z",
     "viewport": {
       "panX": -1419.989999151176,
       "panY": 281.5953756047863,
       "zoom": 1.7200000000000004
     }
-  },
-  "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"
+  }
 }

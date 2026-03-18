@@ -23,10 +23,15 @@ comp-screenplay-generator/
 │   └── _test-helpers.ts # Mock context for tests
 ├── actions/            # UI action behavior configs
 │   └── generate-image.json  # Controls Regen/Generate Image button
-└── bindings/           # Custom data connections
-    ├── bindings.json   # Entity-to-entity relationships
-    ├── rules.json      # Auto-binding rule definitions
-    └── views.json      # Custom view configurations
+├── bindings/           # Custom data connections
+│   ├── bindings.json   # Entity-to-entity relationships
+│   ├── rules.json      # Auto-binding rule definitions
+│   └── views.json      # Custom view configurations
+└── views/              # Custom pipeline views (loaded dynamically)
+    └── {view-name}/
+        ├── manifest.json   # { name, label, icon, description }
+        ├── view.js         # REQUIRED: calls window.registerPipelineView({...})
+        └── view.css        # Optional: custom styles
 ```
 
 ## Rules
@@ -160,6 +165,52 @@ This pipeline has a `TODO.json` file for tracking tasks. When working on this pi
 2. Update item status as you work: "pending" → "in-progress" → "done"
 3. Add new items when you discover more work
 4. If something fails, set status to "failed" with an error message
+
+## Custom Views
+
+Custom views live in `views/{view-name}/` and are loaded dynamically into the app UI. **When asked to create or modify a view, always put the code here — never in Woodbury's source code.**
+
+### Creating a View
+
+1. Create `views/{view-name}/manifest.json`:
+```json
+{ "name": "my-view", "label": "My View", "description": "What it shows" }
+```
+
+2. Create `views/{view-name}/view.js` — must call `window.registerPipelineView()`:
+```javascript
+window.registerPipelineView({
+  name: 'my-view',
+  label: 'My View',
+  detect: function(state) { /* return true if data supports this view */ },
+  stitch: function(state) { /* walk state.nodeData, return unified data */ },
+  render: function(data, state) { /* return HTML string */ },
+  wireEvents: function(root, state) { /* attach click/input handlers */ },
+});
+```
+
+3. Optional: Create `views/{view-name}/view.css` for styles.
+
+### Available in view.js
+
+- `state.nodeData[nodeId].outputs` — all node output data
+- `compData.id` — current pipeline ID
+- `compEscHtml(str)` / `compEscAttr(str)` — escape helpers
+- `toast(msg, 'success'|'error')` — show notifications
+- `appBindings` — entity bindings document
+- `fetch('/api/app/' + compData.id + '/...')` — call any app API
+- `'/api/file?path=' + encodeURIComponent(path)` — serve local files as images/media
+
+### This Pipeline's Data Shape
+
+The stitched state contains these key fields across nodes:
+- `metadata` — { title, logline, genre, ... }
+- `sections[]` — act/scene hierarchy with children
+- `elements[]` — shots, dialogue, action lines with { id, type, content, character }
+- `characters[]` — { id, name, displayName, description }
+- `locations[]` — { id, name, description }
+- `previsualizations.shots[]` — { shotElementId, filePath, characterIds, locationId, description }
+- `assets[]` — { filePath, metadata: { characterId?, locationId? } }
 
 ## Testing
 

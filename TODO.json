@@ -115,6 +115,30 @@
       "completedAt": "2026-03-16T17:15:00Z"
     },
     {
+      "id": "voices-view",
+      "task": "Add Voices view to assign ElevenLabs voices to characters - new view toggle button, renderAppVoicesView function, voice loading/assignment/preview functionality, CSS styles",
+      "status": "done",
+      "category": "implement",
+      "addedAt": "2026-03-18T00:00:00Z",
+      "completedAt": "2026-03-18T00:30:00Z"
+    },
+    {
+      "id": "dialogue-audio-generation",
+      "task": "Add dialogue audio generation node - generates TTS audio for all dialogue elements using ElevenLabs, saves to asset library, links audio to dialogue elements in final assembly",
+      "status": "done",
+      "category": "implement",
+      "addedAt": "2026-03-18T15:54:47.919705Z",
+      "completedAt": "2026-03-18T15:54:47.919848Z"
+    },
+    {
+      "id": "render-all-dialogue-button",
+      "task": "Add Render All Dialogue button to screenplay view toolbar - generates TTS audio for all dialogue elements with assigned voices in batch",
+      "status": "done",
+      "category": "implement",
+      "addedAt": "2026-03-18T17:00:00Z",
+      "completedAt": "2026-03-18T17:05:00Z"
+    },
+    {
       "id": "e2e-test",
       "task": "Test full pipeline end-to-end",
       "status": "pending",

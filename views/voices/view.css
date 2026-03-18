@@ -1,0 +1,354 @@
+/* Voices View — pipeline-local styles */
+
+.voices-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.voices-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.voices-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 0.5rem 0;
+}
+
+.voices-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0 0 1rem 0;
+}
+
+.voices-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.voices-refresh-btn,
+.voices-preview-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 6px;
+  background: rgba(59,130,246,0.1);
+  color: #93c5fd;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.voices-refresh-btn:hover,
+.voices-preview-btn:hover {
+  background: rgba(59,130,246,0.2);
+  border-color: rgba(59,130,246,0.5);
+  color: #fff;
+}
+
+.voices-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(59,130,246,0.1);
+  border-radius: 8px;
+  color: #93c5fd;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.voices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.voices-card {
+  background: rgba(30,41,59,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s;
+}
+
+.voices-card:hover {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(30,41,59,0.8);
+}
+
+.voices-card-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.voices-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.voices-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  font-size: 2rem;
+  color: rgba(255,255,255,0.3);
+}
+
+.voices-card-info {
+  text-align: left;
+}
+
+.voices-card-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.voices-card-role {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.voices-card-desc {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.4;
+}
+
+.voices-card-traits {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+}
+
+.voices-card-assignment {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.voices-card-label {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+
+.voices-card-select-wrap {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.voices-card-select {
+  flex: 1;
+  min-width: 0;
+  max-width: 250px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  background: rgba(15,23,42,0.8);
+  color: #f1f5f9;
+  font-size: 0.8rem;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.voices-card-select:focus {
+  outline: none;
+  border-color: rgba(59,130,246,0.5);
+}
+
+.voices-card-select option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+.voices-card-select optgroup {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.voices-card-preview {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 6px;
+  background: rgba(16,185,129,0.1);
+  color: #6ee7b7;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.voices-card-preview:hover {
+  background: rgba(16,185,129,0.2);
+  border-color: rgba(16,185,129,0.5);
+}
+
+.voices-card-current {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(16,185,129,0.1);
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.voices-card-current-label {
+  color: rgba(255,255,255,0.5);
+}
+
+.voices-card-current-voice {
+  color: #6ee7b7;
+  flex: 1;
+}
+
+.voices-card-remove {
+  padding: 0.15rem 0.4rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(239,68,68,0.2);
+  color: #fca5a5;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.voices-card-remove:hover {
+  background: rgba(239,68,68,0.4);
+  color: #fff;
+}
+
+/* Sample dialogue section */
+.voices-sample-section {
+  background: rgba(30,41,59,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.voices-sample-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 0.5rem 0;
+}
+
+.voices-sample-hint {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0 0 1rem 0;
+}
+
+.voices-sample-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  background: rgba(15,23,42,0.8);
+  color: #f1f5f9;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 0.75rem;
+}
+
+.voices-sample-input:focus {
+  outline: none;
+  border-color: rgba(59,130,246,0.5);
+}
+
+.voices-sample-btn {
+  padding: 0.6rem 1.25rem;
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 6px;
+  background: rgba(139,92,246,0.15);
+  color: #c4b5fd;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.voices-sample-btn:hover {
+  background: rgba(139,92,246,0.25);
+  border-color: rgba(139,92,246,0.5);
+  color: #fff;
+}
+
+.voices-sample-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voices-sample-output {
+  margin-top: 1rem;
+}
+
+.voices-sample-loading {
+  padding: 1rem;
+  text-align: left;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+}
+
+.voices-sample-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.voices-sample-char {
+  font-weight: 600;
+  color: #f1f5f9;
+  min-width: 100px;
+}
+
+.voices-sample-item audio {
+  flex: 1;
+  height: 36px;
+}
+
+.voices-sample-error {
+  color: #fca5a5;
+}
+
+.voices-sample-empty {
+  padding: 1rem;
+  text-align: left;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.85rem;
+}
