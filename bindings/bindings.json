@@ -3,25 +3,6 @@
   "pipelineId": "comp-screenplay-generator",
   "bindings": [
     {
-      "id": "bind-mmw7mx0m",
-      "type": "voice",
-      "source": {
-        "entityType": "character",
-        "entityId": "the-ferryman"
-      },
-      "target": {
-        "entityType": "voice",
-        "entityId": "L5Oo1OjjHdbIvJDQFgmN"
-      },
-      "confidence": 1,
-      "origin": "manual",
-      "createdAt": "2026-03-18T15:42:45.670Z",
-      "updatedAt": "2026-03-18T15:42:45.670Z",
-      "metadata": {
-        "voiceName": "Bartholomeus Bösewicht - Grim and Gruesome (standard, male, middle_aged)"
-      }
-    },
-    {
       "id": "bind-mmw7n8ur",
       "type": "voice",
       "source": {
@@ -7657,6 +7638,25 @@
       "updatedAt": "2026-03-18T17:34:51.173Z",
       "metadata": {
         "voiceName": "George - Warm, Captivating Storyteller (british, male, middle_aged)"
+      }
+    },
+    {
+      "id": "bind-mmwowwo6",
+      "type": "voice",
+      "source": {
+        "entityType": "character",
+        "entityId": "the-ferryman"
+      },
+      "target": {
+        "entityType": "voice",
+        "entityId": "L5Oo1OjjHdbIvJDQFgmN"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-18T23:46:25.254Z",
+      "updatedAt": "2026-03-18T23:46:25.254Z",
+      "metadata": {
+        "voiceName": "Bartholomeus Bösewicht - Grim and Gruesome (standard, male, middle_aged)"
       }
     }
   ]

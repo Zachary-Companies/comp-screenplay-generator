@@ -58,13 +58,19 @@ export async function execute(
     const assets: any[] = [];
     const savedAssetIds: string[] = [];
 
+    // Use project folder for all generated assets (falls back to /tmp if not set)
+    const projFolder = (context as any).projectFolder || '/tmp';
+    const charAssetDir = `${projFolder}/assets/characters`;
+    const locAssetDir = `${projFolder}/assets/locations`;
+    const previsAssetDir = `${projFolder}/assets/previs`;
+
     // Step 2: Generate and save character headshots
     for (const character of characterDefs) {
       context.log(`Generating headshot for character: ${character.name}`);
 
       const headShotPrompt = `Professional headshot of ${character.name}, ${character.description}. ${character.ageRange} ${character.gender}. ${character.wardrobeNotes || 'Professional attire'}. High quality portrait photography, neutral background, good lighting.`;
 
-      const headShotPath = `/tmp/character_${character.id}_headshot.png`;
+      const headShotPath = `${charAssetDir}/character_${character.id}_headshot.png`;
       const headShotResult = await context.tools.nanobanana({
         action: "generate",
         prompt: headShotPrompt,
@@ -130,7 +136,7 @@ export async function execute(
 
       const landscapePrompt = `Beautiful landscape photograph of ${location.name}. ${location.description}. Cinematic composition, professional photography, high detail, atmospheric lighting.`;
 
-      const landscapePath = `/tmp/location_${location.id}_landscape.png`;
+      const landscapePath = `${locAssetDir}/location_${location.id}_landscape.png`;
       const landscapeResult = await context.tools.nanobanana({
         action: "generate",
         prompt: landscapePrompt,
@@ -202,7 +208,7 @@ export async function execute(
 
       const previsPrompt = `Cinematic storyboard frame: ${shotContent}. ${relatedLocation ? relatedLocation.description : 'Generic film set'}. Professional cinematography, film composition, detailed storyboard illustration style.`;
 
-      const previsPath = `/tmp/shot_${shotElement.id || assets.length + 1}_previs.png`;
+      const previsPath = `${previsAssetDir}/shot_${shotElement.id || assets.length + 1}_previs.png`;
       const previsResult = await context.tools.nanobanana({
         action: "generate",
         prompt: previsPrompt,
