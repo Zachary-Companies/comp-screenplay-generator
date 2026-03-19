@@ -1096,6 +1096,16 @@
   font-family: monospace;
 }
 
+/* ── Scrubber Row ─────────────────────────────── */
+.ed-tl-scrubber-row { display:flex; flex-shrink:0; height:28px; background:#0c0e14; border-bottom:1px solid #1e2130; }
+.ed-tl-scrubber-label { width:120px; min-width:120px; flex-shrink:0; border-right:1px solid #1a1d2a; }
+.ed-tl-scrubber-scroll { flex:1; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+.ed-tl-scrubber-scroll::-webkit-scrollbar { display:none; }
+.ed-tl-scrubber { position:relative; height:28px; cursor:col-resize; user-select:none; }
+.ed-tl-scrubber-tick { position:absolute; top:0; width:1px; height:100%; background:rgba(255,255,255,0.04); }
+.ed-tl-scrubber-tick.major { background:rgba(255,255,255,0.08); }
+.ed-tl-scrubber-tick span { position:absolute; top:4px; left:4px; font-size:9px; font-family:'SF Mono','Fira Code',monospace; color:#64748b; white-space:nowrap; }
+
 .ed-timeline-body {
   flex: 1;
   display: flex;
