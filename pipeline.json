@@ -1529,12 +1529,14 @@
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-18T16:06:07.743Z",
+    "updatedAt": "2026-03-19T01:04:42.790Z",
     "viewport": {
       "panX": -1419.989999151176,
       "panY": 281.5953756047863,
       "zoom": 1.7200000000000004
     },
-    "projectFolder": "/Users/andrewporter/Documents/The Last Jump"
-  }
+    "projectFolder": "/Users/andrewporter/Documents/The Last Jump",
+    "logo": "/Users/andrewporter/Documents/The Last Jump/assets/pipeline-logo.png"
+  },
+  "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"
 }
