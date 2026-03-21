@@ -1266,11 +1266,122 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       return true;
     }
 
+    // ── POST /generate-character-headshot ─────────────────────
+    // Generate a single character headshot version.
+    // Body: { characterId: string }
+    // Returns the new version info and updates the character's imageVersions + imagePath.
+    if (req.method === 'POST' && subPath === '/generate-character-headshot') {
+      try {
+        const body = await sdk.readBody(req);
+        const charId = body.characterId;
+        if (!charId) { sdk.sendJson(res, 400, { error: 'characterId required' }); return true; }
+
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        const pfolder = await sdk.getProjectFolder();
+        if (!project || !pfolder) { sdk.sendJson(res, 400, { error: 'No project data found' }); return true; }
+
+        const char = (project.characters || []).find((c: any) => c.id === charId);
+        if (!char) { sdk.sendJson(res, 404, { error: 'Character not found' }); return true; }
+
+        // Apply any client-sent overrides so the latest edits are used in the prompt.
+        // The client sends the current character fields; merge them into the server's copy
+        // so the prompt reflects what the user sees, not stale in-memory state.
+        if (body.character) {
+          const overrides = body.character;
+          for (const key of ['name', 'displayName', 'description', 'ageRange', 'gender', 'wardrobeNotes', 'traits', 'arc', 'voiceDescription'] as const) {
+            if (overrides[key] !== undefined) {
+              (char as any)[key] = overrides[key];
+            }
+          }
+          sdk.updateProject({ characters: project.characters });
+          await sdk.flushProject();
+        }
+
+        const charDir = sdk.join(pfolder, 'characters');
+        await sdk.mkdir(charDir);
+
+        // Build prompt
+        let prompt = `Professional headshot portrait of ${char.name || 'a person'}`;
+        if (char.description) prompt += `. ${char.description}`;
+        if (char.ageRange) prompt += ` Age: ${char.ageRange}.`;
+        if (char.gender) prompt += ` ${char.gender}.`;
+        if (char.wardrobeNotes) prompt += ` Wearing: ${char.wardrobeNotes}.`;
+        prompt += ' Cinematic lighting, studio portrait, shallow depth of field, 85mm lens. Photorealistic.';
+
+        // Determine version number
+        const versions: any[] = char.imageVersions || [];
+        const versionNum = versions.length + 1;
+        const safeName = (char.id || char.name || 'char').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const outputPath = sdk.join(charDir, `${safeName}_v${versionNum}.png`);
+
+        const result = await sdk.generateImage({
+          prompt,
+          model: 'flash',
+          aspectRatio: '3:4',
+          outputPath,
+        });
+
+        const imgPath = result.filePath || outputPath;
+        const newVersion = {
+          version: versionNum,
+          filePath: imgPath,
+          generatedAt: new Date().toISOString(),
+          prompt,
+        };
+
+        // Update character with new version
+        if (!char.imageVersions) char.imageVersions = [];
+        char.imageVersions.push(newVersion);
+        char.imagePath = imgPath;
+        char.activeImageVersion = versionNum;
+        sdk.updateProject({ characters: project.characters });
+        await sdk.flushProject();
+
+        sdk.sendJson(res, 200, { success: true, version: newVersion, totalVersions: char.imageVersions.length });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: 'Headshot generation failed: ' + (err.message || String(err)) });
+      }
+      return true;
+    }
+
+    // ── POST /set-character-image-version ──────────────────────
+    // Switch active image version for a character.
+    // Body: { characterId: string, version: number }
+    if (req.method === 'POST' && subPath === '/set-character-image-version') {
+      try {
+        const body = await sdk.readBody(req);
+        const { characterId, version } = body;
+        if (!characterId || !version) { sdk.sendJson(res, 400, { error: 'characterId and version required' }); return true; }
+
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+
+        const char = (project.characters || []).find((c: any) => c.id === characterId);
+        if (!char) { sdk.sendJson(res, 404, { error: 'Character not found' }); return true; }
+
+        const ver = (char.imageVersions || []).find((v: any) => v.version === version);
+        if (!ver) { sdk.sendJson(res, 404, { error: 'Version not found' }); return true; }
+
+        char.imagePath = ver.filePath;
+        char.activeImageVersion = version;
+        sdk.updateProject({ characters: project.characters });
+        await sdk.flushProject();
+
+        sdk.sendJson(res, 200, { success: true, imagePath: ver.filePath, activeVersion: version });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: String(err.message || err) });
+      }
+      return true;
+    }
+
     // ── POST /generate-assets ──────────────────────────────────
     if (req.method === 'POST' && subPath === '/generate-assets') {
       try {
         const body = await sdk.readBody(req);
         const entityType = body.type || 'all';
+        const useStream = body.stream === true;
 
         await sdk.ensureProject();
         const project = sdk.getProject();
@@ -1281,11 +1392,30 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           return true;
         }
 
-        const results: Array<{ name: string; type: string; path?: string; error?: string }> = [];
+        // Helper: write an ndjson event to the stream
+        function writeEvent(event: Record<string, any>) {
+          if (useStream) {
+            res.write(JSON.stringify(event) + '\n');
+          }
+        }
 
-        // Generate character headshots
+        // Set up streaming response if requested
+        if (useStream) {
+          res.writeHead(200, {
+            'Content-Type': 'application/x-ndjson',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+          });
+        }
+
+        const results: Array<{ name: string; type: string; path?: string; error?: string }> = [];
+        let completed = 0;
+
+        // Generate character headshots (with versioning)
         if (entityType === 'characters' || entityType === 'all') {
           const chars = project.characters || [];
+          const total = chars.length;
           const charDir = sdk.join(pfolder, 'characters');
           await sdk.mkdir(charDir);
 
@@ -1298,8 +1428,10 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
               if (char.wardrobeNotes) prompt += ` Wearing: ${char.wardrobeNotes}.`;
               prompt += ' Cinematic lighting, studio portrait, shallow depth of field, 85mm lens. Photorealistic.';
 
+              const versions: any[] = char.imageVersions || [];
+              const versionNum = versions.length + 1;
               const safeName = (char.id || char.name || 'char').replace(/[^a-zA-Z0-9_-]/g, '_');
-              const outputPath = sdk.join(charDir, `${safeName}.png`);
+              const outputPath = sdk.join(charDir, `${safeName}_v${versionNum}.png`);
 
               const result = await sdk.generateImage({
                 prompt,
@@ -1309,21 +1441,34 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
               });
 
               const imgPath = result.filePath || outputPath;
-              results.push({ name: char.name, type: 'character', path: imgPath });
+              const newVersion = {
+                version: versionNum,
+                filePath: imgPath,
+                generatedAt: new Date().toISOString(),
+                prompt,
+              };
+              if (!char.imageVersions) char.imageVersions = [];
+              char.imageVersions.push(newVersion);
               char.imagePath = imgPath;
+              char.activeImageVersion = versionNum;
+              results.push({ name: char.name, type: 'character', path: imgPath });
               sdk.updateProject({ characters: project.characters });
               await sdk.flushProject();
             } catch (err: any) {
               results.push({ name: char.name, type: 'character', error: err.message || String(err) });
             }
+            completed++;
+            writeEvent({ type: 'progress', completed, total, name: char.name, entityType: 'character' });
           }
         }
 
         // Generate location shots
         if (entityType === 'locations' || entityType === 'all') {
           const locs = project.locations || [];
+          const total = locs.length;
           const locDir = sdk.join(pfolder, 'locations');
           await sdk.mkdir(locDir);
+          let locCompleted = 0;
 
           for (const loc of locs) {
             try {
@@ -1351,6 +1496,9 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
             } catch (err: any) {
               results.push({ name: loc.name, type: 'location', error: err.message || String(err) });
             }
+            locCompleted++;
+            completed++;
+            writeEvent({ type: 'progress', completed: locCompleted, total, name: loc.name, entityType: 'location' });
           }
         }
 
@@ -1358,9 +1506,23 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
 
         const succeeded = results.filter(r => r.path).length;
         const failed = results.filter(r => r.error).length;
-        sdk.sendJson(res, 200, { success: true, generated: succeeded, failed, results });
+        const summary = { type: 'done', success: true, generated: succeeded, failed, results };
+
+        if (useStream) {
+          writeEvent(summary);
+          res.end();
+        } else {
+          sdk.sendJson(res, 200, summary);
+        }
       } catch (err: any) {
-        sdk.sendJson(res, 500, { error: 'Asset generation failed: ' + (err.message || String(err)) });
+        if (useStream) {
+          try {
+            res.write(JSON.stringify({ type: 'error', error: 'Asset generation failed: ' + (err.message || String(err)) }) + '\n');
+            res.end();
+          } catch { res.end(); }
+        } else {
+          sdk.sendJson(res, 500, { error: 'Asset generation failed: ' + (err.message || String(err)) });
+        }
       }
       return true;
     }

@@ -14,16 +14,27 @@ export function DataView() {
   const [activeTab, setActiveTab] = useState<Tab>('characters');
   const [filter, setFilter] = useState('');
   const [generating, setGenerating] = useState<string | null>(null);
+  const [genProgress, setGenProgress] = useState<{ completed: number; total: number; name: string }>({ completed: 0, total: 0, name: '' });
 
   const handleGenerate = useCallback(async (type: 'characters' | 'locations') => {
+    const items = type === 'characters' ? (projectData?.characters || []) : (projectData?.locations || []);
     setGenerating(type);
+    setGenProgress({ completed: 0, total: items.length, name: '' });
     try {
-      await (type === 'characters' ? pipeline.generateCharacterImages() : pipeline.generateLocationImages());
+      const genFn = type === 'characters' ? pipeline.generateCharacterImages : pipeline.generateLocationImages;
+      if (typeof genFn !== 'function') {
+        throw new Error(`pipeline.${type === 'characters' ? 'generateCharacterImages' : 'generateLocationImages'} is not available (type: ${typeof genFn})`);
+      }
+      await genFn((completed: number, name: string) => {
+        setGenProgress(prev => ({ ...prev, completed, name }));
+      });
     } catch (err: any) {
       console.error('Generation failed:', err);
+      alert('Generation failed: ' + (err?.message || String(err)));
     }
     setGenerating(null);
-  }, []);
+    setGenProgress({ completed: 0, total: 0, name: '' });
+  }, [pipeline, projectData]);
 
   if (loading) return <div className="flex items-center justify-center h-full text-slate-500">Loading...</div>;
   if (!projectData) return <div className="flex items-center justify-center h-full text-slate-500">No data loaded</div>;
@@ -83,7 +94,9 @@ export function DataView() {
                 disabled={generating === 'characters'}
                 className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
               >
-                {generating === 'characters' ? '⏳ Generating...' : '🖼 Generate All Headshots'}
+                {generating === 'characters'
+                  ? `⏳ Generating ${genProgress.completed}/${genProgress.total}${genProgress.name ? ` — ${genProgress.name}` : '...'}`
+                  : '🖼 Generate All Headshots'}
               </button>
               <span className="text-[10px] text-slate-600">
                 {characters.filter(c => c.description && c.description.length > 20).length}/{characters.length} enriched
@@ -109,7 +122,9 @@ export function DataView() {
                 disabled={generating === 'locations'}
                 className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
               >
-                {generating === 'locations' ? '⏳ Generating...' : '🌍 Generate All Location Shots'}
+                {generating === 'locations'
+                  ? `⏳ Generating ${genProgress.completed}/${genProgress.total}${genProgress.name ? ` — ${genProgress.name}` : '...'}`
+                  : '🌍 Generate All Location Shots'}
               </button>
               <span className="text-[10px] text-slate-600">
                 {locations.filter(l => l.description && l.description.length > 20).length}/{locations.length} enriched

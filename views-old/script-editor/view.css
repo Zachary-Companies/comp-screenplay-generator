@@ -1,0 +1,171 @@
+/* Fountain Script Editor View */
+
+.fountain-editor-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #0d1117;
+  overflow: hidden;
+}
+
+.fountain-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #161b22;
+  border-bottom: 1px solid #21262d;
+  flex-shrink: 0;
+}
+
+.fountain-editor-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fountain-editor-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fountain-editor-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.fountain-editor-badge {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.fountain-editor-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: #94a3b8;
+  transition: all 0.15s;
+}
+.fountain-editor-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #e2e8f0;
+}
+.fountain-editor-btn--save {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #c4b5fd;
+}
+.fountain-editor-btn--save:hover {
+  background: rgba(139, 92, 246, 0.28);
+  color: #ddd6fe;
+}
+.fountain-editor-btn--import {
+  background: rgba(20, 184, 166, 0.12);
+  border-color: rgba(20, 184, 166, 0.25);
+  color: #5eead4;
+}
+.fountain-editor-btn--import:hover {
+  background: rgba(20, 184, 166, 0.2);
+}
+
+.fountain-editor-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fountain-editor-container {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.fountain-editor-outline {
+  width: 220px;
+  min-width: 220px;
+  background: #0d1117;
+  border-left: 1px solid #21262d;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.fountain-editor-outline-header {
+  padding: 8px 12px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #7d8590;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #21262d;
+}
+
+.fountain-outline-item {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 2px solid transparent;
+}
+.fountain-outline-item:hover {
+  background: rgba(255,255,255,0.03);
+  color: #e2e8f0;
+}
+.fountain-outline-item--scene {
+  color: #a5b4fc;
+}
+.fountain-outline-item--character {
+  padding-left: 20px;
+  color: #5eead4;
+  font-size: 0.68rem;
+}
+
+.fountain-editor-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: #161b22;
+  border-top: 1px solid #21262d;
+  flex-shrink: 0;
+}
+
+.fountain-editor-status-left,
+.fountain-editor-status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.65rem;
+  color: #7d8590;
+}
+
+.fountain-editor-status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fountain-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #7d8590;
+  font-size: 0.85rem;
+  gap: 10px;
+}
