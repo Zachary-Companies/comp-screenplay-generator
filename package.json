@@ -5,7 +5,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "npm run build:views && npm run build:routes",
+    "build:views": "node views/build.mjs",
+    "build:routes": "node routes/build.mjs",
+    "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit --pretty",
     "test": "vitest run"
   },

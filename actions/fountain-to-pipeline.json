@@ -1,0 +1,45 @@
+{
+  "id": "fountain-to-pipeline",
+  "label": "Import Fountain to Pipeline",
+  "description": "Parses Fountain-format screenplay text and imports the structured data (metadata, characters, locations, sections, elements) into the pipeline's node state. Clears existing state first.",
+  "script": "src/fountain-to-pipeline.ts",
+  "inputs": {
+    "fountainText": {
+      "type": "string",
+      "required": false,
+      "description": "Fountain-format screenplay text to parse and import"
+    },
+    "fountainPath": {
+      "type": "string",
+      "required": false,
+      "description": "Path to a .fountain file to read and import"
+    },
+    "pipelineId": {
+      "type": "string",
+      "required": false,
+      "description": "Pipeline ID to save into. Defaults to the current pipeline."
+    }
+  },
+  "outputs": {
+    "metadata": {
+      "type": "object",
+      "description": "Parsed screenplay metadata (title, author, etc.)"
+    },
+    "characterCount": {
+      "type": "number",
+      "description": "Number of unique characters detected"
+    },
+    "locationCount": {
+      "type": "number",
+      "description": "Number of unique locations extracted"
+    },
+    "sceneCount": {
+      "type": "number",
+      "description": "Number of scenes detected"
+    },
+    "elementCount": {
+      "type": "number",
+      "description": "Total number of elements (dialogue, action, transitions)"
+    }
+  }
+}

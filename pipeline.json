@@ -1529,13 +1529,13 @@
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-19T01:04:42.790Z",
+    "updatedAt": "2026-03-19T17:28:16.401Z",
     "viewport": {
-      "panX": -1419.989999151176,
-      "panY": 281.5953756047863,
+      "panX": -1135.989999151176,
+      "panY": 407.5953756047863,
       "zoom": 1.7200000000000004
     },
-    "projectFolder": "/Users/andrewporter/Documents/The Last Jump",
+    "projectFolder": "/Users/andrewporter/Documents/10 Crimes in 2 Hours",
     "logo": "/Users/andrewporter/Documents/The Last Jump/assets/pipeline-logo.png"
   },
   "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"

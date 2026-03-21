@@ -1,0 +1,37 @@
+{
+  "id": "pdf-to-fountain",
+  "label": "Convert PDF to Fountain",
+  "description": "Converts a screenplay PDF to Fountain format using spatial text analysis. Detects scene headings, character names, dialogue, action, transitions, and parentheticals from their x-position on the page.",
+  "script": "src/pdf-to-fountain.ts",
+  "inputs": {
+    "pdfPath": {
+      "type": "string",
+      "required": false,
+      "description": "Absolute path to the PDF file to convert"
+    },
+    "pdfBase64": {
+      "type": "string",
+      "required": false,
+      "description": "Base64-encoded PDF content (alternative to pdfPath)"
+    },
+    "outputPath": {
+      "type": "string",
+      "required": false,
+      "description": "Path to save the .fountain file. Defaults to same name as PDF with .fountain extension"
+    }
+  },
+  "outputs": {
+    "fountain": {
+      "type": "string",
+      "description": "The converted Fountain-format screenplay text"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Path where the .fountain file was saved"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extracted metadata: title, author, pages, scenes, characters"
+    }
+  }
+}

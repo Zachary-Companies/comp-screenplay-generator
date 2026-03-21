@@ -1,0 +1,1 @@
+{ "name": "screenplay", "label": "Screenplay", "icon": "📜", "type": "react", "bundle": "view.bundle.js", "order": 30 }

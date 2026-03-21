@@ -1,0 +1,45 @@
+{
+  "id": "enrich-script-data",
+  "label": "Enrich Characters & Locations",
+  "description": "Reads the imported screenplay's dialogue and action lines, then uses AI to fill in missing character data (description, age, gender, traits, arc, voice, wardrobe, relationships) and location data (description, type, mood, atmosphere). Processes main and supporting characters first, up to a configurable limit.",
+  "script": "src/enrich-script-data.ts",
+  "inputs": {
+    "pipelineId": {
+      "type": "string",
+      "required": false,
+      "description": "Pipeline ID. Defaults to the current pipeline."
+    },
+    "enrichCharacters": {
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "description": "Whether to enrich character data"
+    },
+    "enrichLocations": {
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "description": "Whether to enrich location data"
+    },
+    "maxCharacters": {
+      "type": "number",
+      "required": false,
+      "default": 30,
+      "description": "Maximum number of characters to enrich (processes main roles first)"
+    }
+  },
+  "outputs": {
+    "enrichedCharacters": {
+      "type": "number",
+      "description": "Number of characters that were enriched"
+    },
+    "enrichedLocations": {
+      "type": "number",
+      "description": "Number of locations that were enriched"
+    },
+    "errors": {
+      "type": "array",
+      "description": "Any errors encountered during enrichment"
+    }
+  }
+}

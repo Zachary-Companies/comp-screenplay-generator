@@ -1,0 +1,1 @@
+{ "name": "data", "label": "Data", "icon": "📊", "type": "react", "bundle": "view.bundle.js", "order": 20 }
