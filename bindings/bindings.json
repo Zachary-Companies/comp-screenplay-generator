@@ -60,44 +60,6 @@
       }
     },
     {
-      "id": "voice-char-1-1774052586343",
-      "type": "voice",
-      "source": {
-        "entityType": "character",
-        "entityId": "char-1"
-      },
-      "target": {
-        "entityType": "voice",
-        "entityId": "IKne3meq5aSn9XLyUdCD"
-      },
-      "confidence": 1,
-      "origin": "manual",
-      "createdAt": "2026-03-21T00:23:06.342Z",
-      "updatedAt": "2026-03-21T00:23:06.342Z",
-      "metadata": {
-        "voiceName": "Charlie - Deep, Confident, Energetic"
-      }
-    },
-    {
-      "id": "voice-char-2-1774052601577",
-      "type": "voice",
-      "source": {
-        "entityType": "character",
-        "entityId": "char-2"
-      },
-      "target": {
-        "entityType": "voice",
-        "entityId": "Qbw4VpyUrHEG7NigKzty"
-      },
-      "confidence": 1,
-      "origin": "manual",
-      "createdAt": "2026-03-21T00:23:21.577Z",
-      "updatedAt": "2026-03-21T00:23:21.577Z",
-      "metadata": {
-        "voiceName": "Kristen – Cold Evil Queen Villain"
-      }
-    },
-    {
       "id": "voice-char-3-1774052672155",
       "type": "voice",
       "source": {
@@ -171,6 +133,44 @@
       "updatedAt": "2026-03-21T00:25:13.357Z",
       "metadata": {
         "voiceName": "Bradford - British Narrator, Storyteller"
+      }
+    },
+    {
+      "id": "voice-char-1-1774119646233",
+      "type": "voice",
+      "source": {
+        "entityType": "character",
+        "entityId": "char-1"
+      },
+      "target": {
+        "entityType": "voice",
+        "entityId": "JBFqnCBsd6RMkjVDRZzb"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-21T19:00:46.231Z",
+      "updatedAt": "2026-03-21T19:00:46.231Z",
+      "metadata": {
+        "voiceName": "George - Warm, Captivating Storyteller"
+      }
+    },
+    {
+      "id": "voice-char-2-1774119656785",
+      "type": "voice",
+      "source": {
+        "entityType": "character",
+        "entityId": "char-2"
+      },
+      "target": {
+        "entityType": "voice",
+        "entityId": "U1Vk2oyatMdYs096Ety7"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-21T19:00:56.785Z",
+      "updatedAt": "2026-03-21T19:00:56.785Z",
+      "metadata": {
+        "voiceName": "Michael"
       }
     }
   ]

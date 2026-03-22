@@ -23,7 +23,7 @@ const COLORS = {
 };
 
 export function CharacterEditor({ character, onClose }: { character: Character; onClose: () => void }) {
-  const { project: projectData, updateCharacter, saveProject } = usePipeline();
+  const { pipelineId, reload } = usePipeline();
   const [form, setForm] = useState<Character>({ ...character });
   const [saving, setSaving] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -40,13 +40,32 @@ export function CharacterEditor({ character, onClose }: { character: Character; 
   };
 
   const handleSave = useCallback(async () => {
-    if (!projectData) return;
     setSaving(true);
-    updateCharacter(form.id, form);
-    await saveProject();
+    try {
+      // Only send the editable fields that changed — not the whole project.
+      const { name, displayName, description, ageRange, gender, role,
+              traits, arc, voiceDescription, wardrobeNotes, aliases } = form;
+      const res = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/update-character`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterId: form.id,
+          updates: { name, displayName, description, ageRange, gender, role,
+                     traits, arc, voiceDescription, wardrobeNotes, aliases },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || 'Save failed');
+      }
+      await reload();
+    } catch (err: any) {
+      console.error('Save failed:', err);
+      alert('Save failed: ' + (err.message || String(err)));
+    }
     setSaving(false);
     animateOut(onClose);
-  }, [form, projectData, updateCharacter, saveProject, onClose, animateOut]);
+  }, [form, pipelineId, reload, onClose, animateOut]);
 
   const imgSrc = form.imagePath
     ? `/api/file?path=${encodeURIComponent(form.imagePath)}`

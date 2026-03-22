@@ -185,12 +185,12 @@ export function VoicesView() {
       });
 
     if (pipelineId) {
-      fetch(`/api/app/${encodeURIComponent(pipelineId)}/bindings`)
+      // Load project-scoped voice bindings
+      fetch(`/api/app/${encodeURIComponent(pipelineId)}/voice-bindings`)
         .then(r => r.json())
         .then(data => {
           setBindings(data.bindings || []);
-          // Also sync to window for editor
-          (window as any).appBindings = data;
+          (window as any).appBindings = { bindings: data.bindings || [] };
         })
         .catch(() => {});
     }
@@ -228,7 +228,8 @@ export function VoicesView() {
     // Sync to window for editor
     (window as any).appBindings = { bindings: newBindings };
 
-    await fetch(`/api/app/${encodeURIComponent(pipelineId)}/bindings`, {
+    // Save to project-scoped voice bindings
+    await fetch(`/api/app/${encodeURIComponent(pipelineId)}/voice-bindings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bindings: newBindings }),
@@ -253,6 +254,115 @@ export function VoicesView() {
     audio.play().catch(() => { setPlayingPreview(null); audioRef.current = null; });
   }, [playingPreview]);
 
+  // Auto-assign voices: client calls LLM, validates, then saves
+  const [autoAssigning, setAutoAssigning] = useState(false);
+  const handleAutoAssign = useCallback(async () => {
+    if (voices.length === 0 || characters.length === 0) return;
+    setAutoAssigning(true);
+
+    try {
+      // Find unassigned characters and unused voices
+      const assignedCharIds = new Set(bindings.filter(b => b.type === 'voice').map(b => b.source?.entityId));
+      const usedVoiceIds = new Set(bindings.filter(b => b.type === 'voice').map(b => b.target?.entityId));
+      const unassigned = characters.filter(c => !assignedCharIds.has(c.id));
+      const availableVoices = voices.filter(v => !usedVoiceIds.has(v.voice_id));
+
+      if (unassigned.length === 0) {
+        if (typeof (window as any).toast === 'function') (window as any).toast('All characters already assigned', 'info');
+        setAutoAssigning(false);
+        return;
+      }
+
+      // Build prompt with EXACT voice IDs
+      const charLines = unassigned.map(c => {
+        const parts = [(c as any).gender, (c as any).ageRange, (c as any).voiceDescription, (c.description || '').substring(0, 80)].filter(Boolean);
+        return `  "${c.id}": ${c.displayName || c.name} (${parts.join(', ')})`;
+      }).join('\n');
+
+      const voiceLines = availableVoices.slice(0, 50).map(v => {
+        const labels = v.labels || {};
+        const meta = [labels.gender, labels.age, labels.accent, labels.use_case].filter(Boolean).join(', ');
+        return `  "${v.voice_id}": ${v.name} (${meta || v.description || ''})`;
+      }).join('\n');
+
+      const prompt = `Match characters to voice actors. Return a JSON array.
+
+Characters needing voices:
+${charLines}
+
+Available voices (use the EXACT quoted voice_id string):
+${voiceLines}
+
+Rules: best personality/gender/age match, each voice used only ONCE.
+Return ONLY a JSON array: [{"characterId":"char-1","voiceId":"EXAVITQu4vr...","voiceName":"George"}]`;
+
+      const llmRes = await fetch('/api/chat/one-shot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+      const llmData = await llmRes.json();
+      const responseText = llmData.response || llmData.text || '';
+
+      let assignments: Array<{ characterId: string; voiceId: string; voiceName: string }> = [];
+      try {
+        const match = responseText.match(/\[[\s\S]*\]/);
+        if (match) assignments = JSON.parse(match[0]);
+      } catch (e) {
+        console.error('Failed to parse LLM response:', e, responseText);
+      }
+
+      // Validate against actual IDs
+      const validCharIds = new Set(unassigned.map(c => c.id));
+      const validVoiceIds = new Set(availableVoices.map(v => v.voice_id));
+      const newUsedVoices = new Set<string>();
+      let newBindings = [...bindings];
+      let applied = 0;
+
+      for (const a of assignments) {
+        if (!a.characterId || !a.voiceId) continue;
+        if (!validCharIds.has(a.characterId)) continue;
+        if (!validVoiceIds.has(a.voiceId)) continue;
+        if (newUsedVoices.has(a.voiceId)) continue;
+        newUsedVoices.add(a.voiceId);
+
+        const now = new Date().toISOString();
+        newBindings.push({
+          id: `voice-${a.characterId}-${Date.now()}-${applied}`,
+          type: 'voice',
+          source: { entityType: 'character', entityId: a.characterId },
+          target: { entityType: 'voice', entityId: a.voiceId },
+          confidence: 0.8,
+          origin: 'auto:llm',
+          createdAt: now,
+          updatedAt: now,
+          metadata: { voiceName: a.voiceName },
+        });
+        applied++;
+      }
+
+      setBindings(newBindings);
+      (window as any).appBindings = { bindings: newBindings };
+
+      // Save via voice-bindings route
+      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/voice-bindings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bindings: newBindings }),
+      });
+
+      if (typeof (window as any).toast === 'function') {
+        (window as any).toast(`Auto-assigned ${applied} voice${applied !== 1 ? 's' : ''} of ${unassigned.length} characters`, applied > 0 ? 'success' : 'warning');
+      }
+    } catch (err: any) {
+      console.error('Auto-assign failed:', err);
+      if (typeof (window as any).toast === 'function') {
+        (window as any).toast('Auto-assign failed: ' + (err.message || String(err)), 'error');
+      }
+    }
+    setAutoAssigning(false);
+  }, [voices, characters, bindings, pipelineId]);
+
   // Stats
   const assignedCount = characters.filter(c => getAssignedVoice(c.id)).length;
   const totalDialogLines = characters.reduce((sum, c) => {
@@ -267,40 +377,63 @@ export function VoicesView() {
   );
 
   return (
-    <div style={S.root}>
+    <div style={S.root} role="main" aria-label="Voice assignment manager">
       {/* Header */}
-      <div style={S.header}>
+      <div style={S.header} role="banner">
         <div style={S.title}>
-          <span style={{ fontSize: 18 }}>🎙</span>
+          <span style={{ fontSize: 18 }} aria-hidden="true">🎙</span>
           Voice Assignments
         </div>
         <div style={S.subtitle}>
           Assign ElevenLabs voices to characters for dialogue TTS generation
         </div>
-        <div style={S.statsBar}>
-          <div style={S.stat}>
-            <span>Characters</span>
-            <span style={S.statValue}>{characters.length}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
+          <div style={S.statsBar}>
+            <div style={S.stat}>
+              <span>Characters</span>
+              <span style={S.statValue}>{characters.length}</span>
+            </div>
+            <div style={S.stat}>
+              <span>Assigned</span>
+              <span style={{ ...S.statValue, color: assignedCount === characters.length && characters.length > 0 ? '#6ee7b7' : '#fbbf24' }}>
+                {assignedCount}/{characters.length}
+              </span>
+            </div>
+            <div style={S.stat}>
+              <span>Dialog lines</span>
+              <span style={S.statValue}>{totalDialogLines}</span>
+            </div>
+            <div style={S.stat}>
+              <span>Voices available</span>
+              <span style={S.statValue}>{loadingVoices ? '...' : voices.length}</span>
+            </div>
           </div>
-          <div style={S.stat}>
-            <span>Assigned</span>
-            <span style={{ ...S.statValue, color: assignedCount === characters.length && characters.length > 0 ? '#6ee7b7' : '#fbbf24' }}>
-              {assignedCount}/{characters.length}
-            </span>
-          </div>
-          <div style={S.stat}>
-            <span>Dialog lines</span>
-            <span style={S.statValue}>{totalDialogLines}</span>
-          </div>
-          <div style={S.stat}>
-            <span>Voices available</span>
-            <span style={S.statValue}>{loadingVoices ? '...' : voices.length}</span>
-          </div>
+          <div style={{ flex: 1 }} />
+          <button
+            onClick={handleAutoAssign}
+            disabled={autoAssigning || loadingVoices || voices.length === 0 || characters.length === 0}
+            aria-busy={autoAssigning}
+            aria-label={autoAssigning
+              ? 'AI is analyzing characters and selecting optimal voice matches'
+              : `Use AI to automatically assign the best voice to each of the ${characters.length - assignedCount} unassigned characters`}
+            style={{
+              padding: '6px 14px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+              background: autoAssigning ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.15)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              color: autoAssigning ? '#a78bfa' : '#c4b5fd',
+              cursor: autoAssigning ? 'wait' : 'pointer',
+              opacity: (loadingVoices || voices.length === 0) ? 0.4 : 1,
+              transition: 'background 0.15s, opacity 0.15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {autoAssigning ? 'Analyzing characters...' : 'Auto-Assign Voices'}
+          </button>
         </div>
       </div>
 
       {/* Character list */}
-      <div style={S.content}>
+      <div style={S.content} role="list" aria-label="Characters and their voice assignments">
         {characters.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#475569', fontSize: 12, padding: '40px 0' }}>
             <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.5 }}>🎭</div>
@@ -375,11 +508,16 @@ function CharacterVoiceCard({ character, assignedVoice, voices, loadingVoices, p
     : null;
 
   return (
-    <div style={{ ...S.card, ...(expanded ? S.cardActive : {}) }}>
+    <div style={{ ...S.card, ...(expanded ? S.cardActive : {}) }} role="listitem" aria-label={`${character.displayName || character.name}${assignedVoice ? `, voice: ${assignedVoice.name}` : ', no voice assigned'}, ${dialogCount} dialog lines`}>
       {/* Main row */}
       <div
         style={S.cardRow}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={`${character.displayName || character.name} — ${assignedVoice ? `assigned to ${assignedVoice.name}` : 'no voice'} — click to ${expanded ? 'close' : 'open'} voice picker`}
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded); } }}
       >
         {/* Avatar */}
         {imgSrc ? (
@@ -409,7 +547,8 @@ function CharacterVoiceCard({ character, assignedVoice, voices, loadingVoices, p
                 <button
                   style={S.playBtn}
                   onClick={e => { e.stopPropagation(); onPreview(assignedVoice.preview_url!, assignedVoice.voice_id); }}
-                  title="Preview voice"
+                  aria-label={playingPreview === assignedVoice.voice_id ? `Stop preview of ${assignedVoice.name}` : `Preview ${assignedVoice.name} voice`}
+                  aria-pressed={playingPreview === assignedVoice.voice_id}
                 >
                   {playingPreview === assignedVoice.voice_id ? '⏹' : '▶'}
                 </button>
@@ -422,6 +561,8 @@ function CharacterVoiceCard({ character, assignedVoice, voices, loadingVoices, p
           )}
           <button
             style={S.assignBtn}
+            aria-expanded={expanded}
+            aria-label={expanded ? `Close voice picker for ${character.name}` : assignedVoice ? `Change voice for ${character.name}` : `Assign voice to ${character.name}`}
             onClick={e => { e.stopPropagation(); setExpanded(!expanded); }}
           >
             {expanded ? '▲ Close' : assignedVoice ? '✎ Change' : '▼ Assign'}
@@ -448,10 +589,12 @@ function CharacterVoiceCard({ character, assignedVoice, voices, loadingVoices, p
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   onClick={e => e.stopPropagation()}
+                  aria-label={`Search voices for ${character.name}`}
                 />
                 {assignedVoice && (
                   <button
                     style={S.removeBtn}
+                    aria-label={`Remove ${assignedVoice.name} from ${character.name}`}
                     onClick={e => { e.stopPropagation(); onAssign(''); setExpanded(false); }}
                   >
                     ✕ Remove
@@ -461,10 +604,12 @@ function CharacterVoiceCard({ character, assignedVoice, voices, loadingVoices, p
 
               {/* Category tabs */}
               {categories.length > 2 && (
-                <div style={S.categoryTabs}>
+                <div style={S.categoryTabs} role="tablist" aria-label="Voice categories">
                   {categories.map(cat => (
                     <button
                       key={cat}
+                      role="tab"
+                      aria-selected={category === cat}
                       style={{ ...S.categoryTab, ...(category === cat ? S.categoryTabActive : {}) }}
                       onClick={e => { e.stopPropagation(); setCategory(cat); }}
                     >
@@ -475,7 +620,7 @@ function CharacterVoiceCard({ character, assignedVoice, voices, loadingVoices, p
               )}
 
               {/* Voice grid */}
-              <div style={S.voiceGrid}>
+              <div style={S.voiceGrid} role="listbox" aria-label={`${filteredVoices.length} voices available${category !== 'all' ? ` in ${category} category` : ''}`}>
                 {filteredVoices.map(v => (
                   <VoiceItem
                     key={v.voice_id}
@@ -517,12 +662,17 @@ function VoiceItem({ voice, isSelected, isPlaying, onSelect, onPreview }: {
 
   return (
     <div
+      role="option"
+      aria-selected={isSelected}
+      aria-label={`${voice.name}${meta ? ` — ${meta}` : ''}${isSelected ? ' (currently assigned)' : ''}`}
+      tabIndex={0}
       style={{
         ...S.voiceItem,
         ...(isSelected ? S.voiceItemSelected : {}),
         ...(hover && !isSelected ? S.voiceItemHover : {}),
       }}
       onClick={e => { e.stopPropagation(); onSelect(); }}
+      onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); onSelect(); } }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -535,7 +685,8 @@ function VoiceItem({ voice, isSelected, isPlaying, onSelect, onPreview }: {
             color: isPlaying ? '#a5b4fc' : '#94a3b8',
           }}
           onClick={e => { e.stopPropagation(); onPreview(); }}
-          title="Preview"
+          aria-label={isPlaying ? `Stop preview of ${voice.name}` : `Preview ${voice.name}`}
+          aria-pressed={isPlaying}
         >
           {isPlaying ? '⏹' : '▶'}
         </button>
@@ -555,7 +706,7 @@ function VoiceItem({ voice, isSelected, isPlaying, onSelect, onPreview }: {
 
       {/* Selected indicator */}
       {isSelected && (
-        <span style={{ fontSize: 11, color: '#6ee7b7', flexShrink: 0 }}>✓</span>
+        <span aria-hidden="true" style={{ fontSize: 11, color: '#6ee7b7', flexShrink: 0 }}>✓</span>
       )}
     </div>
   );

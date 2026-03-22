@@ -26,6 +26,7 @@ import {
   formatTimecode, parseTimecodeToSeconds,
   timeToPx, pxToTime, pxPerSec,
   charColor, imgSrc, genId, getClipAtTime, evaluateKeyframes,
+  primarySelectedClipId, isClipSelected,
   MEDIA_COLORS, TRACK_HEIGHT, SCENE_LANE_HEIGHT, PX_PER_SEC, KEYFRAMEABLE,
 } from './editorStore';
 
@@ -180,7 +181,7 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
     if (lastStateRef.current && lastStateRef.current !== state) {
       // Only push significant changes (not time updates during playback)
       if (lastStateRef.current.clips !== state.clips ||
-          lastStateRef.current.selectedClipId !== state.selectedClipId ||
+          lastStateRef.current.selectedClipIds !== state.selectedClipIds ||
           lastStateRef.current.userClips !== state.userClips) {
         undoStackRef.current.past.push(lastStateRef.current);
         if (undoStackRef.current.past.length > 50) undoStackRef.current.past.shift();
@@ -338,11 +339,18 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
         volume: c.volume, fadeIn: c.fadeIn, fadeOut: c.fadeOut,
         keyframes: c.keyframes || undefined,
       }));
+      // Save to project metadata (persists to project.json)
+      fetch(`/api/app/${encodeURIComponent(pipelineId)}/editor-clips`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clips: clipData }),
+      }).catch(err => console.warn('[editor] Failed to persist user clips:', err));
+      // Also save to legacy state endpoint for backward compat
       fetch(`/api/app/${encodeURIComponent(pipelineId)}/state/_editor`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ outputs: { _editorUserClips: clipData } }),
-      }).catch(err => console.warn('[editor] Failed to persist user clips:', err));
+      }).catch(() => {});
     }, 500);
   }, [pipelineId]);
 
@@ -366,7 +374,7 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
           // We can't dispatch to restore full state with current reducer,
           // but we can dispatch SET_DATA with the old state's data
           dispatch({ type: 'SET_DATA', clips: prev.clips, scenes: prev.scenes, characters: prev.characters, assets: prev.assets, tracks: prev.tracks, duration: prev.duration, previsMap: prev.previsMap, dialogAudioMap: prev.dialogAudioMap, dialogDurationMap: prev.dialogDurationMap || {}, userClips: prev.userClips });
-          dispatch({ type: 'SET_SELECTED_CLIP', clipId: prev.selectedClipId });
+          dispatch({ type: 'SET_SELECTION', clipIds: prev.selectedClipIds || [] });
         }
       }
       if ((e.metaKey || e.ctrlKey) && (e.key === 'z' && e.shiftKey || e.key === 'y')) {
@@ -376,21 +384,39 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
           const next = stack.future.pop()!;
           stack.past.push(stateRef.current);
           dispatch({ type: 'SET_DATA', clips: next.clips, scenes: next.scenes, characters: next.characters, assets: next.assets, tracks: next.tracks, duration: next.duration, previsMap: next.previsMap, dialogAudioMap: next.dialogAudioMap, dialogDurationMap: next.dialogDurationMap || {}, userClips: next.userClips });
-          dispatch({ type: 'SET_SELECTED_CLIP', clipId: next.selectedClipId });
+          dispatch({ type: 'SET_SELECTION', clipIds: next.selectedClipIds || [] });
         }
+      }
+      // Select All: Cmd/Ctrl+A
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a' && !isInput) {
+        e.preventDefault();
+        dispatch({ type: 'SELECT_ALL' });
+      }
+      // Copy: Cmd/Ctrl+C
+      if ((e.metaKey || e.ctrlKey) && e.key === 'c' && !isInput) {
+        e.preventDefault();
+        dispatch({ type: 'COPY_SELECTED' });
+      }
+      // Cut: Cmd/Ctrl+X
+      if ((e.metaKey || e.ctrlKey) && e.key === 'x' && !isInput) {
+        e.preventDefault();
+        dispatch({ type: 'CUT_SELECTED' });
+        persistUserClips();
+      }
+      // Paste: Cmd/Ctrl+V
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v' && !isInput) {
+        e.preventDefault();
+        dispatch({ type: 'PASTE', atTime: stateRef.current.currentTime });
+        persistUserClips();
       }
       if (e.key === ' ' && !isInput) {
         e.preventDefault();
         dispatch({ type: 'TOGGLE_PLAY' });
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (!isInput && stateRef.current.selectedClipId) {
-          const clip = stateRef.current.clips.find(c => c.id === stateRef.current.selectedClipId);
-          // Only delete user-added clips
-          if (clip && stateRef.current.userClips.find(uc => uc.id === clip.id)) {
-            dispatch({ type: 'DELETE_CLIP', clipId: clip.id });
-            persistUserClips();
-          }
+        if (!isInput && stateRef.current.selectedClipIds.length > 0) {
+          dispatch({ type: 'DELETE_SELECTED' });
+          persistUserClips();
         }
       }
       if (e.key === 'Home' && !isInput) {
@@ -527,30 +553,30 @@ const EditorTopBar = memo(function EditorTopBar({ onSave }: { onSave: () => void
 
       <div className="ed-topbar-center">
         <div className="ed-transport">
-          <button className={`ed-transport-btn${state.snapEnabled ? ' active' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_SNAP' })} title="Snap">
+          <button className={`ed-transport-btn${state.snapEnabled ? ' active' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_SNAP' })} title="Snap" aria-label="Snap to grid" aria-pressed={state.snapEnabled}>
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1v14"/><path d="M4 5h8M4 11h8"/></svg>
           </button>
           <div className="ed-transport-divider" />
-          <button className="ed-transport-btn" onClick={() => dispatch({ type: 'SET_TIME', time: 0 })} title="Skip to start">
+          <button className="ed-transport-btn" onClick={() => dispatch({ type: 'SET_TIME', time: 0 })} title="Skip to start" aria-label="Skip to start">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M3 3h2v10H3zM7 8l7-5v10z"/></svg>
           </button>
-          <button className={`ed-transport-btn ed-transport-play${state.playing ? ' playing' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_PLAY' })} title="Play/Pause (Space)">
+          <button className={`ed-transport-btn ed-transport-play${state.playing ? ' playing' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_PLAY' })} title="Play/Pause (Space)" aria-label={state.playing ? 'Pause' : 'Play'} aria-pressed={state.playing}>
             {state.playing ? (
               <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><rect x="3" y="2" width="4" height="12" rx="1"/><rect x="9" y="2" width="4" height="12" rx="1"/></svg>
             ) : (
               <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
             )}
           </button>
-          <button className="ed-transport-btn" onClick={() => dispatch({ type: 'SET_TIME', time: state.duration })} title="Skip to end">
+          <button className="ed-transport-btn" onClick={() => dispatch({ type: 'SET_TIME', time: state.duration })} title="Skip to end" aria-label="Skip to end">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M11 3h2v10h-2zM2 3l7 5-7 5z"/></svg>
           </button>
           <div className="ed-transport-divider" />
           <div className="ed-timecode">{formatTimecode(state.currentTime, state.fps)}</div>
           <div className="ed-transport-divider" />
-          <select className="ed-transport-select" value={state.resolution} onChange={e => dispatch({ type: 'SET_RESOLUTION', resolution: e.target.value })}>
+          <select className="ed-transport-select" value={state.resolution} onChange={e => dispatch({ type: 'SET_RESOLUTION', resolution: e.target.value })} aria-label="Resolution">
             {['1920x1080','3840x2160','1280x720','1080x1920'].map(r => <option key={r}>{r}</option>)}
           </select>
-          <select className="ed-transport-select" value={state.fps} onChange={e => dispatch({ type: 'SET_FPS', fps: parseInt(e.target.value) })}>
+          <select className="ed-transport-select" value={state.fps} onChange={e => dispatch({ type: 'SET_FPS', fps: parseInt(e.target.value) })} aria-label="Frame rate">
             {[24,25,30,60].map(f => <option key={f} value={f}>{f} fps</option>)}
           </select>
         </div>
@@ -603,9 +629,10 @@ const EditorSidebar = memo(function EditorSidebar() {
   const { state, dispatch } = useEditor();
   return (
     <div className={`ed-sidebar${state.sidebarCollapsed ? ' collapsed' : ''}`}>
-      <div className="ed-sidebar-tabs">
+      <div className="ed-sidebar-tabs" role="tablist" aria-label="Sidebar tabs">
         {SIDEBAR_TABS.map(tab => (
           <button key={tab} className={`ed-sidebar-tab${state.sidebarTab === tab ? ' active' : ''}`}
+            role="tab" aria-selected={state.sidebarTab === tab}
             onClick={() => dispatch({ type: 'SET_SIDEBAR_TAB', tab })}>
             {tab === 'render' ? '🎬 Render' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
@@ -1017,14 +1044,44 @@ function RenderTab() {
       <div className="ed-render-section">
         <div className="ed-render-section-head">▼ Frame Range</div>
         <div className="ed-render-section-body">
-          <div className="ed-render-row"><label>Start</label><span className="ed-render-value">{formatTimecode(rs.frameStart)}</span></div>
-          <div className="ed-render-row"><label>End</label><span className="ed-render-value">{formatTimecode(endTime)}</span></div>
-          <div className="ed-render-row"><label>Duration</label><span className="ed-render-value">{formatTimecode(endTime - rs.frameStart)}</span></div>
+          <div className="ed-render-row"><label>Start</label>
+            <input type="text" className="ed-render-input ed-render-tc" defaultValue={formatTimecode(rs.frameStart, rs.fps)}
+              aria-label="Render start timecode"
+              onBlur={e => {
+                const v = parseTimecodeToSeconds(e.target.value, rs.fps);
+                if (!isNaN(v) && v >= 0) dispatch({ type: 'SET_RENDER_SETTINGS', settings: { frameStart: v } });
+                else e.target.value = formatTimecode(rs.frameStart, rs.fps);
+              }}
+              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            />
+          </div>
+          <div className="ed-render-row"><label>End</label>
+            <input type="text" className="ed-render-input ed-render-tc" defaultValue={formatTimecode(endTime, rs.fps)}
+              aria-label="Render end timecode"
+              onBlur={e => {
+                const v = parseTimecodeToSeconds(e.target.value, rs.fps);
+                if (!isNaN(v) && v > rs.frameStart) dispatch({ type: 'SET_RENDER_SETTINGS', settings: { frameEnd: v } });
+                else e.target.value = formatTimecode(endTime, rs.fps);
+              }}
+              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            />
+          </div>
+          <div className="ed-render-row"><label>Duration</label>
+            <input type="text" className="ed-render-input ed-render-tc" defaultValue={formatTimecode(endTime - rs.frameStart, rs.fps)}
+              aria-label="Render duration timecode"
+              onBlur={e => {
+                const v = parseTimecodeToSeconds(e.target.value, rs.fps);
+                if (!isNaN(v) && v > 0) dispatch({ type: 'SET_RENDER_SETTINGS', settings: { frameEnd: rs.frameStart + v } });
+                else e.target.value = formatTimecode(endTime - rs.frameStart, rs.fps);
+              }}
+              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            />
+          </div>
           <div className="ed-render-row"><label>Frames</label><span className="ed-render-value">{Math.round((endTime - rs.frameStart) * rs.fps)}</span></div>
           <div className="ed-render-btn-row">
             <button className="ed-render-small-btn" onClick={() => dispatch({ type: 'SET_RENDER_SETTINGS', settings: { frameStart: 0, frameEnd: null } })}>Full Sequence</button>
             <button className="ed-render-small-btn" onClick={() => {
-              const sel = state.clips.find(c => c.id === state.selectedClipId);
+              const sel = state.clips.find(c => c.id === primarySelectedClipId(state));
               if (sel) dispatch({ type: 'SET_RENDER_SETTINGS', settings: { frameStart: sel.startTime, frameEnd: sel.startTime + sel.duration } });
               else showToast('Select a clip first', 'info');
             }}>Use Selection</button>
@@ -1052,7 +1109,7 @@ function RenderTab() {
           {state.renderStatus === 'rendering' ? (
             <>
               <div className="ed-render-progress">
-                <div className="ed-render-progress-bar"><div className="ed-render-progress-fill" style={{ width: `${state.renderProgress}%` }} /></div>
+                <div className="ed-render-progress-bar" role="progressbar" aria-valuenow={state.renderProgress} aria-valuemin={0} aria-valuemax={100} aria-label="Render progress"><div className="ed-render-progress-fill" style={{ width: `${state.renderProgress}%` }} /></div>
                 <div className="ed-render-progress-text">{state.renderProgress}% — Rendering...</div>
               </div>
               <button className="ed-render-main-btn ed-render-main-btn--secondary" onClick={() => {
@@ -1085,7 +1142,7 @@ const ProgramMonitor = memo(function ProgramMonitor() {
   const dialogClip = useMemo(() => getClipAtTime(state.clips, state.currentTime, 'dialog'), [state.clips, state.currentTime]);
 
   // Fall back to selected clip if nothing at playhead
-  const selectedClip = state.selectedClipId ? state.clips.find(c => c.id === state.selectedClipId) : null;
+  const selectedClip = primarySelectedClipId(state) ? state.clips.find(c => c.id === primarySelectedClipId(state)) : null;
   const showVisual = visualClip || (selectedClip?.type === 'image' ? selectedClip : null);
   const showDialog = dialogClip || (selectedClip?.type === 'dialog' ? selectedClip : null);
 
@@ -1144,7 +1201,8 @@ const ProgramMonitor = memo(function ProgramMonitor() {
         <span className="ed-preview-label">Program Monitor</span>
         <div className="ed-preview-toolbar-right">
           <select className="ed-preview-zoom-select" value={String(state.previewZoom)}
-            onChange={e => dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: e.target.value === 'fit' ? 'fit' : Number(e.target.value) })}>
+            onChange={e => dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: e.target.value === 'fit' ? 'fit' : Number(e.target.value) })}
+            aria-label="Preview zoom">
             <option value="fit">Fit</option><option value="50">50%</option><option value="100">100%</option><option value="200">200%</option>
           </select>
         </div>
@@ -1167,7 +1225,7 @@ const ProgramMonitor = memo(function ProgramMonitor() {
         </div>
       </div>
       <div className="ed-preview-controls">
-        <button className="ed-preview-ctrl-btn" onClick={() => dispatch({ type: 'TOGGLE_PLAY' })} title="Play/Pause">{state.playing ? '⏸' : '▶'}</button>
+        <button className="ed-preview-ctrl-btn" onClick={() => dispatch({ type: 'TOGGLE_PLAY' })} title="Play/Pause" aria-label={state.playing ? 'Pause' : 'Play'}>{state.playing ? '⏸' : '▶'}</button>
         <span className="ed-preview-tc">{formatTimecode(state.currentTime)} / {formatTimecode(state.duration)}</span>
         <div className="ed-preview-scrubber" ref={scrubberRef} onMouseDown={handleScrubStart}>
           <div className="ed-preview-scrubber-fill" style={{ width: `${pct}%` }} />
@@ -1177,11 +1235,11 @@ const ProgramMonitor = memo(function ProgramMonitor() {
           const cuts = state.clips.flatMap(c => [c.startTime, c.startTime + c.duration]).sort((a, b) => a - b);
           let prev = 0; for (const t of cuts) { if (t < state.currentTime - 0.05) prev = t; }
           dispatch({ type: 'SET_TIME', time: prev });
-        }} title="Previous cut (↑)">⏮</button>
+        }} title="Previous cut (↑)" aria-label="Previous cut">⏮</button>
         <button className="ed-preview-ctrl-btn" onClick={() => {
           const cuts = state.clips.flatMap(c => [c.startTime, c.startTime + c.duration]).sort((a, b) => a - b);
           for (const t of cuts) { if (t > state.currentTime + 0.05) { dispatch({ type: 'SET_TIME', time: t }); return; } }
-        }} title="Next cut (↓)">⏭</button>
+        }} title="Next cut (↓)" aria-label="Next cut">⏭</button>
       </div>
     </div>
   );
@@ -1191,11 +1249,12 @@ const ProgramMonitor = memo(function ProgramMonitor() {
 
 const ClipInspector = memo(function ClipInspector() {
   const { state, dispatch, pipelineId, audioEngine, persistUserClips, showToast } = useEditor();
-  const clip = state.clips.find(c => c.id === state.selectedClipId);
+  const selectedCount = state.selectedClipIds.length;
+  const clip = selectedCount === 1 ? state.clips.find(c => c.id === state.selectedClipIds[0]) : null;
 
-  if (!clip) {
+  if (selectedCount === 0) {
     return (
-      <div className="ed-inspector">
+      <div className="ed-inspector" role="region" aria-label="Clip inspector">
         <div className="ed-inspector-empty">
           <div className="ed-inspector-empty-icon">🔍</div>
           <div>Select a clip to inspect its properties</div>
@@ -1203,6 +1262,43 @@ const ClipInspector = memo(function ClipInspector() {
       </div>
     );
   }
+
+  // Multi-select summary
+  if (selectedCount > 1) {
+    const selectedClips = state.clips.filter(c => state.selectedClipIds.includes(c.id));
+    const types = [...new Set(selectedClips.map(c => c.type))];
+    const tracks = [...new Set(selectedClips.map(c => c.trackId))];
+    const totalDuration = selectedClips.reduce((sum, c) => sum + c.duration, 0);
+    const deletableCount = selectedClips.filter(c => state.userClips.some(uc => uc.id === c.id)).length;
+
+    return (
+      <div className="ed-inspector" role="region" aria-label="Multi-clip inspector">
+        <div className="ed-inspector-header">
+          <div className="ed-inspector-badge" style={{ background: '#8b5cf6', color: '#fff' }}>MULTI</div>
+          <div className="ed-inspector-name">{selectedCount} clips selected</div>
+        </div>
+        <div className="ed-inspector-section">
+          <div className="ed-inspector-section-head">SUMMARY</div>
+          <div className="ed-inspector-section-body">
+            <div className="ed-inspector-row"><span className="ed-inspector-label">Types</span><span className="ed-inspector-value">{types.join(', ')}</span></div>
+            <div className="ed-inspector-row"><span className="ed-inspector-label">Tracks</span><span className="ed-inspector-value">{tracks.length}</span></div>
+            <div className="ed-inspector-row"><span className="ed-inspector-label">Total Duration</span><span className="ed-inspector-value">{formatTimecode(totalDuration)}</span></div>
+          </div>
+        </div>
+        <div className="ed-inspector-section">
+          <div className="ed-inspector-section-body">
+            {deletableCount > 0 && (
+              <button className="ed-inspector-btn ed-inspector-btn--danger" onClick={() => { dispatch({ type: 'DELETE_SELECTED' }); persistUserClips(); }}>
+                Delete {deletableCount} clip{deletableCount > 1 ? 's' : ''}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!clip) return null;
 
   const colors = MEDIA_COLORS[clip.type] || MEDIA_COLORS.image;
   const hasDialogAudio = !!(clip.elementId && state.dialogAudioMap[clip.elementId]);
@@ -1264,7 +1360,7 @@ const ClipInspector = memo(function ClipInspector() {
   }, [clip, state.dialogAudioMap, audioEngine]);
 
   return (
-    <div className="ed-inspector">
+    <div className="ed-inspector" role="region" aria-label={`Inspector: ${clip.name}`}>
       <div className="ed-inspector-header">
         <span className="ed-inspector-type-badge" style={{ background: colors.bg, borderColor: colors.border }}>{clip.type}</span>
         <div className="ed-inspector-name">{clip.name.slice(0, 40)}</div>
@@ -1505,7 +1601,10 @@ function SaveModal({ onClose }: { onClose: () => void }) {
       .then(resp => {
         const comp = resp?.composition || resp;
         const folder = comp?.metadata?.projectFolder;
-        if (folder) { setSavePath(folder); setSaveName(folder.split('/').pop() || 'My Project'); }
+        if (folder) {
+          setSavePath(folder);
+          setSaveName(folder.split('/').pop() || 'My Project');
+        }
       })
       .catch(() => {});
   }, [pipelineId]);
@@ -1532,7 +1631,7 @@ function SaveModal({ onClose }: { onClose: () => void }) {
 
     fetch(`/api/app/${encodeURIComponent(pipelineId)}/saves`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: saveName, description: saveDesc, path: savePath }),
+      body: JSON.stringify({ name: saveName, description: saveDesc }),
     })
     .then(r => r.json())
     .then(data => {
@@ -1549,7 +1648,7 @@ function SaveModal({ onClose }: { onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, width: 460, maxWidth: '90vw', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+      <div role="dialog" aria-modal="true" aria-label="Save Project" style={{ background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, width: 460, maxWidth: '90vw', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <h3 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>Save Project</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
@@ -1693,7 +1792,7 @@ const TimelinePanel = memo(function TimelinePanel() {
       if (!sourcePath) sourcePath = (file as any).path || null;
 
       if (sourcePath && isAudio) {
-        // Import via server
+        // Import via server — copy file to project, then persist with new path
         ((clip: Clip, sp: string) => {
           fetch(`/api/app/${encodeURIComponent(pipelineId)}/import-audio`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1702,19 +1801,22 @@ const TimelinePanel = memo(function TimelinePanel() {
           .then(r => r.json())
           .then(data => {
             if (data.success && data.filePath) {
-              dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates: { filePath: data.filePath } });
-              if (data.duration && data.duration > 0) {
-                dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates: { duration: data.duration } });
-              }
-              persistUserClips();
+              const updates: Partial<Clip> = { filePath: data.filePath };
+              if (data.duration && data.duration > 0) updates.duration = data.duration;
+              dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates });
+              // Persist AFTER the imported path is set — ensures the project path is saved, not the source
+              setTimeout(() => persistUserClips(), 100);
               showToast(`Imported ${data.fileName || file.name}`, 'success');
             }
           })
           .catch(() => {
             dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates: { filePath: sp } });
+            setTimeout(() => persistUserClips(), 100);
           });
         })(newClip, sourcePath);
-      } else if (sourcePath) {
+      } else if (sourcePath && !isAudio) {
+        newClip.filePath = sourcePath;
+      } else if (sourcePath && isAudio) {
         newClip.filePath = sourcePath;
       } else {
         // Fallback: use object URL for preview
@@ -1726,7 +1828,10 @@ const TimelinePanel = memo(function TimelinePanel() {
     }
     if (addedCount > 0) {
       showToast(`Added ${addedCount} clip${addedCount > 1 ? 's' : ''} to timeline`, 'success');
-      persistUserClips();
+      // Don't persist here for audio — the import callback will persist after copying to project
+      // For non-audio clips, persist immediately
+      const hasAudioImport = Array.from(files).some(f => /\.(mp3|wav|ogg|aac|flac|m4a|wma|opus)$/i.test(f.name));
+      if (!hasAudioImport) persistUserClips();
     }
   }, [state.timelineZoom, pipelineId, dispatch, persistUserClips, showToast]);
 
@@ -1781,7 +1886,8 @@ const TimelinePanel = memo(function TimelinePanel() {
         </div>
 
         <div className="ed-timeline-scroll" ref={scrollRef}>
-          <div className="ed-timeline-scroll-inner" style={{ width: totalWidth }}>
+          <div className="ed-timeline-scroll-inner" style={{ width: totalWidth }}
+            onClick={(e) => { if (e.target === e.currentTarget) dispatch({ type: 'SET_SELECTION', clipIds: [] }); }}>
             <div className="ed-tl-scene-lane" style={{ height: SCENE_LANE_HEIGHT, width: totalWidth }}>
               {state.scenes.map(scene => (
                 <div key={scene.id} className="ed-tl-scene-block"
@@ -1807,7 +1913,7 @@ const TrackLane = memo(function TrackLane({ track, totalWidth }: { track: Track;
   const colors = MEDIA_COLORS[track.type] || MEDIA_COLORS.image;
   const trackClips = useMemo(() => state.clips.filter(c => c.trackId === track.id), [state.clips, track.id]);
   return (
-    <div className="ed-tl-track" style={{ height: TRACK_HEIGHT, width: totalWidth }}>
+    <div className="ed-tl-track" style={{ height: TRACK_HEIGHT, width: totalWidth }} role="row" aria-label={track.name}>
       {trackClips.map(clip => <TimelineClip key={clip.id} clip={clip} defaultColors={colors} />)}
     </div>
   );
@@ -1822,7 +1928,7 @@ const TimelineClip = memo(function TimelineClip({ clip, defaultColors }: { clip:
   const cx = timeToPx(clip.startTime, state.timelineZoom);
   const cw = timeToPx(clip.duration, state.timelineZoom);
   const clipColors = clip.color ? { bg: clip.color + '30', border: clip.color, accent: clip.color } : defaultColors;
-  const isSelected = clip.id === state.selectedClipId;
+  const isSelected = isClipSelected(state, clip.id);
   const isActive = state.currentTime >= clip.startTime && state.currentTime < clip.startTime + clip.duration;
   const isAudio = clip.type === 'dialog' || clip.type === 'music' || clip.type === 'sfx' || clip.type === 'ambience';
 
@@ -1838,47 +1944,79 @@ const TimelineClip = memo(function TimelineClip({ clip, defaultColors }: { clip:
     return diamonds;
   }, [clip.keyframes, state.timelineZoom]);
 
-  const handleClick = useCallback((e: RMouseEvent) => { e.stopPropagation(); dispatch({ type: 'SET_SELECTED_CLIP', clipId: clip.id }); }, [clip.id, dispatch]);
+  const handleClick = useCallback((e: RMouseEvent) => {
+    e.stopPropagation();
+    if (e.metaKey || e.ctrlKey) {
+      dispatch({ type: 'TOGGLE_SELECTION', clipId: clip.id });
+    } else if (e.shiftKey) {
+      dispatch({ type: 'ADD_TO_SELECTION', clipId: clip.id });
+    } else {
+      dispatch({ type: 'SET_SELECTION', clipIds: [clip.id] });
+    }
+  }, [clip.id, dispatch]);
 
   const handleMouseDown = useCallback((e: RMouseEvent) => {
     if ((e.target as HTMLElement).closest('.ed-tl-clip-handle')) return;
     if (e.button !== 0) return;
-    const origStart = clip.startTime;
+
+    // Determine which clips to move
+    const alreadySelected = isClipSelected(state, clip.id);
+    if (!alreadySelected && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+      dispatch({ type: 'SET_SELECTION', clipIds: [clip.id] });
+    }
+    const movingIds = alreadySelected ? state.selectedClipIds : [clip.id];
+    const origStarts: Record<string, number> = {};
+    for (const id of movingIds) {
+      const c = state.clips.find(cl => cl.id === id);
+      if (c) origStarts[id] = c.startTime;
+    }
+
     const startX = e.clientX;
     let moved = false;
-    const el = clipRef.current;
-    if (el) el.classList.add('ed-tl-clip-dragging');
+    let lastDt = 0;
+
+    // Visual feedback: mark all moving clips as dragging
+    const movingEls = movingIds.map(id =>
+      document.querySelector(`[data-clip-id="${id}"]`) as HTMLElement
+    ).filter(Boolean);
+    movingEls.forEach(el => el.classList.add('ed-tl-clip-dragging'));
 
     const onMove = (ev: globalThis.MouseEvent) => {
       const dt = pxToTime(ev.clientX - startX, state.timelineZoom);
-      let newStart = Math.max(0, origStart + dt);
+      lastDt = dt;
+      // Apply snap based on primary clip
+      let snapDt = dt;
       if (state.snapEnabled) {
         const snap = pxToTime(6, state.timelineZoom);
+        let primaryNew = Math.max(0, (origStarts[clip.id] ?? 0) + dt);
         for (const o of state.clips) {
-          if (o.id === clip.id) continue;
+          if (movingIds.includes(o.id)) continue;
           const oEnd = o.startTime + o.duration;
-          if (Math.abs(newStart - o.startTime) < snap) newStart = o.startTime;
-          if (Math.abs(newStart - oEnd) < snap) newStart = oEnd;
-          const nEnd = newStart + clip.duration;
-          if (Math.abs(nEnd - o.startTime) < snap) newStart = o.startTime - clip.duration;
-          if (Math.abs(nEnd - oEnd) < snap) newStart = oEnd - clip.duration;
+          if (Math.abs(primaryNew - o.startTime) < snap) { snapDt = o.startTime - (origStarts[clip.id] ?? 0); break; }
+          if (Math.abs(primaryNew - oEnd) < snap) { snapDt = oEnd - (origStarts[clip.id] ?? 0); break; }
+          const nEnd = primaryNew + clip.duration;
+          if (Math.abs(nEnd - o.startTime) < snap) { snapDt = (o.startTime - clip.duration) - (origStarts[clip.id] ?? 0); break; }
+          if (Math.abs(nEnd - oEnd) < snap) { snapDt = (oEnd - clip.duration) - (origStarts[clip.id] ?? 0); break; }
         }
-        newStart = Math.max(0, newStart);
+        lastDt = snapDt;
       }
-      if (el) el.style.left = timeToPx(newStart, state.timelineZoom) + 'px';
+      // Update visual positions for all moving clips
+      for (const id of movingIds) {
+        const el = document.querySelector(`[data-clip-id="${id}"]`) as HTMLElement;
+        if (el) el.style.left = timeToPx(Math.max(0, (origStarts[id] ?? 0) + lastDt), state.timelineZoom) + 'px';
+      }
       moved = true;
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp);
-      if (el) el.classList.remove('ed-tl-clip-dragging');
-      if (moved && el) {
-        dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates: { startTime: pxToTime(parseFloat(el.style.left), state.timelineZoom) } });
-        dispatch({ type: 'SET_SELECTED_CLIP', clipId: clip.id });
+      movingEls.forEach(el => el.classList.remove('ed-tl-clip-dragging'));
+      if (moved) {
+        dispatch({ type: 'MOVE_SELECTED', deltaTime: lastDt });
         persistUserClips();
       }
     };
     document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
-  }, [clip, state.timelineZoom, state.snapEnabled, state.clips, dispatch, persistUserClips]);
+  }, [clip, state.timelineZoom, state.snapEnabled, state.clips, state.selectedClipIds, dispatch, persistUserClips]);
 
   const handleTrim = useCallback((side: 'left' | 'right', e: RMouseEvent) => {
     e.stopPropagation(); e.preventDefault();
@@ -1904,7 +2042,7 @@ const TimelineClip = memo(function TimelineClip({ clip, defaultColors }: { clip:
   }, [clip, state.timelineZoom, dispatch, persistUserClips]);
 
   return (
-    <div ref={clipRef} className={`ed-tl-clip${isSelected ? ' selected' : ''}${isActive ? ' ed-tl-clip-active' : ''}`}
+    <div ref={clipRef} data-clip-id={clip.id} className={`ed-tl-clip${isSelected ? ' selected' : ''}${isActive ? ' ed-tl-clip-active' : ''}`}
       style={{ left: cx, width: Math.max(cw, 8), background: clipColors.bg, borderColor: clipColors.border }}
       onClick={handleClick} onMouseDown={handleMouseDown}>
       {isAudio && <div className="ed-tl-clip-wave" />}

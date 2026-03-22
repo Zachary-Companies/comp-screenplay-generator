@@ -138,8 +138,9 @@ export interface EditorState {
   playing: boolean;
   snapEnabled: boolean;
   fillGaps: boolean;
-  selectedClipId: string | null;
+  selectedClipIds: string[];
   selectedTrackId: string | null;
+  clipboard: { clips: Clip[]; operation: 'copy' | 'cut' } | null;
   sidebarTab: string;
   inspectorTab: string;
   tracks: Track[];
@@ -174,8 +175,9 @@ export const initialEditorState: EditorState = {
   playing: false,
   snapEnabled: true,
   fillGaps: true,
-  selectedClipId: null,
+  selectedClipIds: [],
   selectedTrackId: null,
+  clipboard: null,
   sidebarTab: 'story',
   inspectorTab: 'clip',
   tracks: [],
@@ -212,6 +214,15 @@ export type EditorAction =
   | { type: 'TOGGLE_PLAY' }
   | { type: 'STOP_PLAY' }
   | { type: 'SET_SELECTED_CLIP'; clipId: string | null }
+  | { type: 'SET_SELECTION'; clipIds: string[] }
+  | { type: 'TOGGLE_SELECTION'; clipId: string }
+  | { type: 'ADD_TO_SELECTION'; clipId: string }
+  | { type: 'SELECT_ALL' }
+  | { type: 'DELETE_SELECTED' }
+  | { type: 'MOVE_SELECTED'; deltaTime: number }
+  | { type: 'COPY_SELECTED' }
+  | { type: 'CUT_SELECTED' }
+  | { type: 'PASTE'; atTime: number }
   | { type: 'SET_SIDEBAR_TAB'; tab: string }
   | { type: 'SET_TIMELINE_ZOOM'; zoom: number }
   | { type: 'SET_PREVIEW_ZOOM'; zoom: 'fit' | number }
@@ -263,7 +274,89 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return { ...state, playing: false };
 
     case 'SET_SELECTED_CLIP':
-      return { ...state, selectedClipId: action.clipId };
+      return { ...state, selectedClipIds: action.clipId ? [action.clipId] : [] };
+
+    case 'SET_SELECTION':
+      return { ...state, selectedClipIds: action.clipIds };
+
+    case 'TOGGLE_SELECTION': {
+      const exists = state.selectedClipIds.includes(action.clipId);
+      return {
+        ...state,
+        selectedClipIds: exists
+          ? state.selectedClipIds.filter(id => id !== action.clipId)
+          : [...state.selectedClipIds, action.clipId],
+      };
+    }
+
+    case 'ADD_TO_SELECTION': {
+      if (state.selectedClipIds.includes(action.clipId)) return state;
+      return { ...state, selectedClipIds: [...state.selectedClipIds, action.clipId] };
+    }
+
+    case 'SELECT_ALL':
+      return { ...state, selectedClipIds: state.clips.map(c => c.id) };
+
+    case 'DELETE_SELECTED': {
+      const userClipIds = new Set(state.userClips.map(uc => uc.id));
+      const deletableIds = new Set(state.selectedClipIds.filter(id => userClipIds.has(id)));
+      if (deletableIds.size === 0) return state;
+      return {
+        ...state,
+        clips: state.clips.filter(c => !deletableIds.has(c.id)),
+        userClips: state.userClips.filter(c => !deletableIds.has(c.id)),
+        selectedClipIds: state.selectedClipIds.filter(id => !deletableIds.has(id)),
+      };
+    }
+
+    case 'MOVE_SELECTED': {
+      const selectedSet = new Set(state.selectedClipIds);
+      const clips = state.clips.map(c =>
+        selectedSet.has(c.id) ? { ...c, startTime: Math.max(0, c.startTime + action.deltaTime) } : c
+      );
+      const userClips = state.userClips.map(c =>
+        selectedSet.has(c.id) ? { ...c, startTime: Math.max(0, c.startTime + action.deltaTime) } : c
+      );
+      return { ...state, clips, userClips };
+    }
+
+    case 'COPY_SELECTED': {
+      const selectedSet = new Set(state.selectedClipIds);
+      const copied = state.clips.filter(c => selectedSet.has(c.id)).map(c => ({ ...c }));
+      return { ...state, clipboard: { clips: copied, operation: 'copy' } };
+    }
+
+    case 'CUT_SELECTED': {
+      const selectedSet = new Set(state.selectedClipIds);
+      const userClipIds = new Set(state.userClips.map(uc => uc.id));
+      const cuttable = state.clips.filter(c => selectedSet.has(c.id) && userClipIds.has(c.id)).map(c => ({ ...c }));
+      const cuttableIds = new Set(cuttable.map(c => c.id));
+      return {
+        ...state,
+        clipboard: { clips: cuttable, operation: 'cut' },
+        clips: state.clips.filter(c => !cuttableIds.has(c.id)),
+        userClips: state.userClips.filter(c => !cuttableIds.has(c.id)),
+        selectedClipIds: [],
+      };
+    }
+
+    case 'PASTE': {
+      if (!state.clipboard || state.clipboard.clips.length === 0) return state;
+      const srcClips = state.clipboard.clips;
+      const minStart = Math.min(...srcClips.map(c => c.startTime));
+      const offset = action.atTime - minStart;
+      const newClips: Clip[] = srcClips.map(c => ({
+        ...c,
+        id: genId(),
+        startTime: c.startTime + offset,
+      }));
+      return {
+        ...state,
+        clips: [...state.clips, ...newClips],
+        userClips: [...state.userClips, ...newClips],
+        selectedClipIds: newClips.map(c => c.id),
+      };
+    }
 
     case 'SET_SIDEBAR_TAB':
       return { ...state, sidebarTab: action.tab };
@@ -307,7 +400,7 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         ...state,
         clips: state.clips.filter(c => c.id !== action.clipId),
         userClips: state.userClips.filter(c => c.id !== action.clipId),
-        selectedClipId: state.selectedClipId === action.clipId ? null : state.selectedClipId,
+        selectedClipIds: state.selectedClipIds.filter(id => id !== action.clipId),
       };
     }
 
@@ -316,7 +409,7 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         ...state,
         clips: [...state.clips, action.clip],
         userClips: [...state.userClips, action.clip],
-        selectedClipId: action.clip.id,
+        selectedClipIds: [action.clip.id],
       };
 
     case 'SET_TRACK_MUTED': {
@@ -495,6 +588,14 @@ export function getClipAtTime(clips: Clip[], time: number, trackId?: string): Cl
     }
   }
   return found;
+}
+
+export function primarySelectedClipId(state: EditorState): string | null {
+  return state.selectedClipIds.length > 0 ? state.selectedClipIds[0] : null;
+}
+
+export function isClipSelected(state: EditorState, clipId: string): boolean {
+  return state.selectedClipIds.includes(clipId);
 }
 
 export function evaluateKeyframes(clip: Clip, prop: string, localTime: number): number {

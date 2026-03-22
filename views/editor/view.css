@@ -744,9 +744,8 @@
 
 .ed-preview-dialog-text {
   color: #cbd5e1;
-  font-size: 14px;
-  line-height: 1.5;
-  max-width: 400px;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .ed-preview-dialog-overlay {
@@ -754,12 +753,13 @@
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 20px;
+  padding: 8px 24px;
   background: #000000cc;
   border-radius: 8px;
   text-align: center;
   z-index: 5;
-  max-width: 80%;
+  max-width: 90%;
+  width: max-content;
   pointer-events: none;
 }
 
@@ -1610,6 +1610,50 @@
   padding: 6px 0;
   font-size: 11px;
   color: #f87171;
+}
+
+/* ── Render Panel: small buttons & path row ────── */
+.ed-render-btn-row {
+  display: flex;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+.ed-render-small-btn {
+  flex: 1;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: #161822;
+  border: 1px solid #1e2130;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.ed-render-small-btn:hover {
+  background: #1e2130;
+  color: #cbd5e1;
+}
+.ed-render-row--path {
+  flex-wrap: wrap;
+}
+.ed-render-path {
+  width: 100%;
+}
+.ed-render-tc {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  text-align: right;
+}
+
+/* ── Marquee Selection ───────────────────────────── */
+.ed-tl-marquee {
+  position: absolute;
+  border: 1px dashed rgba(139, 92, 246, 0.6);
+  background: rgba(139, 92, 246, 0.08);
+  pointer-events: none;
+  z-index: 20;
+  border-radius: 2px;
 }
 
 /* ── Keyframe Diamond ──────────────────────────── */

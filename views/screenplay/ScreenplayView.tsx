@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { usePipeline, ImageZoom } from './sdk';
 import type { Character, Location, SceneData, SceneShot, SceneDialogue, PrevisGeneration, Element } from './sdk';
+import { DialogueAudioProvider, useDialogueAudio } from './DialogueAudioContext';
 
 // ── Aspect Ratio Options ─────────────────────────────────────
 
@@ -47,7 +48,7 @@ function SceneStrip({ scenes, activeScene, onSelect }: {
 }) {
   let lastAct = '';
   return (
-    <div className="flex overflow-x-auto gap-1 py-2 px-1 bg-[#0c0e14] border-b border-[#1e2130]" style={{ scrollbarWidth: 'thin', alignItems: 'center' }}>
+    <div role="tablist" aria-label="Scenes" className="flex overflow-x-auto gap-1 py-2 px-1 bg-[#0c0e14] border-b border-[#1e2130]" style={{ scrollbarWidth: 'thin', alignItems: 'center' }}>
       {scenes.map((s, idx) => {
         const showActLabel = s.actTitle && s.actTitle !== lastAct;
         if (s.actTitle) lastAct = s.actTitle;
@@ -65,6 +66,8 @@ function SceneStrip({ scenes, activeScene, onSelect }: {
               </span>
             )}
             <button
+              role="tab"
+              aria-selected={activeScene === s.id}
               onClick={() => onSelect(s.id)}
               className={`px-3 py-1 rounded text-[11px] whitespace-nowrap flex-shrink-0 transition-all ${
                 activeScene === s.id
@@ -223,6 +226,19 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
     return map;
   }, [scene.shots]);
 
+  // Build map of afterElementId → shots to render after that element
+  const shotsAfterElement = useMemo(() => {
+    const map: Record<string, SceneShot[]> = {};
+    for (const shot of scene.shots) {
+      const anchor = (shot as any).afterElementId;
+      if (anchor) {
+        if (!map[anchor]) map[anchor] = [];
+        map[anchor].push(shot);
+      }
+    }
+    return map;
+  }, [scene.shots]);
+
   // Track which shots were rendered inline (to avoid duplicating in Camera Shots section)
   const renderedShotIds = useRef(new Set<string>());
   renderedShotIds.current.clear();
@@ -341,6 +357,40 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
       if (elem && elem.type !== 'scene-heading') sceneElems.push(elem);
     }
 
+    // Helper to render anchored shots after an element
+    const renderAnchoredShots = (elemId: string) => {
+      const anchored = shotsAfterElement[elemId];
+      if (!anchored || anchored.length === 0) return null;
+      return anchored.map(shot => {
+        renderedShotIds.current.add(shot.id);
+        let previsImgPath = shot.previsPath;
+        if (shot.generations && shot.generations.length > 0) {
+          const selected = shot.selectedGenerationId
+            ? shot.generations.find(g => g.id === shot.selectedGenerationId)
+            : shot.generations[shot.generations.length - 1];
+          if (selected?.filePath) previsImgPath = selected.filePath;
+        }
+        return (
+          <div key={shot.id}>
+            <InlineShotCard
+              shotType={shot.shotType}
+              description={shot.description}
+              previsPath={previsImgPath}
+              characters={shot.characterIds?.map(cid => charMap[cid]).filter(Boolean) || []}
+              duration={shot.duration}
+              onDurationChange={(sec) => handleShotDuration(shot.id, sec)}
+              shot={shot}
+              pipelineId={pipelineId}
+              onRegenerate={() => handleGeneratePrevis(shot.id)}
+              isGenerating={generatingSet.has(shot.id)}
+              globalAspectRatio={globalAspectRatio}
+              onAspectRatioChange={(ar) => handleShotAspectRatio(shot.id, ar)}
+            />
+          </div>
+        );
+      });
+    };
+
     if (sceneElems.length > 0) {
       return (
         <>
@@ -370,6 +420,7 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
                     onDragEnd={() => setDragElemId(null)}
                     isDragging={isDragging}
                   />
+                  {renderAnchoredShots(elem.id)}
                 </React.Fragment>
               );
             } else if (elem.type === 'action' || elem.type === 'transition') {
@@ -417,6 +468,7 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
                         onAspectRatioChange={linkedShot ? (ar) => handleShotAspectRatio(linkedShot.id, ar) : undefined}
                       />
                     </div>
+                    {renderAnchoredShots(elem.id)}
                   </React.Fragment>
                 );
               }
@@ -426,6 +478,7 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
                 <React.Fragment key={elem.id || `elem-${i}`}>
                   {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
                   <EditableAction element={elem} onSave={(text) => handleSaveAction(elem.id, text)} />
+                  {renderAnchoredShots(elem.id)}
                 </React.Fragment>
               );
             }
@@ -717,25 +770,16 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
   onDragEnd?: () => void;
   isDragging?: boolean;
 }) {
-  const { project: projectData } = usePipeline();
+  const { audioPaths, generatingIds: ctxGenerating, generateAudio } = useDialogueAudio();
   const name = dialogue.characterName || 'UNKNOWN';
   const color = charColor(name);
-  const [generating, setGenerating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editLines, setEditLines] = useState<string[]>(dialogue.lines);
   const [showMenu, setShowMenu] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Initialize audioPath from existing dialogue audio assets
-  const existingAudioPath = useMemo(() => {
-    const daAssets = (projectData as any)?.dialogueAudio?.assets;
-    if (!Array.isArray(daAssets)) return null;
-    const match = daAssets.find((a: any) => a.metadata?.dialogueElementId === dialogue.elementId);
-    return match?.filePath || null;
-  }, [projectData, dialogue.elementId]);
-
-  const [audioPath, setAudioPath] = useState<string | null>(null);
-  const resolvedAudioPath = audioPath || existingAudioPath;
+  const generating = ctxGenerating[dialogue.elementId] || false;
+  const resolvedAudioPath = audioPaths[dialogue.elementId] || null;
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -770,31 +814,19 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
   }, [dialogue.characterId]);
 
   const handleGenerateAudio = useCallback(async () => {
-    if (!pipelineId || !voiceBinding?.voiceId) return;
+    if (!voiceBinding?.voiceId) return;
     const text = dialogue.lines.join(' ');
     if (!text.trim()) return;
 
-    setGenerating(true);
-    try {
-      const resp = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-dialogue-audio`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          elementId: dialogue.elementId,
-          text,
-          voiceId: voiceBinding.voiceId,
-          characterName: dialogue.characterName,
-          characterId: dialogue.characterId,
-        }),
-      }).then(r => r.json());
-
-      if (resp.success && resp.filePath) {
-        setAudioPath(resp.filePath);
-        onAudioGenerated?.();
-      }
-    } catch {}
-    setGenerating(false);
-  }, [pipelineId, voiceBinding, dialogue, onAudioGenerated]);
+    await generateAudio({
+      elementId: dialogue.elementId,
+      text,
+      voiceId: voiceBinding.voiceId,
+      characterName: dialogue.characterName,
+      characterId: dialogue.characterId,
+    });
+    onAudioGenerated?.();
+  }, [voiceBinding, dialogue, generateAudio, onAudioGenerated]);
 
   const handlePlayAudio = useCallback(() => {
     if (playing && audioRef.current) {
@@ -846,6 +878,9 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
           <span style={{ position: 'relative' }}>
             <button
               onClick={() => setShowMenu(!showMenu)}
+              aria-expanded={showMenu}
+              aria-haspopup="true"
+              aria-label="Dialogue options"
               style={{ padding: '1px 5px', borderRadius: 3, fontSize: 9, border: 'none', background: 'rgba(255,255,255,0.04)', color: '#64748b', cursor: 'pointer' }}
             >⋯</button>
             {showMenu && (
@@ -880,6 +915,8 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
               {resolvedAudioPath ? (
                 <button
                   onClick={handlePlayAudio}
+                  aria-label={playing ? 'Stop audio' : 'Play audio'}
+                  aria-pressed={playing}
                   style={{
                     padding: '1px 6px', borderRadius: 3, fontSize: 9, border: 'none',
                     background: playing ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.12)',
@@ -893,6 +930,8 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
                 <button
                   onClick={handleGenerateAudio}
                   disabled={generating}
+                  aria-label={generating ? 'Generating audio' : resolvedAudioPath ? 'Regenerate audio' : 'Generate audio'}
+                  aria-busy={generating}
                   style={{
                     padding: '1px 6px', borderRadius: 3, fontSize: 9, border: 'none',
                     background: generating ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.12)',
@@ -951,6 +990,9 @@ function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="previs-gallery-title"
       style={{
         position: 'fixed', inset: 0, zIndex: 10000,
         display: 'flex', flexDirection: 'column',
@@ -967,7 +1009,7 @@ function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
         onClick={e => e.stopPropagation()}
       >
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>
+          <h3 id="previs-gallery-title" style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>
             {shot.shotType} — {count} Generation{count !== 1 ? 's' : ''}
           </h3>
           <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>
@@ -976,6 +1018,7 @@ function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
         </div>
         <button
           onClick={onClose}
+          aria-label="Close"
           style={{
             width: 36, height: 36, borderRadius: '50%', flexShrink: 0, marginLeft: 16,
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
@@ -1058,17 +1101,23 @@ function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
                 <div style={{
                   flexShrink: 0, padding: '6px 10px',
                   background: 'rgba(0,0,0,0.4)',
-                  display: 'flex', alignItems: 'center', gap: 8,
                 }}>
-                  <span style={{ fontSize: 10, color: '#94a3b8' }}>
-                    {gen.generatedAt ? new Date(gen.generatedAt).toLocaleString(undefined, {
-                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                    }) : 'Unknown'}
-                  </span>
-                  {gen.generationModel && <span style={{ fontSize: 10, color: '#7c3aed', fontWeight: 600 }}>{gen.generationModel}</span>}
-                  {gen.aspectRatio && <span style={{ fontSize: 10, color: '#64748b' }}>{gen.aspectRatio}</span>}
-                  {!isSelected && (
-                    <span style={{ marginLeft: 'auto', fontSize: 10, color: '#a78bfa', fontWeight: 500 }}>Click to select</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 10, color: '#94a3b8' }}>
+                      {gen.generatedAt ? new Date(gen.generatedAt).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                      }) : 'Unknown'}
+                    </span>
+                    {gen.generationModel && <span style={{ fontSize: 10, color: '#7c3aed', fontWeight: 600 }}>{gen.generationModel}</span>}
+                    {gen.aspectRatio && <span style={{ fontSize: 10, color: '#64748b' }}>{gen.aspectRatio}</span>}
+                    {!isSelected && (
+                      <span style={{ marginLeft: 'auto', fontSize: 10, color: '#a78bfa', fontWeight: 500 }}>Click to select</span>
+                    )}
+                  </div>
+                  {gen.generationPrompt && (
+                    <p style={{ margin: '4px 0 0', fontSize: 9, color: '#94a3b8', lineHeight: 1.4, wordBreak: 'break-word', maxHeight: 60, overflow: 'auto' }}>
+                      {gen.generationPrompt}
+                    </p>
                   )}
                 </div>
               </div>
@@ -1336,6 +1385,7 @@ function ShotBlock({ shot, charMap, onGenerate, isGenerating, globalAspectRatio,
 // ── Scene Dialogue Render Button ────────────────────────────
 
 function SceneDialogueButton({ scene, pipelineId }: { scene: SceneData; pipelineId: string }) {
+  const { renderScene } = useDialogueAudio();
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState('');
 
@@ -1366,37 +1416,21 @@ function SceneDialogueButton({ scene, pipelineId }: { scene: SceneData; pipeline
     }
 
     setGenerating(true);
-    let success = 0;
-    for (let i = 0; i < dialogWithVoice.length; i++) {
-      const d = dialogWithVoice[i];
-      const text = d.lines.join(' ');
-      if (!text.trim()) continue;
-      setProgress(`${i + 1}/${dialogWithVoice.length}`);
-      try {
-        const resp = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-dialogue-audio`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            elementId: d.elementId, text,
-            voiceId: d.voiceId,
-            characterName: d.characterName,
-            characterId: d.characterId,
-          }),
-        }).then(r => r.json());
-        if (resp.success) success++;
-      } catch {}
-    }
+    setProgress(`0/${dialogWithVoice.length}`);
+    const { success, total } = await renderScene(dialogWithVoice);
     setGenerating(false);
     setProgress('');
     if (typeof (window as any).toast === 'function') {
-      (window as any).toast(`${success}/${dialogWithVoice.length} dialog audio rendered`, success > 0 ? 'success' : 'error');
+      (window as any).toast(`${success}/${total} dialog audio rendered`, success > 0 ? 'success' : 'error');
     }
-  }, [scene, pipelineId]);
+  }, [scene, renderScene]);
 
   return (
     <button
       onClick={handleRender}
       disabled={generating}
+      aria-busy={generating}
+      aria-label={generating ? `Rendering dialogue ${progress}` : `Render dialogue for ${scene.dialogue.length} lines`}
       style={{
         padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 500,
         background: generating ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.12)',
@@ -1458,24 +1492,39 @@ const SceneCard = React.memo(function SceneCard({ scene, charMap, locMap, pipeli
         .map(id => charMap[id]?.name)
         .filter(Boolean);
 
+      // Build numbered element list for positional anchoring
+      const elemRange = scene.elementRange;
+      const numberedLines: string[] = [];
+      if (elemRange && pipeline.project?.elements) {
+        const [s, e] = elemRange;
+        for (let i = s; i < Math.min(e, pipeline.project.elements.length); i++) {
+          const el = pipeline.project.elements[i];
+          if (!el) continue;
+          const tag = el.type === 'dialogue' ? `[${el.characterName || 'CHAR'}]` : '';
+          numberedLines.push(`#${el.id}: ${tag} ${(el.content || '').substring(0, 120)}`);
+        }
+      }
+
       const prompt = `You are a cinematographer breaking down a screenplay scene into camera shots for pre-visualization.
 
 Scene: ${scene.title}
 Location: ${scene.location}
 Characters present: ${charNames.join(', ') || 'unknown'}
 
-Scene content:
-${sceneText.substring(0, 2000)}
+Scene elements (each prefixed with its ID):
+${numberedLines.length > 0 ? numberedLines.join('\n') : sceneText.substring(0, 2000)}
 
 Generate 3-6 camera shot descriptions as a JSON array. Each entry has:
 - "shot": the shot type (WIDE SHOT, MEDIUM SHOT, CLOSE-UP, EXTREME CLOSE-UP, TWO SHOT, etc.)
 - "description": vivid description of what the camera captures (lighting, depth, composition, character actions/emotions)
 - "characters": array of character names visible in this shot (use EXACT names from the characters list above)
+- "afterElementId": the element ID (e.g. "elem-38") after which this shot should appear in the screenplay. Pick the element that this shot visually covers or follows.
 
 Rules:
 - Cover the key dramatic beats of the scene
 - Think cinematically — describe lighting, depth, composition
 - Use ONLY character names from the list above
+- Place each shot at the right moment by choosing the correct afterElementId
 
 Return ONLY a JSON array, no markdown, no explanation.`;
 
@@ -1486,7 +1535,7 @@ Return ONLY a JSON array, no markdown, no explanation.`;
       });
       const data = await res.json();
 
-      let shotEntries: Array<{ shot: string; description: string; characters?: string[] }> = [];
+      let shotEntries: Array<{ shot: string; description: string; characters?: string[]; afterElementId?: string }> = [];
       try {
         const match = (data.response || '').match(/\[[\s\S]*\]/);
         if (match) shotEntries = JSON.parse(match[0]);
@@ -1505,7 +1554,7 @@ Return ONLY a JSON array, no markdown, no explanation.`;
         if (c.displayName) charNameToId[c.displayName.toUpperCase()] = c.id;
       }
 
-      // Create SceneShot objects
+      // Create SceneShot objects with position anchoring
       const newShots: SceneShot[] = shotEntries.map((entry, i) => ({
         id: `shot_${scene.id}_${Date.now()}_${i}`,
         shotType: entry.shot,
@@ -1513,7 +1562,8 @@ Return ONLY a JSON array, no markdown, no explanation.`;
         characterIds: (entry.characters || [])
           .map(name => charNameToId[(name || '').toUpperCase()])
           .filter(Boolean),
-      }));
+        afterElementId: entry.afterElementId || undefined,
+      } as SceneShot));
 
       // Update the scene's shots in project data
       const project = pipeline.project;
@@ -1637,7 +1687,7 @@ Return ONLY a JSON array, no markdown, no explanation.`;
       )}
 
       {/* Scene heading */}
-      <div className="bg-[#1a1d2e] px-4 py-2.5 border-b border-white/5" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div role="region" aria-label={scene.title} className="bg-[#1a1d2e] px-4 py-2.5 border-b border-white/5" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h3 className="text-sm font-bold text-white tracking-wide">{scene.title}</h3>
           {scene.characterIds.length > 0 && (
@@ -1706,9 +1756,9 @@ Return ONLY a JSON array, no markdown, no explanation.`;
           globalAspectRatio={globalAspectRatio}
         />
 
-        {/* Camera Shots — only show shots that weren't rendered inline (no matching element) */}
+        {/* Camera Shots — only show shots that weren't rendered inline */}
         {(() => {
-          // Shots whose IDs match an element in the range were rendered inline by SceneElements
+          // Exclude shots rendered inline: those matching element IDs or anchored via afterElementId
           const elemIds = new Set<string>();
           if (scene.elementRange && pipeline.project?.elements) {
             const [s, e] = scene.elementRange;
@@ -1717,7 +1767,9 @@ Return ONLY a JSON array, no markdown, no explanation.`;
               if (el) elemIds.add(el.id);
             }
           }
-          const remainingShots = scene.shots.filter(shot => !elemIds.has(shot.id));
+          const remainingShots = scene.shots.filter(shot =>
+            !elemIds.has(shot.id) && !(shot as any).afterElementId
+          );
           if (remainingShots.length === 0) return null;
           return (
             <div className="mt-3 pt-3 border-t border-white/5">
@@ -1783,28 +1835,28 @@ function Toolbar({ projectData, onAction }: {
 
   return (
     <div className="flex items-center gap-2 flex-wrap py-2">
-      <button onClick={() => onAction('show-characters')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.04] border border-white/8 text-slate-300 hover:bg-white/[0.08] transition-colors">
+      <button onClick={() => onAction('show-characters')} aria-label={`Show characters (${charCount})`} className="px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.04] border border-white/8 text-slate-300 hover:bg-white/[0.08] transition-colors">
         👥 Characters ({charCount})
       </button>
-      <button onClick={() => onAction('show-locations')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.04] border border-white/8 text-slate-300 hover:bg-white/[0.08] transition-colors">
+      <button onClick={() => onAction('show-locations')} aria-label={`Show locations (${locCount})`} className="px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.04] border border-white/8 text-slate-300 hover:bg-white/[0.08] transition-colors">
         📍 Locations ({locCount})
       </button>
-      <button onClick={() => onAction('enrich-characters')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors">
+      <button onClick={() => onAction('enrich-characters')} aria-label="Enrich characters with AI" className="px-3 py-1.5 rounded-md text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors">
         ✨ Enrich Characters
       </button>
-      <button onClick={() => onAction('enrich-locations')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors">
+      <button onClick={() => onAction('enrich-locations')} aria-label="Enrich locations with AI" className="px-3 py-1.5 rounded-md text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors">
         ✨ Enrich Locations
       </button>
-      <button onClick={() => onAction('generate-headshots')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
+      <button onClick={() => onAction('generate-headshots')} aria-label="Generate character headshot images" className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
         🖼 Generate Headshots
       </button>
-      <button onClick={() => onAction('generate-locations')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
+      <button onClick={() => onAction('generate-locations')} aria-label="Generate location images" className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
         🌍 Location Shots
       </button>
-      <button onClick={() => onAction('generate-previs')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/20 transition-colors">
+      <button onClick={() => onAction('generate-previs')} aria-label="Generate previsualization images for all shots" className="px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/20 transition-colors">
         🎬 Generate Previs
       </button>
-      <button onClick={() => onAction('render-dialogue')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition-colors">
+      <button onClick={() => onAction('render-dialogue')} aria-label="Render audio for all dialogue" className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition-colors">
         🔊 Render All Dialogue
       </button>
     </div>
@@ -1814,13 +1866,51 @@ function Toolbar({ projectData, onAction }: {
 // ── Main ScreenplayView ──────────────────────────────────────
 
 export function ScreenplayView() {
+  return (
+    <DialogueAudioProvider>
+      <ScreenplayViewInner />
+    </DialogueAudioProvider>
+  );
+}
+
+function ScreenplayViewInner() {
   const pipeline = usePipeline();
   const { project: projectData, loading, error, pipelineId } = pipeline;
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [globalAspectRatio, setGlobalAspectRatio] = useState<string>('9:16');
+  const [shotPrefix, setShotPrefix] = useState<string>(projectData?.metadata?.shotImagePromptPrefix || '');
+  const [savingShotPrefix, setSavingShotPrefix] = useState(false);
+  const [showShotPrefix, setShowShotPrefix] = useState(false);
+  const shotPrefixTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Sync prefix state when project data loads or reloads
+  useEffect(() => {
+    const saved = projectData?.metadata?.shotImagePromptPrefix || '';
+    setShotPrefix(prev => prev || saved);
+  }, [projectData?.metadata?.shotImagePromptPrefix]);
+
+  const saveShotPrefix = useCallback(async (value: string) => {
+    setSavingShotPrefix(true);
+    try {
+      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/update-prompt-prefix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shotImagePromptPrefix: value }),
+      });
+    } catch (err: any) {
+      console.error('Failed to save shot prompt prefix:', err);
+    }
+    setSavingShotPrefix(false);
+  }, [pipelineId]);
+
+  const handleShotPrefixChange = useCallback((value: string) => {
+    setShotPrefix(value);
+    if (shotPrefixTimer.current) clearTimeout(shotPrefixTimer.current);
+    shotPrefixTimer.current = setTimeout(() => saveShotPrefix(value), 800);
+  }, [saveShotPrefix]);
 
   // Character/location lookup maps
   const charMap = useMemo(() => {
@@ -1902,10 +1992,15 @@ export function ScreenplayView() {
           }
           break;
         }
-        case 'render-dialogue':
+        case 'render-dialogue': {
           setActionStatus('Rendering dialogue audio...');
-          await fetch(`/api/app/${encodeURIComponent(pipelineId)}/render-dialogue`, { method: 'POST' });
+          const rdRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/render-dialogue`, { method: 'POST' });
+          const rdData = await rdRes.json().catch(() => ({}));
+          setActionStatus(`Rendered ${rdData.rendered || 0}/${rdData.total || 0} dialogue lines`);
+          await pipeline.reload();
+          setTimeout(() => setActionStatus(null), 2000);
           break;
+        }
       }
       setActionStatus(null);
     } catch (err: any) {
@@ -1983,6 +2078,47 @@ export function ScreenplayView() {
           placeholder="Search dialogue, characters, action..."
           className="w-52 px-3 py-1.5 rounded-md text-xs bg-white/[0.03] border border-white/5 text-slate-300 placeholder-slate-600 outline-none focus:border-indigo-500/30"
         />
+      </div>
+
+      {/* Shot prompt prefix (collapsible) */}
+      <div className="flex-shrink-0 px-4">
+        <button
+          onClick={() => setShowShotPrefix(!showShotPrefix)}
+          aria-expanded={showShotPrefix}
+          aria-label="Shot style prefix"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 10, color: '#64748b', padding: '4px 0',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          <span style={{ transform: showShotPrefix ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', display: 'inline-block' }}>▶</span>
+          Shot Style Prefix {shotPrefix ? '✓' : ''}
+        </button>
+        {showShotPrefix && (
+          <div style={{ maxWidth: 720, marginBottom: 8 }}>
+            <div className="flex items-start gap-2">
+              <textarea
+                value={shotPrefix}
+                onChange={e => handleShotPrefixChange(e.target.value)}
+                placeholder="e.g. Pixar 3D animation style, vibrant colors... (overrides default cinematic style)"
+                rows={2}
+                style={{
+                  width: '100%', resize: 'vertical',
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8, padding: '8px 12px', fontSize: 12, lineHeight: 1.5,
+                  color: '#e2e8f0', outline: 'none',
+                }}
+                onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.4)'; }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              />
+              {savingShotPrefix && <span style={{ fontSize: 10, color: '#475569', marginTop: 8, flexShrink: 0 }}>Saving...</span>}
+            </div>
+            <p style={{ fontSize: 10, color: '#475569', marginTop: 4 }}>
+              Overrides the default "Cinematic previsualization frame, 35mm film..." style for all shot generation
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Status bar */}

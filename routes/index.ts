@@ -397,9 +397,16 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       if (cameraIntent && cameraIntent !== composition) prompt += cameraIntent + '. ';
       if (lighting || cameraIntent) prompt += '\n\n';
 
-      const stylePrompt = actionConfig.prompt?.sections?.find((s: any) => s.id === 'style')?.template
-        || 'Style: Cinematic previsualization frame, shot on 35mm film with subtle grain. Professional cinematography with rich color grading, deep shadows, and controlled highlights. The image should feel like a single frame from a feature film.';
-      prompt += stylePrompt;
+      // Use shot prompt prefix from metadata if set — overrides default style
+      const shotProject = sdk.getProject();
+      const shotPrefix = shotProject?.metadata?.shotImagePromptPrefix || '';
+      if (shotPrefix) {
+        prompt += `Style: ${shotPrefix}`;
+      } else {
+        const stylePrompt = actionConfig.prompt?.sections?.find((s: any) => s.id === 'style')?.template
+          || 'Style: Cinematic previsualization frame, shot on 35mm film with subtle grain. Professional cinematography with rich color grading, deep shadows, and controlled highlights. The image should feel like a single frame from a feature film.';
+        prompt += stylePrompt;
+      }
 
       // ── Generate image ──
       const projFolder = await sdk.getProjectFolder();
@@ -642,11 +649,12 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           return true;
         }
 
-        // Load bindings for voice assignments
-        const bindingsDoc = await sdk.loadBindings();
+        // Load voice bindings from project metadata (persisted) with fallback to legacy and pipeline-level
+        const projectVoiceBindings = projData.metadata?.voiceBindings || projData.voiceBindings || [];
         const voiceMap: Record<string, string> = {};
         const voiceNameMap: Record<string, string> = {};
-        for (const b of bindingsDoc.bindings) {
+        const voiceSource = projectVoiceBindings.length > 0 ? projectVoiceBindings : (await sdk.loadBindings()).bindings;
+        for (const b of voiceSource) {
           if (b.type === 'voice' && b.source?.entityType === 'character' && b.source?.entityId && b.target?.entityId) {
             voiceMap[b.source.entityId] = b.target.entityId;
             voiceNameMap[b.source.entityId] = (b.metadata?.voiceName as string) || '';
@@ -745,6 +753,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         }
 
         sdk.markDirty(['dialogueAudio']);
+        await sdk.flushProject();
         sdk.sendJson(res, 200, { success: true, rendered, total: dialogueItems.length });
       } catch (err) {
         sdk.sendJson(res, 500, { error: 'Render failed: ' + (err instanceof Error ? err.message : String(err)) });
@@ -830,6 +839,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           );
           projData.dialogueAudio.assets.push(asset);
           sdk.markDirty(['dialogueAudio']);
+          await sdk.flushProject();
         }
 
         sdk.sendJson(res, 200, {
@@ -1266,6 +1276,213 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       return true;
     }
 
+    // ── GET /voice-bindings ─────────────────────────────────
+    // Return voice bindings stored in the project metadata (persisted).
+    if (req.method === 'GET' && subPath === '/voice-bindings') {
+      try {
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        // Read from metadata (persisted) with fallback to legacy top-level field
+        const voiceBindings = project?.metadata?.voiceBindings || project?.voiceBindings || [];
+        sdk.sendJson(res, 200, { bindings: voiceBindings });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: String(err.message || err) });
+      }
+      return true;
+    }
+
+    // ── PUT /voice-bindings ──────────────────────────────────
+    // Save voice bindings into project.metadata (persisted to project.json).
+    if (req.method === 'PUT' && subPath === '/voice-bindings') {
+      try {
+        const body = await sdk.readBody(req);
+        const voiceBindings = Array.isArray(body.bindings) ? body.bindings : [];
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+        if (!project.metadata) project.metadata = {};
+        project.metadata.voiceBindings = voiceBindings;
+        sdk.markDirty(['metadata']);
+        await sdk.flushProject();
+        sdk.sendJson(res, 200, { success: true, count: voiceBindings.length });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: String(err.message || err) });
+      }
+      return true;
+    }
+
+    // ── POST /auto-assign-voices ──────────────────────────────
+    // Validate LLM-generated voice assignments and save them.
+    // Body: { assignments: [{characterId, voiceId, voiceName}], characters: [{id}], voices: [{voice_id}] }
+    if (req.method === 'POST' && subPath === '/auto-assign-voices') {
+      try {
+        const body = await sdk.readBody(req);
+        const assignments: any[] = body.assignments || [];
+        const characters: any[] = body.characters || [];
+        const voices: any[] = body.voices || [];
+
+        if (characters.length === 0 || voices.length === 0) {
+          sdk.sendJson(res, 400, { error: 'characters and voices arrays required' });
+          return true;
+        }
+
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        const existingBindings: any[] = project?.metadata?.voiceBindings || project?.voiceBindings || [];
+        const alreadyAssigned = new Set(
+          existingBindings.filter((b: any) => b.type === 'voice').map((b: any) => b.source?.entityId)
+        );
+
+        // Validate assignments against actual IDs
+        const validCharIds = new Set(characters.map((c: any) => c.id));
+        const validVoiceIds = new Set(voices.map((v: any) => v.voice_id));
+        const usedVoices = new Set(
+          existingBindings.filter((b: any) => b.type === 'voice').map((b: any) => b.target?.entityId)
+        );
+        const validAssignments: any[] = [];
+
+        for (const a of assignments) {
+          if (!a.characterId || !a.voiceId) continue;
+          if (!validCharIds.has(a.characterId)) continue;
+          if (!validVoiceIds.has(a.voiceId)) continue;
+          if (alreadyAssigned.has(a.characterId)) continue;
+          if (usedVoices.has(a.voiceId)) continue;
+          usedVoices.add(a.voiceId);
+          validAssignments.push(a);
+        }
+
+        // Build new bindings
+        const now = new Date().toISOString();
+        const newBindings = [...existingBindings];
+        for (const a of validAssignments) {
+          newBindings.push({
+            id: `voice-${a.characterId}-${Date.now()}`,
+            type: 'voice',
+            source: { entityType: 'character', entityId: a.characterId },
+            target: { entityType: 'voice', entityId: a.voiceId },
+            confidence: 0.8,
+            origin: 'auto:llm',
+            createdAt: now,
+            updatedAt: now,
+            metadata: { voiceName: a.voiceName },
+          });
+        }
+
+        // Save to metadata
+        if (project) {
+          if (!project.metadata) project.metadata = {};
+          project.metadata.voiceBindings = newBindings;
+          sdk.markDirty(['metadata']);
+          await sdk.flushProject();
+        }
+
+        sdk.sendJson(res, 200, {
+          success: true,
+          assignments: validAssignments,
+          applied: validAssignments.length,
+          total: characters.filter((c: any) => !alreadyAssigned.has(c.id)).length,
+          bindings: newBindings,
+        });
+      } catch (err: any) {
+        sdk.log('error', 'auto-assign-voices', `Error: ${err.message || err}`);
+        sdk.sendJson(res, 500, { error: 'Auto-assign failed: ' + (err.message || String(err)) });
+      }
+      return true;
+    }
+
+    // ── PUT /editor-clips ──────────────────────────────────
+    // Save user-added editor clips (music, sfx, etc.) to project metadata.
+    if (req.method === 'PUT' && subPath === '/editor-clips') {
+      try {
+        const body = await sdk.readBody(req);
+        const clips = Array.isArray(body.clips) ? body.clips : [];
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+        if (!project.metadata) project.metadata = {};
+        project.metadata.editorUserClips = clips;
+        sdk.markDirty(['metadata']);
+        await sdk.flushProject();
+        sdk.sendJson(res, 200, { success: true, count: clips.length });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: String(err.message || err) });
+      }
+      return true;
+    }
+
+    // ── GET /editor-clips ──────────────────────────────────
+    if (req.method === 'GET' && subPath === '/editor-clips') {
+      try {
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        const clips = project?.metadata?.editorUserClips || [];
+        sdk.sendJson(res, 200, { clips });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: String(err.message || err) });
+      }
+      return true;
+    }
+
+    // ── POST /update-prompt-prefix ──────────────────────────
+    // Save the image generation prompt prefix on the project.
+    // Body: { imagePromptPrefix: string }
+    if (req.method === 'POST' && subPath === '/update-prompt-prefix') {
+      try {
+        const body = await sdk.readBody(req);
+        const prefix = typeof body.imagePromptPrefix === 'string' ? body.imagePromptPrefix : undefined;
+        const locPrefix = typeof body.locationImagePromptPrefix === 'string' ? body.locationImagePromptPrefix : undefined;
+        const shotPrefix = typeof body.shotImagePromptPrefix === 'string' ? body.shotImagePromptPrefix : undefined;
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+        if (!project.metadata) project.metadata = {};
+        if (prefix !== undefined) project.metadata.imagePromptPrefix = prefix;
+        if (locPrefix !== undefined) project.metadata.locationImagePromptPrefix = locPrefix;
+        if (shotPrefix !== undefined) project.metadata.shotImagePromptPrefix = shotPrefix;
+        sdk.markDirty(['metadata']);
+        await sdk.flushProject();
+        sdk.sendJson(res, 200, { success: true });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: 'Failed to save prompt prefix: ' + (err.message || String(err)) });
+      }
+      return true;
+    }
+
+    // ── POST /update-character ───────────────────────────────
+    // Update a single character's editable fields. Does NOT touch image fields.
+    // Body: { characterId: string, updates: { name?, description?, ... } }
+    if (req.method === 'POST' && subPath === '/update-character') {
+      try {
+        const body = await sdk.readBody(req);
+        const { characterId, updates } = body;
+        if (!characterId || !updates) { sdk.sendJson(res, 400, { error: 'characterId and updates required' }); return true; }
+
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+
+        const char = (project.characters || []).find((c: any) => c.id === characterId);
+        if (!char) { sdk.sendJson(res, 404, { error: 'Character not found' }); return true; }
+
+        // Only update user-editable fields — never image fields
+        const editableFields = ['name', 'displayName', 'description', 'ageRange', 'gender', 'role',
+          'traits', 'arc', 'voiceDescription', 'wardrobeNotes', 'aliases'] as const;
+        for (const key of editableFields) {
+          if (updates[key] !== undefined) {
+            (char as any)[key] = updates[key];
+          }
+        }
+
+        sdk.markDirty(['characters']);
+        await sdk.flushProject();
+
+        sdk.sendJson(res, 200, { success: true, character: char });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: String(err.message || err) });
+      }
+      return true;
+    }
+
     // ── POST /generate-character-headshot ─────────────────────
     // Generate a single character headshot version.
     // Body: { characterId: string }
@@ -1277,42 +1494,51 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         if (!charId) { sdk.sendJson(res, 400, { error: 'characterId required' }); return true; }
 
         await sdk.ensureProject();
-        const project = sdk.getProject();
         const pfolder = await sdk.getProjectFolder();
-        if (!project || !pfolder) { sdk.sendJson(res, 400, { error: 'No project data found' }); return true; }
+        if (!pfolder) { sdk.sendJson(res, 400, { error: 'No project data found' }); return true; }
 
-        const char = (project.characters || []).find((c: any) => c.id === charId);
-        if (!char) { sdk.sendJson(res, 404, { error: 'Character not found' }); return true; }
+        // Use the client-sent character for prompt building — this is the user's
+        // latest data, which may not yet be reflected in the server's in-memory state.
+        // Fall back to the server's copy only if no client data was sent.
+        const clientChar = body.character;
+        const project = sdk.getProject();
+        const serverChar = (project?.characters || []).find((c: any) => c.id === charId);
+        if (!serverChar && !clientChar) { sdk.sendJson(res, 404, { error: 'Character not found' }); return true; }
 
-        // Apply any client-sent overrides so the latest edits are used in the prompt.
-        // The client sends the current character fields; merge them into the server's copy
-        // so the prompt reflects what the user sees, not stale in-memory state.
-        if (body.character) {
-          const overrides = body.character;
-          for (const key of ['name', 'displayName', 'description', 'ageRange', 'gender', 'wardrobeNotes', 'traits', 'arc', 'voiceDescription'] as const) {
-            if (overrides[key] !== undefined) {
-              (char as any)[key] = overrides[key];
-            }
-          }
-          sdk.updateProject({ characters: project.characters });
-          await sdk.flushProject();
-        }
+        // Use client data for prompt fields, fall back to server data
+        const c = clientChar || serverChar;
+        const name = c.name || 'a person';
+        const description = c.description || '';
+        const ageRange = c.ageRange || '';
+        const gender = c.gender || '';
+        const wardrobeNotes = c.wardrobeNotes || '';
 
         const charDir = sdk.join(pfolder, 'characters');
         await sdk.mkdir(charDir);
 
-        // Build prompt
-        let prompt = `Professional headshot portrait of ${char.name || 'a person'}`;
-        if (char.description) prompt += `. ${char.description}`;
-        if (char.ageRange) prompt += ` Age: ${char.ageRange}.`;
-        if (char.gender) prompt += ` ${char.gender}.`;
-        if (char.wardrobeNotes) prompt += ` Wearing: ${char.wardrobeNotes}.`;
-        prompt += ' Cinematic lighting, studio portrait, shallow depth of field, 85mm lens. Photorealistic.';
+        // Read prompt prefix from project metadata
+        const promptPrefix = project?.metadata?.imagePromptPrefix || '';
 
-        // Determine version number
-        const versions: any[] = char.imageVersions || [];
-        const versionNum = versions.length + 1;
-        const safeName = (char.id || char.name || 'char').replace(/[^a-zA-Z0-9_-]/g, '_');
+        // Build prompt — prefix overrides default style when set
+        let prompt = promptPrefix
+          ? `${promptPrefix} ${name}`
+          : `Professional headshot portrait of ${name}`;
+        if (description) prompt += `. ${description}`;
+        if (ageRange) prompt += ` Age: ${ageRange}.`;
+        if (gender) prompt += ` ${gender}.`;
+        if (wardrobeNotes) prompt += ` Wearing: ${wardrobeNotes}.`;
+        if (!promptPrefix) prompt += ' Cinematic lighting, studio portrait, shallow depth of field, 85mm lens. Photorealistic.';
+
+        // Determine version number from server's copy (authoritative for image history).
+        // If the character has an imagePath but no imageVersions, seed the existing
+        // image as v1 so it's preserved in the version history.
+        let existingVersions: any[] = (serverChar?.imageVersions) || [];
+        if (existingVersions.length === 0 && serverChar?.imagePath) {
+          existingVersions = [{ version: 1, filePath: serverChar.imagePath, generatedAt: '', prompt: 'Original generation' }];
+          if (serverChar) serverChar.imageVersions = existingVersions;
+        }
+        const versionNum = existingVersions.length + 1;
+        const safeName = (charId || name || 'char').replace(/[^a-zA-Z0-9_-]/g, '_');
         const outputPath = sdk.join(charDir, `${safeName}_v${versionNum}.png`);
 
         const result = await sdk.generateImage({
@@ -1330,15 +1556,26 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           prompt,
         };
 
-        // Update character with new version
-        if (!char.imageVersions) char.imageVersions = [];
-        char.imageVersions.push(newVersion);
-        char.imagePath = imgPath;
-        char.activeImageVersion = versionNum;
-        sdk.updateProject({ characters: project.characters });
-        await sdk.flushProject();
+        // Re-read the character fresh from project state to avoid overwriting
+        // concurrent edits. Only mutate image-related fields, then flush.
+        const freshProject = sdk.getProject();
+        const freshChar = (freshProject?.characters || []).find((c: any) => c.id === charId);
+        if (freshChar) {
+          if (!freshChar.imageVersions) freshChar.imageVersions = [];
+          // Seed existing image as v1 if this is the first regen
+          if (freshChar.imageVersions.length === 0 && freshChar.imagePath) {
+            freshChar.imageVersions.push({ version: 1, filePath: freshChar.imagePath, generatedAt: '', prompt: 'Original generation' });
+          }
+          freshChar.imageVersions.push(newVersion);
+          freshChar.imagePath = imgPath;
+          freshChar.activeImageVersion = versionNum;
+          // Mark characters dirty and flush — don't call updateProject which
+          // replaces the whole slice and can overwrite concurrent edits.
+          sdk.markDirty(['characters']);
+          await sdk.flushProject();
+        }
 
-        sdk.sendJson(res, 200, { success: true, version: newVersion, totalVersions: char.imageVersions.length });
+        sdk.sendJson(res, 200, { success: true, version: newVersion, totalVersions: versionNum });
       } catch (err: any) {
         sdk.sendJson(res, 500, { error: 'Headshot generation failed: ' + (err.message || String(err)) });
       }
@@ -1366,7 +1603,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
 
         char.imagePath = ver.filePath;
         char.activeImageVersion = version;
-        sdk.updateProject({ characters: project.characters });
+        sdk.markDirty(['characters']);
         await sdk.flushProject();
 
         sdk.sendJson(res, 200, { success: true, imagePath: ver.filePath, activeVersion: version });
@@ -1419,14 +1656,18 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           const charDir = sdk.join(pfolder, 'characters');
           await sdk.mkdir(charDir);
 
+          const bulkPromptPrefix = project.metadata?.imagePromptPrefix || '';
           for (const char of chars) {
             try {
-              let prompt = `Professional headshot portrait of ${char.name || 'a person'}`;
+              const charName = char.name || 'a person';
+              let prompt = bulkPromptPrefix
+                ? `${bulkPromptPrefix} ${charName}`
+                : `Professional headshot portrait of ${charName}`;
               if (char.description) prompt += `. ${char.description}`;
               if (char.ageRange) prompt += ` Age: ${char.ageRange}.`;
               if (char.gender) prompt += ` ${char.gender}.`;
               if (char.wardrobeNotes) prompt += ` Wearing: ${char.wardrobeNotes}.`;
-              prompt += ' Cinematic lighting, studio portrait, shallow depth of field, 85mm lens. Photorealistic.';
+              if (!bulkPromptPrefix) prompt += ' Cinematic lighting, studio portrait, shallow depth of field, 85mm lens. Photorealistic.';
 
               const versions: any[] = char.imageVersions || [];
               const versionNum = versions.length + 1;
@@ -1470,13 +1711,17 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           await sdk.mkdir(locDir);
           let locCompleted = 0;
 
+          const locPromptPrefix = project.metadata?.locationImagePromptPrefix || '';
           for (const loc of locs) {
             try {
-              let prompt = `Cinematic establishing shot of ${loc.name || 'a location'}`;
+              const locName = loc.name || 'a location';
+              let prompt = locPromptPrefix
+                ? `${locPromptPrefix} ${locName}`
+                : `Cinematic establishing shot of ${locName}`;
               if (loc.description) prompt += `. ${loc.description}`;
               if (loc.mood) prompt += ` Mood: ${loc.mood}.`;
               if (loc.atmosphere) prompt += ` ${loc.atmosphere}`;
-              prompt += ' Wide-angle lens, dramatic lighting, film grain, professional cinematography. 35mm film look.';
+              if (!locPromptPrefix) prompt += ' Wide-angle lens, dramatic lighting, film grain, professional cinematography. 35mm film look.';
 
               const safeName = (loc.id || loc.name || 'loc').replace(/[^a-zA-Z0-9_-]/g, '_');
               const outputPath = sdk.join(locDir, `${safeName}.png`);
