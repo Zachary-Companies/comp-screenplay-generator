@@ -63,6 +63,34 @@ export async function execute(
     context.log(`Dialogue audio: ${dialogueAudioAssets.length}`);
     context.log(`Previs shots: ${previs.shots?.length || 0}`);
 
+    // Link asset image paths back to character and location objects
+    // The frontend expects character.imagePath and location.imagePath
+    const assetList = assets?.assets || [];
+
+    const charactersWithImages = characterDefinitions.map((char: any) => {
+      const headshot = assetList.find((a: any) =>
+        a.type === 'character-headshot' && a.metadata?.characterId === char.id
+      );
+      if (headshot?.filePath && !char.imagePath) {
+        context.log(`Linking headshot to character "${char.name}": ${headshot.filePath}`);
+        return { ...char, imagePath: headshot.filePath };
+      }
+      return char;
+    });
+
+    const locationsWithImages = locationDefinitions.map((loc: any) => {
+      const landscape = assetList.find((a: any) =>
+        a.type === 'landscape' && a.metadata?.locationId === loc.id
+      );
+      if (landscape?.filePath && !loc.imagePath) {
+        context.log(`Linking landscape to location "${loc.name}": ${landscape.filePath}`);
+        return { ...loc, imagePath: landscape.filePath };
+      }
+      return loc;
+    });
+
+    context.log(`Linked images: ${charactersWithImages.filter((c: any) => c.imagePath).length}/${characterDefinitions.length} characters, ${locationsWithImages.filter((l: any) => l.imagePath).length}/${locationDefinitions.length} locations`);
+
     // Populate section children arrays with their corresponding elements
     // Elements are generated per-section in order, so we distribute them back
     const populatedSections = populateSectionChildren(scriptSections, scriptElements, context);
@@ -73,8 +101,8 @@ export async function execute(
     // Assemble the complete ScriptDocument
     const scriptDocument = {
       metadata: scriptMetadata,
-      characters: characterDefinitions,
-      locations: locationDefinitions,
+      characters: charactersWithImages,
+      locations: locationsWithImages,
       sections: populatedSections,
       elements: elementsWithAudio,
       productionMetadata: prodMetadata,

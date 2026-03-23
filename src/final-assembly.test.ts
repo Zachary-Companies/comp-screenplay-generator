@@ -109,6 +109,88 @@ describe('final-assembly', () => {
     expect(pkg.script.sections[0].children).toEqual([]);
   });
 
+  it('should link asset imagePaths to characters and locations', async () => {
+    const { execute } = await import('./final-assembly.js');
+    const { context } = createMockContext();
+
+    const inputs = {
+      validatedInput: { kind: 'short-film' },
+      metadata: { title: 'Test' },
+      characters: [
+        { id: 'char_1', name: 'ALICE', description: 'Main character' },
+        { id: 'char_2', name: 'BOB', description: 'Supporting character' }
+      ],
+      locations: [
+        { id: 'loc_1', name: 'Office', description: 'Modern office' },
+        { id: 'loc_2', name: 'Park', description: 'City park' }
+      ],
+      processedSections: [
+        { id: 'scene-01', type: 'scene', title: 'Test', children: [], beats: [{ id: 'b1', description: 'test' }] }
+      ],
+      elements: [{ id: 'elem_1', type: 'action', content: 'Test' }],
+      productionMetadata: {},
+      revisionMetadata: {},
+      assetCollection: {
+        assets: [
+          { type: 'character-headshot', filePath: '/assets/characters/alice.png', metadata: { characterId: 'char_1' } },
+          { type: 'character-headshot', filePath: '/assets/characters/bob.png', metadata: { characterId: 'char_2' } },
+          { type: 'landscape', filePath: '/assets/locations/office.png', metadata: { locationId: 'loc_1' } },
+          { type: 'landscape', filePath: '/assets/locations/park.png', metadata: { locationId: 'loc_2' } }
+        ]
+      },
+      previsualizationPlan: { shots: [] },
+      validationResults: { valid: true }
+    };
+
+    const result = await execute(inputs, context);
+    const pkg = result.scriptPackage as any;
+
+    // Characters should now have imagePath
+    expect(pkg.script.characters[0].imagePath).toBe('/assets/characters/alice.png');
+    expect(pkg.script.characters[1].imagePath).toBe('/assets/characters/bob.png');
+
+    // Locations should now have imagePath
+    expect(pkg.script.locations[0].imagePath).toBe('/assets/locations/office.png');
+    expect(pkg.script.locations[1].imagePath).toBe('/assets/locations/park.png');
+  });
+
+  it('should not overwrite existing imagePath on characters or locations', async () => {
+    const { execute } = await import('./final-assembly.js');
+    const { context } = createMockContext();
+
+    const inputs = {
+      validatedInput: { kind: 'short-film' },
+      metadata: { title: 'Test' },
+      characters: [
+        { id: 'char_1', name: 'ALICE', imagePath: '/existing/alice.png' }
+      ],
+      locations: [
+        { id: 'loc_1', name: 'Office', imagePath: '/existing/office.png' }
+      ],
+      processedSections: [
+        { id: 'scene-01', type: 'scene', title: 'Test', children: [] }
+      ],
+      elements: [],
+      productionMetadata: {},
+      revisionMetadata: {},
+      assetCollection: {
+        assets: [
+          { type: 'character-headshot', filePath: '/new/alice.png', metadata: { characterId: 'char_1' } },
+          { type: 'landscape', filePath: '/new/office.png', metadata: { locationId: 'loc_1' } }
+        ]
+      },
+      previsualizationPlan: { shots: [] },
+      validationResults: { valid: true }
+    };
+
+    const result = await execute(inputs, context);
+    const pkg = result.scriptPackage as any;
+
+    // Should keep existing paths, not overwrite
+    expect(pkg.script.characters[0].imagePath).toBe('/existing/alice.png');
+    expect(pkg.script.locations[0].imagePath).toBe('/existing/office.png');
+  });
+
   it('should distribute elements evenly when no beats info', async () => {
     const { execute } = await import('./final-assembly.js');
     const { context } = createMockContext();
