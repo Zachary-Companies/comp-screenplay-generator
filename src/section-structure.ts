@@ -59,10 +59,12 @@ Rules:
 3. For feature films: Include acts (typically 3), scenes within acts
 4. For short films: Include scenes, possibly acts
 5. For commercials: Include scenes or montages as appropriate
-6. Container sections (teaser, act, montage, sequence) should have children arrays with nested scenes
-7. Scene sections should be leaf nodes (no children)
-8. Ensure logical flow and pacing appropriate for the runtime
-9. Include blackout or end-credits as final section if appropriate
+6. For YouTube shorts: Keep to a single punchy scene or montage (under 60 seconds)
+7. For YouTube videos: Include an intro hook, main content segments, and outro/CTA
+8. Container sections (teaser, act, montage, sequence) should have children arrays with nested scenes
+9. Scene sections should be leaf nodes (no children)
+10. Ensure logical flow and pacing appropriate for the runtime
+11. Include blackout or end-credits as final section if appropriate
 
 Return ONLY the JSON array of ScriptSection objects.`;
 
@@ -298,6 +300,80 @@ function generateFallbackSections(scriptKind: string): any[] {
               id: 'commercial-scene-1',
               type: 'scene',
               title: 'Product Introduction',
+              order: 1,
+              children: []
+            }
+          ]
+        }
+      ];
+
+    case 'youtube-short':
+      return [
+        {
+          id: 'hook',
+          type: 'scene',
+          title: 'Hook',
+          order: 1,
+          children: []
+        },
+        {
+          id: 'payoff',
+          type: 'scene',
+          title: 'Payoff',
+          order: 2,
+          children: []
+        }
+      ];
+
+    case 'youtube-video':
+      return [
+        {
+          id: 'intro-hook',
+          type: 'sequence',
+          title: 'Intro Hook',
+          order: 1,
+          children: [
+            {
+              id: 'intro-scene-1',
+              type: 'scene',
+              title: 'Cold Open',
+              order: 1,
+              children: []
+            }
+          ]
+        },
+        {
+          id: 'main-content',
+          type: 'sequence',
+          title: 'Main Content',
+          order: 2,
+          children: [
+            {
+              id: 'main-scene-1',
+              type: 'scene',
+              title: 'Segment 1',
+              order: 1,
+              children: []
+            },
+            {
+              id: 'main-scene-2',
+              type: 'scene',
+              title: 'Segment 2',
+              order: 2,
+              children: []
+            }
+          ]
+        },
+        {
+          id: 'outro',
+          type: 'sequence',
+          title: 'Outro & CTA',
+          order: 3,
+          children: [
+            {
+              id: 'outro-scene-1',
+              type: 'scene',
+              title: 'Wrap-Up & Call to Action',
               order: 1,
               children: []
             }

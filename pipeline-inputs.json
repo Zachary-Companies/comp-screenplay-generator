@@ -1,6 +1,14 @@
 {
   "friendlyInputs": [
     {
+      "id": "projectFolder",
+      "label": "Project Folder",
+      "type": "text",
+      "required": true,
+      "description": "Where to store your project files (assets, audio, renders). Set this before running the pipeline.",
+      "placeholder": "Example: /Users/you/Documents/MyScreenplay"
+    },
+    {
       "id": "projectType",
       "label": "Project Type",
       "type": "select",
@@ -11,7 +19,9 @@
         { "value": "Feature Film", "label": "Feature Film (full-length movie)" },
         { "value": "TV Pilot", "label": "TV Pilot (first episode of a new series)" },
         { "value": "TV Episode", "label": "TV Episode (episode of existing series)" },
-        { "value": "Commercial", "label": "Commercial / Advertisement" }
+        { "value": "Commercial", "label": "Commercial / Advertisement" },
+        { "value": "YouTube Short", "label": "YouTube Short (under 60 seconds)" },
+        { "value": "YouTube Video", "label": "YouTube Video (standard YouTube content)" }
       ],
       "placeholder": "Select a project type..."
     },

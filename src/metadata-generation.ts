@@ -115,6 +115,8 @@ function getEstimatedRuntime(scriptKind: string): number {
     case "tv-episode": return 45;
     case "tv-pilot": return 60;
     case "feature-film": return 120;
+    case "youtube-short": return 1;
+    case "youtube-video": return 12;
     default: return 90;
   }
 }
@@ -126,6 +128,8 @@ function getEstimatedPages(scriptKind: string): number {
     case "tv-episode": return 45;
     case "tv-pilot": return 60;
     case "feature-film": return 120;
+    case "youtube-short": return 1;
+    case "youtube-video": return 12;
     default: return 90;
   }
 }

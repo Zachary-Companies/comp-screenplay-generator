@@ -38,6 +38,12 @@ export async function execute(
       case 'feature-film':
         targetCharacterCount = Math.min(12, Math.max(5, Math.floor(runtime / 15)));
         break;
+      case 'youtube-short':
+        targetCharacterCount = Math.min(2, Math.max(1, 1));
+        break;
+      case 'youtube-video':
+        targetCharacterCount = Math.min(4, Math.max(1, Math.floor(runtime / 5)));
+        break;
     }
 
     // Build character generation prompt

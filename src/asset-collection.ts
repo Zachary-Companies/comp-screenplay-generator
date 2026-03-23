@@ -6,6 +6,7 @@
  * Generates images for characters, locations, and shots, then saves them
  * to the Woodbury asset library using the asset_save and asset_collection_create tools.
  *
+ * @input projectFolder: string - Root folder for storing generated assets
  * @input metadata: object - Script metadata
  * @input characters: object[] - Character definitions
  * @input locations: object[] - Location definitions
@@ -13,7 +14,7 @@
  * @output assetCollection: object - Complete AssetCollection object with saved asset IDs
  */
 export async function execute(
-  inputs: { metadata: any; characters: any[]; locations: any[]; elements: any[] },
+  inputs: { projectFolder?: string; metadata: any; characters: any[]; locations: any[]; elements: any[] },
   context: ScriptContext,
 ): Promise<{ assetCollection: object }> {
   const { metadata, characters, locations, elements } = inputs;
@@ -58,8 +59,8 @@ export async function execute(
     const assets: any[] = [];
     const savedAssetIds: string[] = [];
 
-    // Use project folder for all generated assets (falls back to /tmp if not set)
-    const projFolder = (context as any).projectFolder || '/tmp';
+    // Use explicit projectFolder input, then context, then fallback
+    const projFolder = inputs.projectFolder?.trim() || (context as any).projectFolder || '/tmp';
     const charAssetDir = `${projFolder}/assets/characters`;
     const locAssetDir = `${projFolder}/assets/locations`;
     const previsAssetDir = `${projFolder}/assets/previs`;

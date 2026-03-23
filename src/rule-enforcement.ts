@@ -40,7 +40,7 @@ export async function execute(
 
     // Rule 1: requireDialogueForNarrativeKinds
     if (rules.requireDialogueForNarrativeKinds) {
-      const narrativeKinds = ['tv-episode', 'tv-pilot', 'feature-film', 'short-film'];
+      const narrativeKinds = ['tv-episode', 'tv-pilot', 'feature-film', 'short-film', 'youtube-short', 'youtube-video'];
       if (narrativeKinds.includes(input.kind)) {
         const hasDialogue = scriptElements.some(element => element.type === 'dialogue');
         if (!hasDialogue) {

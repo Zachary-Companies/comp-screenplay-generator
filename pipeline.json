@@ -33,7 +33,9 @@
           "Documentary Short",
           "Corporate Video",
           "Training Video",
-          "Educational Content"
+          "Educational Content",
+          "YouTube Short",
+          "YouTube Video"
         ]
       }
     },
@@ -411,6 +413,25 @@
       }
     },
     {
+      "id": "var-project-folder",
+      "workflowId": "__variable__",
+      "position": {
+        "x": -248,
+        "y": 1510
+      },
+      "label": "Project Folder",
+      "variableNode": {
+        "type": "string",
+        "initialValue": "/Users/andrewporter/Documents/Screenplays",
+        "exposeAsInput": true,
+        "inputName": "projectFolder",
+        "description": "Where to store project files (assets, audio, renders). Set this before running the pipeline.",
+        "required": true,
+        "generationPrompt": "",
+        "inputControl": "folder-select"
+      }
+    },
+    {
       "id": "node-3",
       "workflowId": "__script_file__",
       "position": {
@@ -781,6 +802,11 @@
         "file": "src/asset-collection.ts",
         "description": "Create AssetCollection with character headshots, location landscapes, and shot previs frames",
         "inputs": [
+          {
+            "name": "projectFolder",
+            "type": "string",
+            "description": "Root folder for storing generated assets"
+          },
           {
             "name": "metadata",
             "type": "string",
@@ -1184,6 +1210,13 @@
       "targetPort": "additionalNotes"
     },
     {
+      "id": "edge-var-18",
+      "sourceNodeId": "var-project-folder",
+      "sourcePort": "value",
+      "targetNodeId": "node-12",
+      "targetPort": "projectFolder"
+    },
+    {
       "id": "edge-2",
       "sourceNodeId": "node-3",
       "sourcePort": "validatedInput",
@@ -1529,13 +1562,13 @@
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-22T03:04:46.455Z",
+    "updatedAt": "2026-03-23T00:12:48.348Z",
     "viewport": {
       "panX": -1135.989999151176,
       "panY": 407.5953756047863,
       "zoom": 1.7200000000000004
     },
-    "projectFolder": "/Users/andrewporter/Documents/Whats Aloha",
+    "projectFolder": "/Users/andrewporter/Documents/Screenplays",
     "logo": "/Users/andrewporter/Documents/The Last Jump/assets/pipeline-logo.png"
   },
   "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"

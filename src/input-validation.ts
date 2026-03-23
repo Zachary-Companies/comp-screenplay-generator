@@ -91,17 +91,23 @@ export async function execute(
       'commercial': 'commercial',
       'ad': 'commercial',
       'advertisement': 'commercial',
+      'youtube short': 'youtube-short',
+      'yt short': 'youtube-short',
+      'shorts': 'youtube-short',
+      'youtube video': 'youtube-video',
+      'yt video': 'youtube-video',
+      'youtube': 'youtube-video',
     };
 
     const normalizedType = projectType.toLowerCase().trim();
     const kind = projectTypeMap[normalizedType] || normalizedType;
 
     // Validate kind
-    const validKinds = ['commercial', 'tv-episode', 'tv-pilot', 'feature-film', 'short-film'];
+    const validKinds = ['commercial', 'tv-episode', 'tv-pilot', 'feature-film', 'short-film', 'youtube-short', 'youtube-video'];
     if (!validKinds.includes(kind)) {
       throw new Error(
         `"${projectType}" isn't a recognized project type. Try one of these:\n` +
-        '• Short Film\n• Feature Film\n• TV Episode\n• TV Pilot\n• Commercial'
+        '• Short Film\n• Feature Film\n• TV Episode\n• TV Pilot\n• Commercial\n• YouTube Short\n• YouTube Video'
       );
     }
 
@@ -136,6 +142,12 @@ export async function execute(
           break;
         case 'feature-film':
           targetRuntimeMinutes = 100;
+          break;
+        case 'youtube-short':
+          targetRuntimeMinutes = 1; // ~60 seconds
+          break;
+        case 'youtube-video':
+          targetRuntimeMinutes = 12;
           break;
       }
     }

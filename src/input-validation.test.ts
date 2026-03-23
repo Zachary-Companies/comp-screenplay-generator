@@ -54,6 +54,27 @@ describe('Input Validation', () => {
       storyIdea: 'A product showcase.',
     }, context);
     expect((result3.validatedInput as any).kind).toBe('commercial');
+
+    // Test "YouTube Short" -> "youtube-short"
+    const result4 = await execute({
+      projectType: 'YouTube Short',
+      storyIdea: 'A quick viral moment.',
+    }, context);
+    expect((result4.validatedInput as any).kind).toBe('youtube-short');
+
+    // Test "YouTube Video" -> "youtube-video"
+    const result5 = await execute({
+      projectType: 'YouTube Video',
+      storyIdea: 'A tutorial on cooking.',
+    }, context);
+    expect((result5.validatedInput as any).kind).toBe('youtube-video');
+
+    // Test "yt short" alias -> "youtube-short"
+    const result6 = await execute({
+      projectType: 'yt short',
+      storyIdea: 'A funny skit.',
+    }, context);
+    expect((result6.validatedInput as any).kind).toBe('youtube-short');
   });
 
   it('should parse length in various formats', async () => {
@@ -107,6 +128,20 @@ describe('Input Validation', () => {
       storyIdea: 'A long story.',
     }, context);
     expect((result3.validatedInput as any).targetRuntimeMinutes).toBe(100);
+
+    // YouTube Short default
+    const result4 = await execute({
+      projectType: 'YouTube Short',
+      storyIdea: 'A quick clip.',
+    }, context);
+    expect((result4.validatedInput as any).targetRuntimeMinutes).toBe(1);
+
+    // YouTube Video default
+    const result5 = await execute({
+      projectType: 'YouTube Video',
+      storyIdea: 'A tutorial.',
+    }, context);
+    expect((result5.validatedInput as any).targetRuntimeMinutes).toBe(12);
   });
 
   it('should handle TV series metadata', async () => {
