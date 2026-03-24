@@ -259,9 +259,156 @@ function ShotGalleryLink({ shot, pipelineId, genCount }: { shot: SceneShot; pipe
   );
 }
 
+// ── Manual Reference Editor (add/remove character & location refs per shot) ──
+
+function RefEditor({ elementId, currentRefs, allCharacters, allLocations, pipelineId, onUpdate }: {
+  elementId: string;
+  currentRefs: string[];
+  allCharacters: Character[];
+  allLocations: Location[];
+  pipelineId: string;
+  onUpdate: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  // Identify which chars/locs are currently referenced
+  const charRefNames = new Set(currentRefs.map(r => {
+    const name = r.split('/').pop()?.replace(/^character_|_headshot.*|_v\d+\..*/g, '').replace(/-/g, ' ') || '';
+    return name.toLowerCase();
+  }));
+  const locRefNames = new Set(currentRefs.map(r => {
+    const name = r.split('/').pop()?.replace(/^location_|_landscape.*|_v\d+\..*/g, '').replace(/-/g, ' ') || '';
+    return name.toLowerCase();
+  }));
+
+  const toggleBinding = async (targetType: 'character' | 'location', targetId: string, add: boolean) => {
+    setSaving(true);
+    try {
+      const bindingType = targetType === 'character' ? 'depicts' : 'set-in';
+      if (add) {
+        await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: bindingType,
+            source: { entityType: 'shot', entityId: elementId },
+            target: { entityType: targetType, entityId: targetId },
+            confidence: 1.0,
+            origin: 'manual',
+          }),
+        });
+      } else {
+        // Remove binding — fetch existing then delete
+        const resp = await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings`);
+        const data = await resp.json();
+        const bindings = data.bindings || [];
+        const toRemove = bindings.find((b: any) =>
+          b.type === bindingType &&
+          b.source?.entityId === elementId &&
+          b.target?.entityId === targetId
+        );
+        if (toRemove) {
+          await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings/${toRemove.id}`, { method: 'DELETE' });
+        }
+      }
+      onUpdate();
+    } catch (e) {
+      console.error('Failed to update binding:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        title="Edit references for this shot"
+        style={{
+          background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)',
+          borderRadius: 4, color: '#a78bfa', fontSize: 9, padding: '2px 6px',
+          cursor: 'pointer', fontWeight: 600,
+        }}
+      >
+        ✏️ Refs
+      </button>
+      {open && (
+        <div ref={popRef} style={{
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 4,
+          background: '#1e1b2e', border: '1px solid rgba(139,92,246,0.3)',
+          borderRadius: 8, padding: 8, zIndex: 100, width: 220,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+        }}>
+          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginBottom: 6 }}>Characters</div>
+          {allCharacters.map(c => {
+            const isRef = charRefNames.has((c.name || '').toLowerCase().replace(/\s+/g, '-'));
+            return (
+              <label key={c.id} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0',
+                fontSize: 11, color: isRef ? '#a78bfa' : '#94a3b8', cursor: 'pointer',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={isRef}
+                  disabled={saving}
+                  onChange={() => toggleBinding('character', c.id, !isRef)}
+                  style={{ accentColor: '#8b5cf6' }}
+                />
+                {c.imagePath && (
+                  <img src={`/api/file?path=${encodeURIComponent(c.imagePath)}`}
+                    style={{ width: 20, height: 20, borderRadius: 3, objectFit: 'cover' }}
+                    alt="" />
+                )}
+                {c.displayName || c.name}
+              </label>
+            );
+          })}
+          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 8, marginBottom: 6 }}>Locations</div>
+          {allLocations.slice(0, 8).map(l => {
+            const isRef = locRefNames.has((l.name || '').toLowerCase().replace(/\s+/g, '-'));
+            return (
+              <label key={l.id} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0',
+                fontSize: 11, color: isRef ? '#22d3ee' : '#94a3b8', cursor: 'pointer',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={isRef}
+                  disabled={saving}
+                  onChange={() => toggleBinding('location', l.id, !isRef)}
+                  style={{ accentColor: '#06b6d4' }}
+                />
+                {l.imagePath && (
+                  <img src={`/api/file?path=${encodeURIComponent(l.imagePath)}`}
+                    style={{ width: 20, height: 20, borderRadius: 3, objectFit: 'cover' }}
+                    alt="" />
+                )}
+                {l.name}
+              </label>
+            );
+          })}
+          {saving && <div style={{ fontSize: 9, color: '#f59e0b', marginTop: 4 }}>Saving...</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Scene Elements (in document order, with editing & drag) ──
 
-function SceneElements({ scene, charMap, pipelineId, globalAspectRatio, motionApproach }: { scene: SceneData; charMap: Record<string, Character>; pipelineId: string; globalAspectRatio?: string; motionApproach?: string }) {
+function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, motionApproach }: { scene: SceneData; charMap: Record<string, Character>; locMap?: Record<string, Location>; pipelineId: string; globalAspectRatio?: string; motionApproach?: string }) {
   const pipeline = usePipeline();
   const { project, updateElement, updateProject } = pipeline;
   const elements = project?.elements || [];
@@ -786,6 +933,22 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio, motionAp
                             fontSize: 9, color: '#e2e8f0', fontWeight: 600,
                           }}>+{refImages.length - 3}</span>
                         )}
+                      </div>
+                    )}
+                    {/* Manual ref editor button */}
+                    {shotElem && !isGen && (
+                      <div style={{ position: 'absolute', bottom: 4, right: 4, zIndex: 3 }}>
+                        <RefEditor
+                          elementId={shotElem.id}
+                          currentRefs={refImages}
+                          allCharacters={Object.values(charMap)}
+                          allLocations={Object.values(locMap || {})}
+                          pipelineId={pipelineId}
+                          onUpdate={() => {
+                            // Force re-fetch by triggering a state update
+                            if (typeof (window as any).toast === 'function') (window as any).toast('Bindings updated — Regen to apply', 'success');
+                          }}
+                        />
                       </div>
                     )}
                     {/* Generation count badge */}
@@ -2399,6 +2562,7 @@ Return ONLY a JSON array, no markdown, no explanation.`;
         <SceneElements
           scene={scene}
           charMap={charMap}
+          locMap={locMap}
           pipelineId={pipelineId}
           globalAspectRatio={globalAspectRatio}
           motionApproach={motionApproach}

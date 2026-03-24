@@ -33,6 +33,7 @@ export interface ExtractionResult {
   tracks: Track[];
   duration: number;
   previsMap: Record<string, string>;
+  videoMap: Record<string, string>;
   dialogAudioMap: Record<string, string>;
   dialogDurationMap: Record<string, number>;
   userClips: Clip[];
@@ -49,7 +50,7 @@ export function extractData(
       return {
         clips: [], scenes: [], characters: [], assets: [],
         tracks: DEFAULT_TRACKS.map(t => ({ ...t })),
-        duration: 120, previsMap: {}, dialogAudioMap: {}, dialogDurationMap: {}, userClips: [],
+        duration: 120, previsMap: {}, videoMap: {}, dialogAudioMap: {}, dialogDurationMap: {}, userClips: [],
       };
     }
 
@@ -246,15 +247,17 @@ export function extractData(
             });
             // Subtitles don't advance the timeline — they overlay other content
           } else if (elem.type === 'shot') {
+            const hasVideo = !!videoMap[elem.id];
             clips.push({
               id: stableId('shot', elem.id),
               elementId: elem.id,
               trackId: 'visuals',
-              type: 'image',
+              type: hasVideo ? 'video' : 'image',
               name: (elem.shotText || elem.content || '').slice(0, 50),
               startTime: sceneStart + localOffset,
               duration: clipDur,
               content: elem.shotText || elem.content,
+              filePath: hasVideo ? videoMap[elem.id] : undefined,
             });
             localOffset += clipDur;
           }
@@ -387,6 +390,25 @@ export function extractData(
       }
     }
 
+    // Build videoMap: element ID → video file path (prefer selected video generation)
+    const videoMap: Record<string, string> = {};
+    for (const pv of previsShots) {
+      if (!pv.shotElementId) continue;
+      if (pv.videoGenerations && pv.videoGenerations.length > 0) {
+        const selVideo = pv.selectedVideoGenerationId
+          ? pv.videoGenerations.find((g: any) => g.id === pv.selectedVideoGenerationId)
+          : pv.videoGenerations[pv.videoGenerations.length - 1];
+        if (selVideo?.filePath) videoMap[pv.shotElementId] = selVideo.filePath;
+      } else if (pv.videoPath) {
+        videoMap[pv.shotElementId] = pv.videoPath;
+      }
+    }
+    for (const shot of sceneGroupedShots) {
+      if ((shot as any).videoPath && !videoMap[shot.id]) {
+        videoMap[shot.id] = (shot as any).videoPath;
+      }
+    }
+
     const sceneStartTimeMap: Record<string, number> = {};
     if (project.scenes) {
       for (const sc of project.scenes) {
@@ -441,16 +463,17 @@ export function extractData(
           const dur = shot.duration || autoShotDur;
           const hasVisualClip = clips.find(c => c.elementId === shot.id && c.trackId === 'visuals');
           if (!hasVisualClip) {
+            const shotHasVideo = !!videoMap[shot.id];
             clips.push({
               id: stableId('shot', shot.id),
               elementId: shot.id,
               trackId: 'visuals',
-              type: 'image',
+              type: shotHasVideo ? 'video' : 'image',
               name: (shot.shotType || '') + ' — ' + (shot.description || '').slice(0, 40),
               startTime: sceneStart + shotOffset,
               duration: dur,
               content: shot.description,
-              filePath: previsMap[shot.id],
+              filePath: shotHasVideo ? videoMap[shot.id] : previsMap[shot.id],
             });
           }
           shotOffset += dur;
@@ -509,6 +532,7 @@ export function extractData(
       tracks,
       duration,
       previsMap,
+      videoMap,
       dialogAudioMap,
       dialogDurationMap,
       userClips: loadedUserClips,

@@ -698,7 +698,7 @@ function StorySceneItem({ scene, index }: { scene: EditorScene; index: number })
       {sceneClips.slice(0, 8).map(clip => (
         <div key={clip.id} className="ed-story-clip" onClick={e => { e.stopPropagation(); dispatch({ type: 'SET_SELECTED_CLIP', clipId: clip.id }); dispatch({ type: 'SET_TIME', time: clip.startTime }); }}>
           <span className="ed-story-clip-type" style={{ color: (MEDIA_COLORS[clip.type] || MEDIA_COLORS.image).accent }}>
-            {clip.type === 'dialog' ? '🎤' : clip.type === 'image' ? '🖼' : clip.type === 'text' ? '📝' : '🎵'}
+            {clip.type === 'dialog' ? '🎤' : clip.type === 'video' ? '🎬' : clip.type === 'image' ? '🖼' : clip.type === 'text' ? '📝' : '🎵'}
           </span>
           <span className="ed-story-clip-name">{clip.name.slice(0, 36)}</span>
           <span className="ed-story-clip-dur">{clip.duration.toFixed(1)}s</span>
@@ -1143,13 +1143,18 @@ const ProgramMonitor = memo(function ProgramMonitor() {
 
   // Fall back to selected clip if nothing at playhead
   const selectedClip = primarySelectedClipId(state) ? state.clips.find(c => c.id === primarySelectedClipId(state)) : null;
-  const showVisual = visualClip || (selectedClip?.type === 'image' ? selectedClip : null);
+  const showVisual = visualClip || (selectedClip?.type === 'image' || selectedClip?.type === 'video' ? selectedClip : null);
   const showDialog = dialogClip || (selectedClip?.type === 'dialog' ? selectedClip : null);
 
   const previewImgPath = useMemo(() => {
     if (showVisual?.type === 'image') return showVisual.filePath || state.previsMap[showVisual.elementId || ''];
     return null;
   }, [showVisual, state.previsMap]);
+
+  const previewVideoPath = useMemo(() => {
+    if (showVisual?.type === 'video') return showVisual.filePath || (state as any).videoMap?.[showVisual.elementId || ''];
+    return null;
+  }, [showVisual, (state as any).videoMap]);
 
   const handleScrubStart = useCallback((e: RMouseEvent) => {
     const scrub = scrubberRef.current;
@@ -1209,14 +1214,22 @@ const ProgramMonitor = memo(function ProgramMonitor() {
       </div>
       <div ref={canvasWrapRef} className={`ed-preview-canvas-wrap${state.previewZoom !== 'fit' ? ' ed-preview-canvas-wrap--scrollable' : ''}`}>
         <div className="ed-preview-canvas" style={state.previewZoom !== 'fit' ? { width: Math.round(560 * (Number(state.previewZoom) / 100)), height: Math.round(315 * (Number(state.previewZoom) / 100)), maxWidth: 'none', flexShrink: 0 } : undefined}>
-          {previewImgPath && <img className="ed-preview-image" src={imgSrc(previewImgPath)} alt="" />}
+          {previewVideoPath && (
+            <video
+              className="ed-preview-image"
+              src={imgSrc(previewVideoPath)}
+              autoPlay muted loop playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          )}
+          {previewImgPath && !previewVideoPath && <img className="ed-preview-image" src={imgSrc(previewImgPath)} alt="" />}
           {showDialog?.type === 'dialog' && (
             <div className="ed-preview-dialog-overlay">
               <div className="ed-preview-dialog-char" style={{ color: showDialog.color || charColor(showDialog.characterName || '') }}>{showDialog.characterName || ''}</div>
               <div className="ed-preview-dialog-text">{(showDialog.lines || []).join(' ')}</div>
             </div>
           )}
-          {!previewImgPath && !showDialog && (
+          {!previewImgPath && !previewVideoPath && !showDialog && (
             <div className="ed-preview-empty">
               <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5"><rect x="4" y="8" width="40" height="28" rx="3"/><path d="M4 30l12-8 8 6 8-10 12 8"/><circle cx="14" cy="18" r="3"/></svg>
               <div>No clip at playhead</div>

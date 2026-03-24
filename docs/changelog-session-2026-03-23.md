@@ -329,3 +329,44 @@ Documented and refined the action configuration that controls how the `/generate
 ### Woodbury platform
 - `/Users/andrewporter/Documents/GitHub/woodbury/src/loop/tools/nanobanana.ts` (modified: referenceImages parameter)
 - `/Users/andrewporter/Documents/GitHub/woodbury/src/config-dashboard/react/hooks/useDataExtraction.ts` (baseline reference, proportional budget calculation)
+
+---
+
+## Late Session Additions (continued)
+
+### 12. Editor uses video clips in Visuals track when available
+
+- **Problem/Need**: The Editor timeline always showed still images for shots, even when video previs clips had been generated via Veo.
+- **Solution**: `extractData.ts` now builds a `videoMap` (element ID → video file path) from `previsualizations.shots[].videoGenerations` and `videoPath`. Visual clips get `type: 'video'` when a video exists. The Editor's Program Monitor renders `<video autoPlay muted loop>` for video clips and `<img>` for stills. Timeline clips display a 🎬 icon (purple) for video vs 🖼 for images.
+- **Files Changed**:
+  - `views/editor/extractData.ts` — added `videoMap` to ExtractionResult, built from previs shots and scene shots
+  - `views/editor/EditorView.tsx` — added `previewVideoPath` memo, renders `<video>` in Program Monitor, updated empty-state check, added video icon to story panel
+
+### 13. Manual reference editor for shot cards ("✏️ Refs" button)
+
+- **Problem/Need**: Auto-binding rules match character names in shot text, but many shots don't mention characters by name (e.g., "Family kitchen bathed in morning light"). Users needed a way to manually add or remove character/location references per shot so regenerated images use the correct headshots.
+- **Solution**: Added a `RefEditor` React component that renders a "✏️ Refs" button in the bottom-right corner of each shot thumbnail. Clicking it opens a popup with checkboxes for all characters (with headshot thumbnails) and locations (up to 8). Toggling a checkbox creates or removes a `depicts` or `set-in` binding via the `/api/compositions/:id/bindings` API. After updating, a toast prompts "Bindings updated — Regen to apply".
+- **Files Changed**:
+  - `views/screenplay/ScreenplayView.tsx` — added `RefEditor` component, integrated into shot card rendering, passed `locMap` prop through `SceneElements`
+
+### 14. Video generation MIME type fix (JPEG files with .png extension)
+
+- **Problem/Need**: Gemini's image generator saves JPEG data with `.png` file extensions. When the Veo API received these with `mimeType: 'image/png'`, the mismatched MIME caused Veo to silently ignore the source image and fall back to text-to-video, producing completely different characters/scenes.
+- **Root Cause**: The route trusted the file extension for MIME type detection instead of inspecting the actual file data.
+- **Solution**: The route now detects the actual image format by checking the base64 prefix: `/9j/` → JPEG, `iVBOR` → PNG. This ensures the correct MIME type is sent to Veo regardless of file extension.
+- **Files Changed**:
+  - `routes/index.ts` — MIME detection in `callVeoApi`, base64 prefix check
+
+### 15. Video generation uses fs.readFileSync instead of shell exec for base64
+
+- **Problem/Need**: The route used `sdk.exec('base64 -i ...')` to encode images, but Node.js `execSync` has a default stdout buffer limit (~1MB). Previs images encoded to ~1.1MB base64, causing `ENOBUFS` errors that silently failed — resulting in no image being sent to Veo.
+- **Solution**: Replaced shell-based `base64` command with direct `fs.readFileSync` + `Buffer.from(...).toString('base64')` in Node.js, which has no buffer size limits.
+- **Files Changed**:
+  - `routes/index.ts` — `callVeoApi` now reads files directly with `fs`
+
+### 16. Veo model selection: Veo 2.0 for image-to-video, Veo 3.1 for text-to-video
+
+- **Problem/Need**: Veo 3.1's audio generation triggered aggressive safety filters on many scenes (children's rooms, etc.), blocking video output entirely. Veo 3.1 also doesn't support the `generateAudio: false` parameter on the Gemini API endpoint.
+- **Solution**: The route now selects the model based on whether a source image exists: image-to-video uses `veo-2.0-generate-001` (no audio generation, fewer safety blocks), text-to-video uses `veo-3.1-generate-preview` (higher quality when no source constraints exist).
+- **Files Changed**:
+  - `routes/index.ts` — model selection logic in `callVeoApi`
