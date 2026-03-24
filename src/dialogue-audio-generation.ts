@@ -45,64 +45,48 @@ export async function execute(
       };
     }
 
-    // Build character ID to voice ID mapping from bindings
-    // Voice bindings are stored as: character → voice (target is the voice ID)
+    // Build character ID to voice ID mapping from persisted voiceId on characters
+    // (set during character-generation node)
     const characterVoiceMap = new Map<string, string>();
-    
-    // Try to load voice bindings from the pipeline bindings
-    try {
-      // The bindings are available via the pipeline context
-      // We'll look for voice bindings in the format: character:id → voice:voiceId
-      const bindingsResponse = await context.tools.asset_list?.({ 
-        tags: ['voice-binding'],
-        limit: 100 
-      }).catch(() => null);
-      
-      // If we can't get bindings from assets, we'll use a fallback approach
-      // by checking if characters have voiceId properties
-      for (const char of characterDefs) {
-        if (char.voiceId) {
-          characterVoiceMap.set(char.id, char.voiceId);
-          characterVoiceMap.set(char.name?.toLowerCase(), char.voiceId);
-        }
+
+    for (const char of characterDefs) {
+      if (char.voiceId) {
+        characterVoiceMap.set(char.id, char.voiceId);
+        characterVoiceMap.set(char.name?.toLowerCase(), char.voiceId);
+        context.log('Using persisted voice "' + (char.voiceName || char.voiceId) + '" for ' + char.name);
       }
-    } catch (e) {
-      context.log('Could not load voice bindings from assets, using character voiceId properties');
     }
 
-    // If no voice mappings found, try to get available voices and assign defaults
+    // Fallback: if no voices were persisted, try to assign from available voices
     if (characterVoiceMap.size === 0) {
-      context.log('No voice bindings found, attempting to list available voices');
+      context.log('No persisted voice assignments found, attempting auto-assign...');
       try {
-        const voicesResult = await context.tools.tts_voices?.({});
+        const voicesResult = await (context.tools as any).tts_voices?.({});
         if (voicesResult?.voices && Array.isArray(voicesResult.voices)) {
           const availableVoices = voicesResult.voices;
           context.log('Found ' + availableVoices.length + ' available voices');
-          
-          // Assign voices to characters based on gender/characteristics if possible
+
           for (let i = 0; i < characterDefs.length; i++) {
             const char = characterDefs[i];
-            // Try to match voice by gender or just cycle through available voices
             let matchedVoice = availableVoices.find((v: any) => {
               const charGender = char.gender?.toLowerCase();
               const voiceLabels = v.labels || {};
               return charGender && voiceLabels.gender?.toLowerCase() === charGender;
             });
-            
+
             if (!matchedVoice && availableVoices.length > 0) {
-              // Fallback: cycle through voices
               matchedVoice = availableVoices[i % availableVoices.length];
             }
-            
+
             if (matchedVoice) {
               characterVoiceMap.set(char.id, matchedVoice.voice_id);
               characterVoiceMap.set(char.name?.toLowerCase(), matchedVoice.voice_id);
-              context.log('Assigned voice "' + matchedVoice.name + '" to character "' + char.name + '"');
+              context.log('Fallback-assigned voice "' + matchedVoice.name + '" to ' + char.name);
             }
           }
         }
       } catch (e: any) {
-        context.log('Could not list voices: ' + e.message);
+        context.log('Could not list voices for fallback: ' + e.message);
       }
     }
 

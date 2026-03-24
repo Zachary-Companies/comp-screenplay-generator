@@ -138,6 +138,7 @@ export interface EditorState {
   playing: boolean;
   snapEnabled: boolean;
   fillGaps: boolean;
+  compactTimeline: boolean;
   selectedClipIds: string[];
   selectedTrackId: string | null;
   clipboard: { clips: Clip[]; operation: 'copy' | 'cut' } | null;
@@ -175,6 +176,7 @@ export const initialEditorState: EditorState = {
   playing: false,
   snapEnabled: true,
   fillGaps: true,
+  compactTimeline: false,
   selectedClipIds: [],
   selectedTrackId: null,
   clipboard: null,
@@ -228,6 +230,7 @@ export type EditorAction =
   | { type: 'SET_PREVIEW_ZOOM'; zoom: 'fit' | number }
   | { type: 'TOGGLE_SNAP' }
   | { type: 'TOGGLE_FILL_GAPS' }
+  | { type: 'TOGGLE_COMPACT_TIMELINE' }
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'TOGGLE_INSPECTOR' }
   | { type: 'TOGGLE_APP_SIDEBAR' }
@@ -372,6 +375,9 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
 
     case 'TOGGLE_FILL_GAPS':
       return { ...state, fillGaps: !state.fillGaps };
+
+    case 'TOGGLE_COMPACT_TIMELINE':
+      return { ...state, compactTimeline: !state.compactTimeline };
 
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarCollapsed: !state.sidebarCollapsed };

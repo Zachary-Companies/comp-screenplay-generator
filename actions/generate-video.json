@@ -1,0 +1,108 @@
+{
+  "id": "generate-video",
+  "label": "Generate AI Video Clip",
+  "description": "Generates an AI video clip from a shot's previs image using Veo 3.1.",
+
+  "referenceResolution": {
+    "characters": {
+      "strategy": "binding-match",
+      "description": "Only include characters whose names appear in the shot description text",
+      "bindingType": "depicts",
+      "sourceEntityType": "shot",
+      "targetEntityType": "character",
+      "autoCreateBindings": true,
+      "autoBindRule": {
+        "matchSourceField": "shotText",
+        "matchTargetField": "name",
+        "wholeWord": true,
+        "caseSensitive": false
+      },
+      "fallback": "none",
+      "assetField": "characterAssets",
+      "descriptionTemplate": "Reference image {index} is {displayName || name} ({description})"
+    },
+    "locations": {
+      "strategy": "binding-match",
+      "description": "Include the location if it is referenced in the shot via a set-in binding",
+      "bindingType": "set-in",
+      "sourceEntityType": "shot",
+      "targetEntityType": "location",
+      "autoCreateBindings": true,
+      "autoBindRule": {
+        "matchSourceField": "shotText",
+        "matchTargetField": "name",
+        "wholeWord": true,
+        "caseSensitive": false
+      },
+      "fallback": "scene-heading",
+      "assetField": "locationAssets",
+      "descriptionTemplate": "Reference image {index} is the location \"{name}\" ({description})"
+    }
+  },
+
+  "referenceInstruction": "Using the attached reference images as visual guides for character appearance and location setting. The characters in this frame must match these references exactly — same face, hair, body type, clothing, and features. The environment should be consistent with the location reference.",
+
+  "prompt": {
+    "sections": [
+      {
+        "id": "references",
+        "when": "referenceImages.length > 0",
+        "template": "{referenceInstruction}\n{referenceDescriptions}"
+      },
+      {
+        "id": "scene-description",
+        "template": "{previsDescription}",
+        "appendWhen": "shotText !== previsDescription",
+        "appendTemplate": " The camera captures: {shotText}"
+      },
+      {
+        "id": "camera-motion",
+        "template": "Camera motion: {cameraMovementDescription}. Frame: {frameSizeDescription}."
+      },
+      {
+        "id": "lighting",
+        "when": "lighting || cameraIntent",
+        "template": "{lighting ? 'Lighting: ' + lighting + '. ' : ''}{cameraIntent ? cameraIntent + '. ' : ''}"
+      },
+      {
+        "id": "style",
+        "template": "Style: Cinematic video footage shot on professional cinema camera. Smooth, naturalistic motion with 24fps film cadence. Rich color grading with deep shadows and controlled highlights."
+      }
+    ]
+  },
+
+  "generation": {
+    "model": "veo-3.1",
+    "aspectRatio": "16:9",
+    "defaultDuration": 6,
+    "maxDuration": 8
+  },
+
+  "frameSizeLensMap": {
+    "WIDE": "wide-angle lens (24mm), deep depth of field",
+    "EXTREME WIDE": "ultra wide-angle lens (16mm), expansive depth of field",
+    "MEDIUM": "standard lens (50mm), natural perspective with moderate depth of field",
+    "MEDIUM CLOSE-UP": "85mm portrait lens, shallow depth of field (f/2.8)",
+    "CLOSE-UP": "85mm portrait lens, very shallow depth of field (f/1.8)",
+    "EXTREME CLOSE-UP": "macro lens (100mm), extremely shallow depth of field (f/1.4)"
+  },
+
+  "cameraMovementPromptMap": {
+    "STATIC": "Camera holds perfectly still on a locked-off tripod",
+    "PAN": "Smooth horizontal pan following the action from left to right",
+    "TILT": "Gentle vertical tilt upward revealing the scene",
+    "DOLLY": "Dolly tracking shot pushing forward through the space",
+    "SLOW PUSH IN": "Very subtle, barely perceptible dolly push-in",
+    "PUSH IN": "Camera pushes in toward the subject, tightening the frame",
+    "PULL BACK": "Camera slowly pulls back, revealing the wider scene",
+    "TRACKING": "Camera tracks laterally alongside the moving subject",
+    "CRANE": "Camera cranes upward with sweeping elevated perspective",
+    "HANDHELD": "Handheld camera with organic, documentary-style movement",
+    "STEADICAM": "Smooth floating Steadicam gliding through the space"
+  },
+
+  "costEstimate": {
+    "perSecond": 0.075,
+    "currency": "USD"
+  }
+}

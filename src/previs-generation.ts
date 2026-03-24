@@ -65,10 +65,15 @@ export async function execute(
       const dialogueElements = parsedElements.filter((el: any) => el.type === 'dialogue');
       const characterIds = [...new Set(dialogueElements.map((el: any) => el.characterId).filter(Boolean))];
 
-      // Find corresponding previs-frame asset
-      const assetId = parsedAssets?.assets?.find((asset: any) =>
-        asset.type === 'previs-frame' && asset.metadata?.shotElementId === shotElement.id
-      )?.id || null;
+      // Find corresponding previs-frame asset (match by shotElementId or element id)
+      const matchedAsset = parsedAssets?.assets?.find((asset: any) =>
+        asset.type === 'previs-frame' && (
+          asset.metadata?.shotElementId === shotElement.id ||
+          asset.metadata?.elementId === shotElement.id
+        )
+      );
+      const assetId = matchedAsset?.id || null;
+      const assetFilePath = matchedAsset?.filePath || null;
 
       // Generate shot description and camera intent using LLM
       const shotText = shotElement.shotText || shotElement.content || 'Shot';
@@ -109,7 +114,8 @@ Format as JSON with keys: description, cameraIntent, composition, lighting, dura
         composition: shotDetails.composition || 'Balanced framing',
         lighting: shotDetails.lighting || 'Natural lighting',
         durationSeconds: shotDetails.durationSeconds || 3,
-        assetId: assetId
+        assetId: assetId,
+        filePath: assetFilePath
       };
 
       previsualizationShots.push(previsualizationShot);

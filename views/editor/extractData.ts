@@ -43,6 +43,7 @@ export function extractData(
   appState: any | null,
   fillGaps: boolean,
   extraDurations?: Record<string, number>,
+  compactTimeline?: boolean,
 ): ExtractionResult {
     if (!project) {
       return {
@@ -63,8 +64,10 @@ export function extractData(
     // ── Pre-build audio duration map from dialogue-audio assets ──
     const dialogAudioMap: Record<string, string> = {};
     const dialogDurationMap: Record<string, number> = {};
+    const rawAssets = (project as any).assets;
+    const assetArray = Array.isArray(rawAssets) ? rawAssets : (rawAssets?.assets || []);
     const allAssetSources = [
-      ...((project as any).assets || []),
+      ...assetArray,
       ...((project as any).dialogueAudio?.assets || []),
     ];
     for (const a of allAssetSources) {
@@ -176,14 +179,23 @@ export function extractData(
         const hasAudio = audioCount > 0;
         let budget: number;
 
+        // Compact timeline: shots/non-dialogue get minimal time (0.5s each)
+        // so the video is paced tightly by dialogue audio
+        const COMPACT_SHOT_DUR = 0.5;
+
         if (hasAudio) {
-          const nonDialogWeight = elems.filter(e => e.audioDur === null && project.elements![e.idx].type !== 'dialogue').reduce((sum, e) => sum + e.weight, 0);
-          const unrenderedDialogWeight = elems.filter(e => e.audioDur === null && project.elements![e.idx].type === 'dialogue').reduce((sum, e) => sum + e.weight, 0);
-          const avgAudioPerWeight = totalWeight > 0 ? totalAudioDur / (totalWeight - nonDialogWeight - unrenderedDialogWeight || 1) : 1;
-          const nonAudioTime = (nonDialogWeight + unrenderedDialogWeight) * avgAudioPerWeight;
-          budget = totalAudioDur + nonAudioTime;
+          // Shot elements get minimal time — visuals change with dialogue, not independently
+          const shotCount = elems.filter(e => e.audioDur === null && e.weight > 0 && project.elements![e.idx].type === 'shot').length;
+          const unrenderedDialogCount = elems.filter(e => e.audioDur === null && project.elements![e.idx].type === 'dialogue').length;
+          if (compactTimeline) {
+            // Compact: shots get 0.5s, unrendered dialogue gets 1s estimate
+            budget = totalAudioDur + shotCount * COMPACT_SHOT_DUR + unrenderedDialogCount * 1.0;
+          } else {
+            // Normal: shots get 1s each (not proportional weight), unrendered dialogue gets 2s estimate
+            budget = totalAudioDur + shotCount * 1.0 + unrenderedDialogCount * 2.0;
+          }
         } else {
-          budget = DEFAULT_SCENE_BUDGET;
+          budget = compactTimeline ? 4 : DEFAULT_SCENE_BUDGET;
         }
 
         let localOffset = 0;
@@ -195,10 +207,13 @@ export function extractData(
           if (audioDur !== null) {
             clipDur = audioDur;
           } else if (hasAudio) {
-            const audioElemWeight = elems.filter(e => e.audioDur !== null).reduce((sum, e) => sum + e.weight, 0);
-            const nonAudioBudget = budget - totalAudioDur;
-            const nonAudioWeight = totalWeight - audioElemWeight;
-            clipDur = nonAudioWeight > 0 ? (weight / nonAudioWeight) * nonAudioBudget : 1;
+            // Non-audio elements: fixed duration based on type, not proportional weight
+            const elemType = project.elements![idx].type;
+            if (compactTimeline) {
+              clipDur = elemType === 'shot' ? COMPACT_SHOT_DUR : (elemType === 'dialogue' ? 1.0 : 0);
+            } else {
+              clipDur = elemType === 'shot' ? 1.0 : (elemType === 'dialogue' ? 2.0 : 0);
+            }
           } else {
             clipDur = totalWeight > 0 ? (weight / totalWeight) * budget : budget / elems.length;
           }
@@ -306,10 +321,11 @@ export function extractData(
       }
     }
 
-    if ((project as any).assets && Array.isArray((project as any).assets)) {
-      for (const a of (project as any).assets) {
-        if (a && (a.name || a.filePath)) assets.push(a);
-      }
+    const projectAssets = Array.isArray((project as any).assets)
+      ? (project as any).assets
+      : ((project as any).assets?.assets || []);
+    for (const a of projectAssets) {
+      if (a && (a.name || a.filePath)) assets.push(a);
     }
 
     const daAssets = (project as any).dialogueAudio?.assets;

@@ -1012,6 +1012,11 @@
             "name": "dialogueAudio",
             "type": "string",
             "description": "Generated dialogue audio assets"
+          },
+          {
+            "name": "motionGraphicsPlan",
+            "type": "string",
+            "description": "Motion graphics plan (Ken Burns, transitions, etc.)"
           }
         ],
         "outputs": [
@@ -1084,6 +1089,67 @@
             "name": "updatedAssetCollection",
             "type": "string",
             "description": "Asset collection with audio assets added"
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-18",
+      "workflowId": "__script_file__",
+      "position": {
+        "x": 2900,
+        "y": 500
+      },
+      "label": "Motion Graphics Generation",
+      "scriptFile": {
+        "file": "src/motion-graphics-generation.ts",
+        "inputs": [
+          {
+            "name": "elements",
+            "type": "string",
+            "description": "Script elements (shots, dialogue, action, transition)"
+          },
+          {
+            "name": "previsualizationPlan",
+            "type": "string",
+            "description": "Previs shots with camera movement and frame size"
+          },
+          {
+            "name": "characters",
+            "type": "string",
+            "description": "Character definitions"
+          },
+          {
+            "name": "locations",
+            "type": "string",
+            "description": "Location definitions"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "description": "Script metadata (title, genre, logline)"
+          },
+          {
+            "name": "processedSections",
+            "type": "string",
+            "description": "Section hierarchy"
+          },
+          {
+            "name": "dialogueAudio",
+            "type": "string",
+            "description": "Dialogue audio assets with duration metadata"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "motionGraphicsPlan",
+            "type": "string",
+            "description": "Complete motion graphics specification"
+          },
+          {
+            "name": "videoSpecs",
+            "type": "string",
+            "description": "Video generation specifications per shot"
           }
         ]
       }
@@ -1558,11 +1624,67 @@
       "sourcePort": "updatedAssetCollection",
       "targetNodeId": "node-15",
       "targetPort": "assetCollection"
+    },
+    {
+      "id": "edge-mg-1",
+      "sourceNodeId": "node-10",
+      "sourcePort": "elements",
+      "targetNodeId": "node-18",
+      "targetPort": "elements"
+    },
+    {
+      "id": "edge-mg-2",
+      "sourceNodeId": "node-13",
+      "sourcePort": "previsualizationPlan",
+      "targetNodeId": "node-18",
+      "targetPort": "previsualizationPlan"
+    },
+    {
+      "id": "edge-mg-3",
+      "sourceNodeId": "node-5",
+      "sourcePort": "characters",
+      "targetNodeId": "node-18",
+      "targetPort": "characters"
+    },
+    {
+      "id": "edge-mg-4",
+      "sourceNodeId": "node-6",
+      "sourcePort": "locations",
+      "targetNodeId": "node-18",
+      "targetPort": "locations"
+    },
+    {
+      "id": "edge-mg-5",
+      "sourceNodeId": "node-4",
+      "sourcePort": "metadata",
+      "targetNodeId": "node-18",
+      "targetPort": "metadata"
+    },
+    {
+      "id": "edge-mg-6",
+      "sourceNodeId": "node-8",
+      "sourcePort": "results",
+      "targetNodeId": "node-18",
+      "targetPort": "processedSections"
+    },
+    {
+      "id": "edge-mg-7",
+      "sourceNodeId": "node-18",
+      "sourcePort": "motionGraphicsPlan",
+      "targetNodeId": "node-15",
+      "targetPort": "motionGraphicsPlan"
+    },
+    {
+      "id": "edge-mg-8",
+      "sourceNodeId": "node-17",
+      "sourcePort": "dialogueAudio",
+      "targetNodeId": "node-18",
+      "targetPort": "dialogueAudio"
     }
   ],
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2026-03-23T00:12:48.348Z",
+    "updatedAt": "2026-03-23T21:35:04.150Z",
     "viewport": {
       "panX": -1135.989999151176,
       "panY": 407.5953756047863,
@@ -1570,6 +1692,5 @@
     },
     "projectFolder": "/Users/andrewporter/Documents/Screenplays",
     "logo": "/Users/andrewporter/Documents/The Last Jump/assets/pipeline-logo.png"
-  },
-  "pipelineDir": "/Users/andrewporter/.woodbury/workflows/comp-screenplay-generator"
+  }
 }

@@ -110,6 +110,59 @@ Return as a JSON array of character objects.`;
 
     context.log(`Generated ${normalizedCharacters.length} characters`);
 
+    // Auto-assign ElevenLabs voices to characters
+    try {
+      const voicesResult = await (context.tools as any).tts_voices?.({});
+      if (voicesResult?.voices && Array.isArray(voicesResult.voices)) {
+        const availableVoices = voicesResult.voices;
+        context.log(`Found ${availableVoices.length} available TTS voices, auto-assigning...`);
+
+        // Separate voices by gender for better matching
+        const maleVoices = availableVoices.filter((v: any) =>
+          v.labels?.gender?.toLowerCase() === 'male');
+        const femaleVoices = availableVoices.filter((v: any) =>
+          v.labels?.gender?.toLowerCase() === 'female');
+        const neutralVoices = availableVoices.filter((v: any) => {
+          const g = v.labels?.gender?.toLowerCase();
+          return !g || (g !== 'male' && g !== 'female');
+        });
+
+        let maleIdx = 0;
+        let femaleIdx = 0;
+        let neutralIdx = 0;
+
+        for (const char of normalizedCharacters) {
+          const gender = (char.gender || '').toLowerCase();
+          let voice: any = null;
+
+          if (gender === 'male' && maleVoices.length > 0) {
+            voice = maleVoices[maleIdx % maleVoices.length];
+            maleIdx++;
+          } else if (gender === 'female' && femaleVoices.length > 0) {
+            voice = femaleVoices[femaleIdx % femaleVoices.length];
+            femaleIdx++;
+          } else if (neutralVoices.length > 0) {
+            voice = neutralVoices[neutralIdx % neutralVoices.length];
+            neutralIdx++;
+          } else if (availableVoices.length > 0) {
+            // Fallback: cycle through all voices
+            voice = availableVoices[(maleIdx + femaleIdx + neutralIdx) % availableVoices.length];
+            neutralIdx++;
+          }
+
+          if (voice) {
+            (char as any).voiceId = voice.voice_id;
+            (char as any).voiceName = voice.name;
+            context.log(`Assigned voice "${voice.name}" (${voice.voice_id}) to ${char.name} (${gender})`);
+          }
+        }
+      } else {
+        context.log('No TTS voices available, skipping voice assignment');
+      }
+    } catch (voiceErr: any) {
+      context.log(`Voice assignment skipped (TTS not available): ${voiceErr.message}`);
+    }
+
     return { characters: normalizedCharacters };
 
   } catch (error) {

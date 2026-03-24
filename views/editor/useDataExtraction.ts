@@ -13,6 +13,7 @@ export function useDataExtraction(
   appState: any | null,
   fillGaps: boolean,
   extraDurations?: Record<string, number>,
+  compactTimeline?: boolean,
 ): ExtractionResult {
-  return useMemo(() => extractData(project, appState, fillGaps, extraDurations), [project, appState, fillGaps, extraDurations]);
+  return useMemo(() => extractData(project, appState, fillGaps, extraDurations, compactTimeline), [project, appState, fillGaps, extraDurations, compactTimeline]);
 }

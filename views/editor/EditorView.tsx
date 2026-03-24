@@ -201,7 +201,7 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
   const backfillTriggeredRef = useRef(false);
 
   // Extract data from project — with detected durations fed back in
-  const extracted = useDataExtraction(project, propAppState, state.fillGaps, detectedDurations);
+  const extracted = useDataExtraction(project, propAppState, state.fillGaps, detectedDurations, state.compactTimeline);
 
   // Sync extracted data into state
   const prevExtractedRef = useRef<typeof extracted | null>(null);
@@ -1846,6 +1846,7 @@ const TimelinePanel = memo(function TimelinePanel() {
           <div className="ed-transport-divider" />
           <button className={`ed-tl-btn${state.snapEnabled ? ' active' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_SNAP' })} title="Snap">🧲</button>
           <button className={`ed-tl-btn${state.fillGaps ? ' active' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_FILL_GAPS' })} title="Fill gaps">↔</button>
+          <button className={`ed-tl-btn${state.compactTimeline ? ' active' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_COMPACT_TIMELINE' })} title="Compact timeline — tighten timing to dialogue audio">⏩</button>
         </div>
       </div>
 

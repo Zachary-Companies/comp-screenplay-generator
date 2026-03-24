@@ -3,7 +3,7 @@
  * Tests the key routes: prompt prefix saving, character headshot generation,
  * dialogue audio rendering, and dialogue audio persistence.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ── Mock SDK factory ────────────────────────────────────────────
 
@@ -106,6 +106,31 @@ function createMockSdk(project: MockProject = {}) {
 
 function mockReq(method: string, body: any = {}) {
   return { method, __body: body } as any;
+}
+
+/** Creates a mock response object that captures streaming writes */
+function mockStreamRes() {
+  const written: string[] = [];
+  let headers: Record<string, string> = {};
+  let ended = false;
+  return {
+    res: {
+      writeHead: (_status: number, hdrs: Record<string, string>) => { headers = hdrs; },
+      write: (chunk: string) => { written.push(chunk); },
+      end: () => { ended = true; },
+    },
+    written,
+    getHeaders: () => headers,
+    isEnded: () => ended,
+    /** Parse all ndjson lines from written chunks */
+    getEvents: () => {
+      return written
+        .join('')
+        .split('\n')
+        .filter(l => l.trim())
+        .map(l => JSON.parse(l));
+    },
+  };
 }
 
 // ── Import handler ──────────────────────────────────────────────
@@ -1792,10 +1817,11 @@ describe('Dialogue audio: full render → lookup flow', () => {
       dialogueAudio: { assets: [] },
     };
     const mock = createMockSdk(project);
-    let callCount = 0;
-    mock.sdk.callTool = async (_name: string, params: any) => {
-      callCount++;
-      if (callCount === 1) return { success: false, error: 'TTS service unavailable' };
+    let ttsCallCount = 0;
+    mock.sdk.callTool = async (toolName: string, params: any) => {
+      if (toolName === 'tts_user_info') return null; // quota check — no info
+      ttsCallCount++;
+      if (ttsCallCount === 1) return { success: false, error: 'TTS service unavailable' };
       return { success: true, audio_path: params.output_path };
     };
     const handler = setupRoutes(mock.sdk);
@@ -2107,6 +2133,167 @@ describe('Voice bindings: save and load persistence', () => {
     expect(mock.ttsResults[0].voiceId).toBe('voice-legacy');
   });
 
+  it('render-dialogue should use character voiceId as primary source', async () => {
+    const project: MockProject = {
+      metadata: {},
+      characters: [
+        { id: 'char-1', name: 'Michael', voiceId: 'voice-from-char', voiceName: 'CharVoice' },
+        { id: 'char-2', name: 'Brad', voiceId: 'voice-brad', voiceName: 'BradVoice' },
+      ],
+      scenes: [{
+        id: 'scene-5',
+        dialogue: [
+          { elementId: 'elem-38', characterId: 'char-1', characterName: 'MICHAEL', lines: ['Using character voiceId.'] },
+          { elementId: 'elem-39', characterId: 'char-2', characterName: 'BRAD', lines: ['Me too.'] },
+        ],
+        shots: [],
+      }],
+      dialogueAudio: { assets: [] },
+    };
+    const mock = createMockSdk(project);
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST'), {}, '/render-dialogue');
+
+    expect(mock.ttsResults.length).toBe(2);
+    expect(mock.ttsResults[0].voiceId).toBe('voice-from-char');
+    expect(mock.ttsResults[1].voiceId).toBe('voice-brad');
+  });
+
+  it('render-dialogue should prefer character voiceId over bindings', async () => {
+    const project: MockProject = {
+      metadata: {
+        voiceBindings: [
+          { type: 'voice', source: { entityType: 'character', entityId: 'char-1' }, target: { entityId: 'voice-from-binding' }, metadata: {} },
+        ],
+      },
+      characters: [
+        { id: 'char-1', name: 'Michael', voiceId: 'voice-from-char' },
+      ],
+      scenes: [{
+        id: 'scene-5',
+        dialogue: [
+          { elementId: 'elem-38', characterId: 'char-1', characterName: 'MICHAEL', lines: ['Which voice?'] },
+        ],
+        shots: [],
+      }],
+      dialogueAudio: { assets: [] },
+    };
+    const mock = createMockSdk(project);
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST'), {}, '/render-dialogue');
+
+    expect(mock.ttsResults.length).toBe(1);
+    // Character voiceId takes priority over binding
+    expect(mock.ttsResults[0].voiceId).toBe('voice-from-char');
+  });
+
+  it('render-dialogue should fall back to bindings when characters have no voiceId', async () => {
+    const project: MockProject = {
+      metadata: {
+        voiceBindings: [
+          { type: 'voice', source: { entityType: 'character', entityId: 'char-1' }, target: { entityId: 'voice-from-binding' }, metadata: {} },
+        ],
+      },
+      characters: [
+        { id: 'char-1', name: 'Michael' }, // no voiceId
+      ],
+      scenes: [{
+        id: 'scene-5',
+        dialogue: [
+          { elementId: 'elem-38', characterId: 'char-1', characterName: 'MICHAEL', lines: ['Fallback test.'] },
+        ],
+        shots: [],
+      }],
+      dialogueAudio: { assets: [] },
+    };
+    const mock = createMockSdk(project);
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST'), {}, '/render-dialogue');
+
+    expect(mock.ttsResults.length).toBe(1);
+    expect(mock.ttsResults[0].voiceId).toBe('voice-from-binding');
+  });
+
+  it('render-dialogue should work when dialogue uses id instead of elementId', async () => {
+    const project: MockProject = {
+      metadata: {
+        voiceBindings: [
+          { type: 'voice', source: { entityType: 'character', entityId: 'char-1' }, target: { entityId: 'voice-george' }, metadata: {} },
+        ],
+      },
+      scenes: [{
+        id: 'scene-5',
+        dialogue: [
+          { id: 'element_5', characterId: 'char-1', characterName: 'MICHAEL', lines: ['Using id not elementId.'] },
+        ],
+        shots: [],
+      }],
+      dialogueAudio: { assets: [] },
+    };
+    const mock = createMockSdk(project);
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST'), {}, '/render-dialogue');
+
+    expect(mock.ttsResults.length).toBe(1);
+    expect(mock.ttsResults[0].text).toBe('Using id not elementId.');
+    // The asset should reference the correct element ID
+    expect(project.dialogueAudio!.assets[0].metadata.dialogueElementId).toBe('element_5');
+  });
+
+  it('render-dialogue should skip already-rendered when dialogue uses id', async () => {
+    const project: MockProject = {
+      metadata: {
+        voiceBindings: [
+          { type: 'voice', source: { entityType: 'character', entityId: 'char-1' }, target: { entityId: 'voice-george' }, metadata: {} },
+        ],
+      },
+      scenes: [{
+        id: 'scene-5',
+        dialogue: [
+          { id: 'element_5', characterId: 'char-1', characterName: 'MICHAEL', lines: ['Already done.'] },
+          { id: 'element_6', characterId: 'char-1', characterName: 'MICHAEL', lines: ['Not done yet.'] },
+        ],
+        shots: [],
+      }],
+      dialogueAudio: { assets: [{ id: 'existing', metadata: { dialogueElementId: 'element_5' } }] },
+    };
+    const mock = createMockSdk(project);
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST'), {}, '/render-dialogue');
+
+    expect(mock.ttsResults.length).toBe(1);
+    expect(mock.ttsResults[0].text).toBe('Not done yet.');
+  });
+
+  it('render-dialogue returns 0 rendered when no voices assigned anywhere', async () => {
+    const project: MockProject = {
+      metadata: {},
+      characters: [
+        { id: 'char-1', name: 'Michael' }, // no voiceId
+      ],
+      scenes: [{
+        id: 'scene-5',
+        dialogue: [
+          { elementId: 'elem-38', characterId: 'char-1', characterName: 'MICHAEL', lines: ['No voice at all.'] },
+        ],
+        shots: [],
+      }],
+      dialogueAudio: { assets: [] },
+    };
+    const mock = createMockSdk(project);
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST'), {}, '/render-dialogue');
+
+    expect(mock.ttsResults.length).toBe(0);
+    expect(mock.sentResponses[0]?.data.rendered).toBe(0);
+  });
+
   it('should handle save with empty bindings array (clear all)', async () => {
     const project: MockProject = {
       metadata: {
@@ -2313,5 +2500,741 @@ describe('Route: POST /auto-assign-voices', () => {
     }), {}, '/auto-assign-voices');
 
     expect(mock.sentResponses[0]?.data.applied).toBe(1);
+  });
+});
+
+// ── render-dialogue streaming + quota tests ──────────────────
+
+describe('Route: POST /render-dialogue (streaming & quota)', () => {
+  const baseProject = (): MockProject => ({
+    metadata: {},
+    scenes: [{
+      id: 'scene-1',
+      dialogue: [
+        { elementId: 'elem-1', characterId: 'char-1', characterName: 'ALICE', lines: ['Hello world.'] },
+        { elementId: 'elem-2', characterId: 'char-2', characterName: 'BOB', lines: ['Hi there, nice to meet you.'] },
+      ],
+      shots: [],
+    }],
+    characters: [
+      { id: 'char-1', name: 'Alice', voiceId: 'voice-alice' },
+      { id: 'char-2', name: 'Bob', voiceId: 'voice-bob' },
+    ],
+    dialogueAudio: { assets: [] },
+  });
+
+  it('should stream progress events when stream=true', async () => {
+    const mock = createMockSdk(baseProject());
+    // Mock tts_user_info to return quota
+    mock.sdk.callTool = async (toolName: string, params: any) => {
+      if (toolName === 'tts_user_info') {
+        return { character_count: 5000, character_limit: 100000 };
+      }
+      if (toolName === 'tts_speak') {
+        mock.ttsResults.push({ text: params.text, voiceId: params.voice_id, outputPath: params.output_path });
+        return { success: true, audio_path: params.output_path };
+      }
+      return null;
+    };
+    const handler = setupRoutes(mock.sdk);
+    const stream = mockStreamRes();
+
+    await handler(mockReq('POST', { stream: true }), stream.res, '/render-dialogue');
+
+    expect(stream.isEnded()).toBe(true);
+    const events = stream.getEvents();
+    // Should have: quota, progress x2, complete
+    expect(events.length).toBeGreaterThanOrEqual(3);
+    expect(events[0].type).toBe('quota');
+    expect(events[0].remainingChars).toBe(95000);
+    expect(events[0].characterLimit).toBe(100000);
+    expect(events[0].total).toBe(2);
+
+    const progressEvents = events.filter((e: any) => e.type === 'progress');
+    expect(progressEvents.length).toBe(2);
+    expect(progressEvents[0].rendered).toBe(1);
+    expect(progressEvents[0].characterName).toBe('ALICE');
+    expect(progressEvents[1].rendered).toBe(2);
+
+    const complete = events.find((e: any) => e.type === 'complete');
+    expect(complete).toBeDefined();
+    expect(complete.rendered).toBe(2);
+    expect(complete.total).toBe(2);
+  });
+
+  it('should include remainingChars in non-streaming response', async () => {
+    const mock = createMockSdk(baseProject());
+    mock.sdk.callTool = async (toolName: string, params: any) => {
+      if (toolName === 'tts_user_info') {
+        return { character_count: 10000, character_limit: 50000 };
+      }
+      if (toolName === 'tts_speak') {
+        mock.ttsResults.push({ text: params.text, voiceId: params.voice_id, outputPath: params.output_path });
+        return { success: true, audio_path: params.output_path };
+      }
+      return null;
+    };
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', { stream: false }), {}, '/render-dialogue');
+
+    expect(mock.sentResponses[0]?.data.remainingChars).toBeDefined();
+    expect(mock.sentResponses[0]?.data.rendered).toBe(2);
+  });
+
+  it('should stop rendering when quota is insufficient', async () => {
+    const mock = createMockSdk({
+      metadata: {},
+      scenes: [{
+        id: 'scene-1',
+        dialogue: [
+          { elementId: 'elem-1', characterId: 'char-1', characterName: 'ALICE', lines: ['Short.'] },
+          { elementId: 'elem-2', characterId: 'char-2', characterName: 'BOB', lines: ['This line is longer and will exceed the very tight remaining quota we set up.'] },
+        ],
+        shots: [],
+      }],
+      characters: [
+        { id: 'char-1', name: 'Alice', voiceId: 'voice-alice' },
+        { id: 'char-2', name: 'Bob', voiceId: 'voice-bob' },
+      ],
+      dialogueAudio: { assets: [] },
+    });
+    // Set quota to only allow the first short item
+    mock.sdk.callTool = async (toolName: string, params: any) => {
+      if (toolName === 'tts_user_info') {
+        return { character_count: 99980, character_limit: 100000 };
+      }
+      if (toolName === 'tts_speak') {
+        mock.ttsResults.push({ text: params.text, voiceId: params.voice_id, outputPath: params.output_path });
+        return { success: true, audio_path: params.output_path };
+      }
+      return null;
+    };
+    const handler = setupRoutes(mock.sdk);
+    const stream = mockStreamRes();
+
+    await handler(mockReq('POST', { stream: true }), stream.res, '/render-dialogue');
+
+    const events = stream.getEvents();
+    // First item "Short." (6 chars) fits in 20 remaining, second item does not
+    const progressEvents = events.filter((e: any) => e.type === 'progress');
+    expect(progressEvents.length).toBe(1);
+    expect(progressEvents[0].characterName).toBe('ALICE');
+
+    const errorEvents = events.filter((e: any) => e.type === 'error');
+    expect(errorEvents.length).toBe(1);
+    expect(errorEvents[0].error).toContain('Insufficient ElevenLabs character quota');
+    // Only one TTS call should have been made
+    expect(mock.ttsResults.length).toBe(1);
+  });
+
+  it('should continue without quota tracking when tts_user_info fails', async () => {
+    const mock = createMockSdk(baseProject());
+    mock.sdk.callTool = async (toolName: string, params: any) => {
+      if (toolName === 'tts_user_info') {
+        throw new Error('ElevenLabs API key not configured');
+      }
+      if (toolName === 'tts_speak') {
+        mock.ttsResults.push({ text: params.text, voiceId: params.voice_id, outputPath: params.output_path });
+        return { success: true, audio_path: params.output_path };
+      }
+      return null;
+    };
+    const handler = setupRoutes(mock.sdk);
+    const stream = mockStreamRes();
+
+    await handler(mockReq('POST', { stream: true }), stream.res, '/render-dialogue');
+
+    const events = stream.getEvents();
+    // Should still render all items even without quota info
+    expect(events.find((e: any) => e.type === 'quota')?.remainingChars).toBeNull();
+    const complete = events.find((e: any) => e.type === 'complete');
+    expect(complete?.rendered).toBe(2);
+    expect(mock.ttsResults.length).toBe(2);
+  });
+
+  it('should send empty-result complete event when no dialogue to render (streaming)', async () => {
+    const mock = createMockSdk({
+      metadata: {},
+      scenes: [],
+      characters: [],
+      dialogueAudio: { assets: [] },
+    });
+    const handler = setupRoutes(mock.sdk);
+    const stream = mockStreamRes();
+
+    await handler(mockReq('POST', { stream: true }), stream.res, '/render-dialogue');
+
+    const events = stream.getEvents();
+    expect(events.length).toBe(1);
+    expect(events[0].type).toBe('complete');
+    expect(events[0].rendered).toBe(0);
+    expect(stream.isEnded()).toBe(true);
+  });
+});
+
+// ── Motion Graphics Plan tests ──────────────────────────────────
+
+describe('Route: POST /render-video — motion graphics plan', () => {
+  it('should apply zoompan filter when Ken Burns spec is present', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        kenBurns: [
+          {
+            shotElementId: 'shot-1',
+            cameraMovement: 'PUSH IN',
+            frameSize: 'WIDE',
+            durationSeconds: 5,
+            zoomStart: 1.0,
+            zoomEnd: 1.2,
+            panDirection: 'none',
+            panAmount: 0,
+            easing: 'ease-in',
+          },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 30 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 5, elementId: 'shot-1' },
+        { trackId: 'visuals', type: 'image', filePath: '/img2.png', startTime: 5, duration: 25, elementId: 'shot-2' },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    // shot-1 should use zoompan instead of the default fps,scale,pad chain
+    expect(filter).toContain('zoompan');
+    // shot-2 should still use the default chain
+    expect(filter).toContain('fps=24,scale=');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should add drawtext caption filters when captions are present', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        captions: [
+          {
+            elementId: 'shot-1',
+            characterName: 'ALICE',
+            text: 'Hello world',
+            words: [
+              { word: 'Hello', startPct: 0, endPct: 0.5 },
+              { word: 'world', startPct: 0.5, endPct: 1.0 },
+            ],
+            style: 'film',
+            position: 'bottom-third',
+            fontSize: 32,
+          },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 10, elementId: 'shot-1' },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    expect(filter).toContain('drawtext=');
+    expect(filter).toContain('Hello world');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should add lower third drawtext filters', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        lowerThirds: [
+          {
+            id: 'lt-1',
+            type: 'character',
+            primaryText: 'ALICE',
+            secondaryText: 'Protagonist',
+            triggerElementId: 'shot-1',
+            durationSeconds: 3,
+            animation: 'slide-in-left',
+          },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 10, elementId: 'shot-1' },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    expect(filter).toContain('drawtext=');
+    expect(filter).toContain('ALICE');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should add global effect filters (grain, vignette)', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        effects: [
+          { type: 'grain', intensity: 0.5, scope: 'global' },
+          { type: 'vignette', intensity: 0.8, scope: 'global' },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 10, elementId: 'shot-1' },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    expect(filter).toContain('noise=');
+    expect(filter).toContain('vignette=');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should insert title card inputs into the concat', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        titleCards: [
+          {
+            id: 'tc-main',
+            type: 'main-title',
+            lines: ['My Movie'],
+            durationSeconds: 3,
+            background: 'black',
+          },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 10, elementId: 'shot-1' },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    // Title card should produce a color source input and drawtext
+    expect(filter).toContain('drawtext=');
+    expect(filter).toContain('My Movie');
+    // Concat should include the title card segment (n=2: title + 1 visual)
+    expect(filter).toContain('concat=n=2');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should work without motion graphics plan (backward compat)', async () => {
+    const mock = createRenderMockSdk({});
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 30 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 30 },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    // Should use the standard filter chain
+    expect(filter).toContain('fps=24,scale=');
+    expect(filter).toContain('concat=n=1');
+    // Should NOT contain any motion graphics filters
+    expect(filter).not.toContain('zoompan');
+    expect(filter).not.toContain('noise=');
+    expect(filter).not.toContain('vignette=');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should accept motionGraphicsPlan from request body', async () => {
+    const mock = createRenderMockSdk({}); // no project-level plan
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 10, elementId: 'shot-1' },
+      ],
+      motionGraphicsPlan: {
+        kenBurns: [
+          {
+            shotElementId: 'shot-1',
+            cameraMovement: 'STATIC',
+            frameSize: 'MEDIUM',
+            durationSeconds: 10,
+            zoomStart: 1.0,
+            zoomEnd: 1.05,
+            panDirection: 'none',
+            panAmount: 0,
+            easing: 'linear',
+          },
+        ],
+      },
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    expect(filter).toContain('zoompan');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should skip scene-scoped effects (only apply global)', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        effects: [
+          { type: 'grain', intensity: 0.5, scope: 'scene', sceneId: 'scene-1' },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 10, elementId: 'shot-1' },
+      ],
+    }), {}, '/render-video');
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    expect(filter).not.toContain('noise=');
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+});
+
+// ── Video generation route tests ────────────────────────────────
+
+describe('Route: POST /generate-video-previs', () => {
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('should call Veo API and save video', async () => {
+    const fetchCalls: Array<{ url: string; body: any }> = [];
+    let pollCount = 0;
+
+    // Mock fetch: first call returns operation, poll returns done with video URI, download returns bytes
+    globalThis.fetch = (async (url: any, init?: any) => {
+      const urlStr = String(url);
+      if (urlStr.includes('predictLongRunning')) {
+        fetchCalls.push({ url: urlStr, body: JSON.parse(init?.body || '{}') });
+        return { ok: true, json: async () => ({ name: 'operations/test-op-1', done: false }) } as any;
+      }
+      if (urlStr.includes('operations/test-op-1')) {
+        pollCount++;
+        return {
+          ok: true,
+          json: async () => ({
+            name: 'operations/test-op-1',
+            done: true,
+            response: {
+              generateVideoResponse: {
+                generatedSamples: [{ video: { uri: 'https://example.com/video.mp4' } }],
+              },
+            },
+          }),
+        } as any;
+      }
+      if (urlStr.includes('example.com/video.mp4')) {
+        return { ok: true, arrayBuffer: async () => new ArrayBuffer(100) } as any;
+      }
+      return { ok: false, text: async () => 'Not found' } as any;
+    }) as any;
+
+    const writtenFiles: string[] = [];
+    const mock = createMockSdk({
+      metadata: {},
+      elements: [{ id: 'shot-1', type: 'shot', content: 'Wide shot of the park', shotText: 'WIDE — Park scene' }],
+      previsualizations: { shots: [] },
+      scenes: [],
+    });
+    mock.sdk.exec = async (cmd: string) => {
+      if (cmd.includes('GEMINI_API_KEY')) return { stdout: 'test-api-key-123', stderr: '' };
+      if (cmd.includes('base64')) return { stdout: 'dGVzdA==', stderr: '' };
+      return { stdout: '', stderr: '' };
+    };
+    mock.sdk.writeFile = async (path: string) => { writtenFiles.push(path); };
+    mock.sdk.loadActionConfig = async (id: string) => {
+      if (id === 'generate-video') {
+        return {
+          generation: { defaultDuration: 6, aspectRatio: '16:9' },
+          cameraMovementPromptMap: { 'STATIC': 'Camera holds perfectly still' },
+          frameSizeLensMap: {},
+          prompt: { sections: [{ id: 'style', template: 'Style: Cinematic video.' }] },
+          referenceResolution: {},
+        };
+      }
+      return { generation: { model: 'flash', aspectRatio: '16:9' } };
+    };
+
+    const handler = setupRoutes(mock.sdk);
+    await handler(mockReq('POST', { elementId: 'shot-1', aspectRatio: '9:16' }), {}, '/generate-video-previs');
+
+    expect(mock.sentResponses[0]?.status).toBe(200);
+    expect(mock.sentResponses[0]?.data.success).toBe(true);
+    // Verify Veo API was called
+    expect(fetchCalls.length).toBe(1);
+    expect(fetchCalls[0].url).toContain('veo-3.1-generate-preview:predictLongRunning');
+    expect(fetchCalls[0].body.parameters.aspectRatio).toBe('9:16');
+    expect(fetchCalls[0].body.parameters.durationSeconds).toBe(6);
+    // Verify polling happened
+    expect(pollCount).toBe(1);
+    // Verify video was saved
+    expect(writtenFiles.length).toBe(1);
+    expect(writtenFiles[0]).toContain('video_shot-1_');
+  });
+
+  it('should include source image for image-to-video', async () => {
+    const fetchCalls: Array<{ url: string; body: any }> = [];
+
+    globalThis.fetch = (async (url: any, init?: any) => {
+      const urlStr = String(url);
+      if (urlStr.includes('predictLongRunning')) {
+        fetchCalls.push({ url: urlStr, body: JSON.parse(init?.body || '{}') });
+        return {
+          ok: true,
+          json: async () => ({
+            done: true,
+            response: { generateVideoResponse: { generatedSamples: [{ video: { uri: 'https://example.com/v.mp4' } }] } },
+          }),
+        } as any;
+      }
+      if (urlStr.includes('example.com')) {
+        return { ok: true, arrayBuffer: async () => new ArrayBuffer(50) } as any;
+      }
+      return { ok: false, text: async () => 'nope' } as any;
+    }) as any;
+
+    // Create a real temp file with JPEG magic bytes for readFileSync
+    const fs = await import('fs');
+    const tmpImg = '/tmp/test-previs-shot-1.png';
+    // JPEG header: FF D8 FF E0 + some data
+    fs.writeFileSync(tmpImg, Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]));
+
+    const mock = createMockSdk({
+      metadata: {},
+      elements: [{ id: 'shot-1', type: 'shot', content: 'Close up', shotText: 'CLOSE-UP — Face' }],
+      previsualizations: { shots: [{ shotElementId: 'shot-1', filePath: tmpImg }] },
+      scenes: [],
+    });
+    mock.sdk.fileExists = (p: string) => p === tmpImg;
+    mock.sdk.exec = async (cmd: string) => {
+      if (cmd.includes('GEMINI_API_KEY')) return { stdout: 'test-key', stderr: '' };
+      if (cmd.includes('python3')) return { stdout: '1024x768', stderr: '' };
+      return { stdout: '', stderr: '' };
+    };
+    mock.sdk.writeFile = async () => {};
+    mock.sdk.loadActionConfig = async (id: string) => {
+      if (id === 'generate-video') return { generation: { defaultDuration: 6, aspectRatio: '16:9' }, cameraMovementPromptMap: {}, prompt: { sections: [] }, referenceResolution: {} };
+      return { generation: { model: 'flash', aspectRatio: '16:9' } };
+    };
+
+    const handler = setupRoutes(mock.sdk);
+    await handler(mockReq('POST', { elementId: 'shot-1' }), {}, '/generate-video-previs');
+
+    // Cleanup
+    try { fs.unlinkSync(tmpImg); } catch {}
+
+    expect(mock.sentResponses[0]?.status).toBe(200);
+    expect(fetchCalls[0].body.instances[0].image).toBeDefined();
+    expect(fetchCalls[0].body.instances[0].image.mimeType).toBe('image/jpeg');
+  });
+
+  it('should return error when API key is missing', async () => {
+    const mock = createMockSdk({
+      metadata: {},
+      elements: [{ id: 'shot-1', type: 'shot', content: 'Shot' }],
+      previsualizations: { shots: [] },
+      scenes: [],
+    });
+    mock.sdk.exec = async () => ({ stdout: '', stderr: '' }); // No API key
+    mock.sdk.loadActionConfig = async (id: string) => {
+      if (id === 'generate-video') return { generation: { defaultDuration: 6 }, cameraMovementPromptMap: {}, prompt: { sections: [] }, referenceResolution: {} };
+      return { generation: { model: 'flash', aspectRatio: '16:9' } };
+    };
+
+    const handler = setupRoutes(mock.sdk);
+    await handler(mockReq('POST', { elementId: 'shot-1' }), {}, '/generate-video-previs');
+
+    expect(mock.sentResponses[0]?.status).toBe(500);
+    expect(mock.sentResponses[0]?.data.error).toContain('GEMINI_API_KEY');
+  });
+});
+
+describe('Route: POST /generate-video-batch', () => {
+  it('should return cost estimate with dryRun', async () => {
+    const mock = createMockSdk({
+      metadata: {},
+      elements: [
+        { id: 'shot-1', type: 'shot', content: 'Shot one' },
+        { id: 'shot-2', type: 'shot', content: 'Shot two' },
+      ],
+      previsualizations: { shots: [] },
+      scenes: [],
+    });
+    mock.sdk.loadActionConfig = async (id: string) => {
+      if (id === 'generate-video') {
+        return {
+          generation: { defaultDuration: 6, aspectRatio: '16:9' },
+          costEstimate: { perSecond: 0.075 },
+          cameraMovementPromptMap: {},
+          prompt: { sections: [] },
+          referenceResolution: {},
+        };
+      }
+      return { generation: { model: 'flash', aspectRatio: '16:9' } };
+    };
+
+    const handler = setupRoutes(mock.sdk);
+    await handler(mockReq('POST', { dryRun: true }), {}, '/generate-video-batch');
+
+    expect(mock.sentResponses[0]?.status).toBe(200);
+    expect(mock.sentResponses[0]?.data.shotCount).toBe(2);
+    expect(mock.sentResponses[0]?.data.totalSeconds).toBe(12);
+    expect(mock.sentResponses[0]?.data.estimatedCost).toBe(0.9);
+  });
+});
+
+describe('Route: POST /render-video — video clip handling', () => {
+  it('should skip -loop 1 and zoompan for video clips', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        kenBurns: [
+          {
+            shotElementId: 'shot-1',
+            cameraMovement: 'PUSH IN',
+            frameSize: 'WIDE',
+            durationSeconds: 5,
+            zoomStart: 1.0,
+            zoomEnd: 1.2,
+            panDirection: 'none',
+            panAmount: 0,
+            easing: 'ease-in',
+          },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 15 },
+      clips: [
+        { trackId: 'visuals', type: 'video', filePath: '/clip.mp4', startTime: 0, duration: 5, elementId: 'shot-1' },
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 5, duration: 10, elementId: 'shot-2' },
+      ],
+    }), {}, '/render-video');
+
+    // Check ffmpeg input args: video clip should NOT have -loop 1
+    const call = mock.spawnCalls[0];
+    const args = call.args;
+
+    // First input (video): should have -t but not -loop before it
+    const firstInputIdx = args.indexOf('/clip.mp4');
+    expect(firstInputIdx).toBeGreaterThan(0);
+    // The arg before -i should be -t, not -loop
+    const loopBeforeVideo = args.slice(0, firstInputIdx).lastIndexOf('-loop');
+    // -loop should not appear before the first input
+    expect(loopBeforeVideo).toBe(-1);
+
+    // Second input (image): should have -loop 1
+    const secondInputIdx = args.indexOf('/img.png');
+    expect(secondInputIdx).toBeGreaterThan(firstInputIdx);
+    // Check -loop 1 appears before this input
+    const loopIdx = args.indexOf('-loop');
+    expect(loopIdx).toBeGreaterThan(firstInputIdx);
+    expect(loopIdx).toBeLessThan(secondInputIdx);
+
+    // Filter: video clip should use fps,scale (no zoompan), image uses default
+    const filter = getFilterComplex(mock.spawnCalls);
+    // shot-1 is video → no zoompan even though Ken Burns spec exists
+    // The first filter [0:v] should be fps,scale, NOT zoompan
+    expect(filter).toMatch(/\[0:v\]fps=24,scale=/);
+    // shot-2 is image → uses default scale/pad
+    expect(filter).toMatch(/\[1:v\]fps=24,scale=/);
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+
+  it('should preserve image clips with Ken Burns (backward compat)', async () => {
+    const mock = createRenderMockSdk({
+      motionGraphicsPlan: {
+        kenBurns: [
+          {
+            shotElementId: 'shot-1',
+            cameraMovement: 'DOLLY',
+            frameSize: 'WIDE',
+            durationSeconds: 5,
+            zoomStart: 1.0,
+            zoomEnd: 1.3,
+            panDirection: 'left-to-right',
+            panAmount: 0.2,
+            easing: 'ease-in-out',
+          },
+        ],
+      },
+    });
+    const handler = setupRoutes(mock.sdk);
+
+    await handler(mockReq('POST', {
+      settings: { startTime: 0, endTime: 10 },
+      clips: [
+        { trackId: 'visuals', type: 'image', filePath: '/img.png', startTime: 0, duration: 5, elementId: 'shot-1' },
+        { trackId: 'visuals', type: 'image', filePath: '/img2.png', startTime: 5, duration: 5, elementId: 'shot-2' },
+      ],
+    }), {}, '/render-video');
+
+    // Check ffmpeg input: both images should have -loop 1
+    const args = mock.spawnCalls[0].args;
+    const loopCount = args.filter(a => a === '-loop').length;
+    expect(loopCount).toBe(2);
+
+    const filter = getFilterComplex(mock.spawnCalls);
+    // shot-1 should use zoompan (Ken Burns)
+    expect(filter).toContain('zoompan');
+    // shot-2 should use default fps,scale
+    expect(filter).toMatch(/\[1:v\]fps=24,scale=/);
+    expect(mock.sentResponses[0]?.status).toBe(200);
+  });
+});
+
+describe('Route: POST /generate-overlay-graphics', () => {
+  it('should generate image with overlay prompt', async () => {
+    const { sdk, generatedImages, sentResponses } = createMockSdk({ metadata: {} });
+    const handler = setupRoutes(sdk);
+
+    await handler(mockReq('POST', {
+      type: 'lower-third',
+      text: 'ALICE JOHNSON',
+      subtext: 'Lead Detective',
+      style: 'cinematic broadcast',
+    }), {}, '/generate-overlay-graphics');
+
+    expect(sentResponses[0]?.status).toBe(200);
+    expect(sentResponses[0]?.data.success).toBe(true);
+    expect(sentResponses[0]?.data.type).toBe('lower-third');
+    expect(generatedImages.length).toBe(1);
+    expect(generatedImages[0].prompt).toContain('lower third');
+    expect(generatedImages[0].prompt).toContain('ALICE JOHNSON');
+    expect(generatedImages[0].prompt).toContain('Lead Detective');
+    expect(generatedImages[0].outputPath).toContain('overlays');
+  });
+
+  it('should return 400 when type or text is missing', async () => {
+    const { sdk, sentResponses } = createMockSdk({ metadata: {} });
+    const handler = setupRoutes(sdk);
+
+    await handler(mockReq('POST', { type: 'lower-third' }), {}, '/generate-overlay-graphics');
+    expect(sentResponses[0]?.status).toBe(400);
   });
 });

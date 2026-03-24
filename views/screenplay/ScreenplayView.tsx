@@ -184,14 +184,91 @@ function PasteZone({ onPaste, label }: { onPaste: () => void; label?: string }) 
   );
 }
 
+// ── Shot Gallery helpers for dual-column layout ─────────────
+
+function ShotGalleryBadge({ shot, pipelineId, genCount }: { shot: SceneShot; pipelineId: string; genCount: number }) {
+  const pipeline = usePipeline();
+  const [showGallery, setShowGallery] = useState(false);
+  const handleSelectGeneration = async (generationId: string) => {
+    try {
+      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/select-previs-generation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shotId: shot.id, generationId }),
+      });
+      await pipeline.reload();
+    } catch (err) {
+      console.error('Select generation failed:', err);
+    }
+    setShowGallery(false);
+  };
+  return (
+    <>
+      <button
+        onClick={e => { e.stopPropagation(); setShowGallery(true); }}
+        style={{
+          position: 'absolute', top: 4, right: 4,
+          background: 'rgba(139,92,246,0.9)', color: '#fff',
+          fontSize: 9, fontWeight: 700, borderRadius: 8,
+          padding: '1px 6px', minWidth: 18, textAlign: 'center',
+          border: 'none', cursor: 'pointer',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+        }}
+        title={`${genCount} versions — click to browse`}
+      >
+        {genCount}
+      </button>
+      {showGallery && (
+        <PrevisGalleryModal shot={shot} pipelineId={pipelineId} onClose={() => setShowGallery(false)} onSelect={handleSelectGeneration} />
+      )}
+    </>
+  );
+}
+
+function ShotGalleryLink({ shot, pipelineId, genCount }: { shot: SceneShot; pipelineId: string; genCount: number }) {
+  const pipeline = usePipeline();
+  const [showGallery, setShowGallery] = useState(false);
+  const handleSelectGeneration = async (generationId: string) => {
+    try {
+      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/select-previs-generation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shotId: shot.id, generationId }),
+      });
+      await pipeline.reload();
+    } catch (err) {
+      console.error('Select generation failed:', err);
+    }
+    setShowGallery(false);
+  };
+  return (
+    <>
+      <button
+        onClick={e => { e.stopPropagation(); setShowGallery(true); }}
+        style={{
+          fontSize: 9, color: '#7c3aed', background: 'none', border: 'none',
+          cursor: 'pointer', padding: 0, textDecoration: 'underline', textAlign: 'center',
+        }}
+      >
+        {genCount} versions
+      </button>
+      {showGallery && (
+        <PrevisGalleryModal shot={shot} pipelineId={pipelineId} onClose={() => setShowGallery(false)} onSelect={handleSelectGeneration} />
+      )}
+    </>
+  );
+}
+
 // ── Scene Elements (in document order, with editing & drag) ──
 
-function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scene: SceneData; charMap: Record<string, Character>; pipelineId: string; globalAspectRatio?: string }) {
+function SceneElements({ scene, charMap, pipelineId, globalAspectRatio, motionApproach }: { scene: SceneData; charMap: Record<string, Character>; pipelineId: string; globalAspectRatio?: string; motionApproach?: string }) {
   const pipeline = usePipeline();
   const { project, updateElement, updateProject } = pipeline;
   const elements = project?.elements || [];
   const [dragElemId, setDragElemId] = useState<string | null>(null);
   const [generatingSet, setGeneratingSet] = useState<Set<string>>(new Set());
+  const [videoModalSrc, setVideoModalSrc] = useState<string | null>(null);
+  const [videoGallery, setVideoGallery] = useState<{ elementId: string; videoGenerations: any[]; selectedVideoId?: string } | null>(null);
 
   // Handle previs generation for a specific shot
   const handleGeneratePrevis = useCallback(async (shotId: string) => {
@@ -216,6 +293,23 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
     }
     setGeneratingSet(prev => { const next = new Set(prev); next.delete(shotId); return next; });
   }, [pipelineId, scene, globalAspectRatio, pipeline]);
+
+  // Handle video previs generation for a specific shot
+  const handleGenerateVideoPrevis = useCallback(async (shotId: string) => {
+    setGeneratingSet(prev => new Set(prev).add('video_' + shotId));
+    try {
+      const ratio = globalAspectRatio || '9:16';
+      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-previs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ elementId: shotId, aspectRatio: ratio }),
+      });
+      await pipeline.reload();
+    } catch (err) {
+      console.error('Video generation failed:', err);
+    }
+    setGeneratingSet(prev => { const next = new Set(prev); next.delete('video_' + shotId); return next; });
+  }, [pipelineId, globalAspectRatio, pipeline]);
 
   // Build a map of element ID → SceneShot for inline previs rendering
   const shotMap = useMemo(() => {
@@ -348,7 +442,7 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
     updateProject({ scenes: newScenes });
   }, [project?.scenes, scene.id, updateProject]);
 
-  // If we have elementRange, render elements in their natural order
+  // If we have elementRange, render elements in their natural order using dual-column layout
   if (scene.elementRange) {
     const [start, end] = scene.elementRange;
     const sceneElems: Element[] = [];
@@ -357,135 +451,582 @@ function SceneElements({ scene, charMap, pipelineId, globalAspectRatio }: { scen
       if (elem && elem.type !== 'scene-heading') sceneElems.push(elem);
     }
 
-    // Helper to render anchored shots after an element
-    const renderAnchoredShots = (elemId: string) => {
-      const anchored = shotsAfterElement[elemId];
-      if (!anchored || anchored.length === 0) return null;
-      return anchored.map(shot => {
-        renderedShotIds.current.add(shot.id);
-        let previsImgPath = shot.previsPath;
-        if (shot.generations && shot.generations.length > 0) {
-          const selected = shot.selectedGenerationId
-            ? shot.generations.find(g => g.id === shot.selectedGenerationId)
-            : shot.generations[shot.generations.length - 1];
-          if (selected?.filePath) previsImgPath = selected.filePath;
+    // Helper: resolve previs image path for a shot or element
+    const resolvePrevisPath = (shot: SceneShot): string | undefined => {
+      let previsImgPath = shot.previsPath;
+      if (shot.generations && shot.generations.length > 0) {
+        const selected = shot.selectedGenerationId
+          ? shot.generations.find(g => g.id === shot.selectedGenerationId)
+          : shot.generations[shot.generations.length - 1];
+        if (selected?.filePath) previsImgPath = selected.filePath;
+      }
+      return previsImgPath;
+    };
+
+    // Build a lookup from element ID to previs shot (from previsualizations.shots[].shotElementId)
+    const previsByElementId: Record<string, any> = {};
+    const allPrevisShots = (project as any).previsualizations?.shots || [];
+    for (const ps of allPrevisShots) {
+      if (ps.shotElementId) {
+        // Keep the one with filePath, or the last one
+        if (!previsByElementId[ps.shotElementId] || ps.filePath || ps._generatedFilePath) {
+          previsByElementId[ps.shotElementId] = ps;
         }
+      }
+    }
+
+    // Helper: resolve previs path for an element ID (checks both scene shots and previs plan)
+    const resolveElementPrevisPath = (elemId: string): { path?: string; videoPath?: string; generations?: any[]; videoGenerations?: any[]; selectedVideoGenerationId?: string; refImages?: string[] } => {
+      // Check scene shots first
+      const linked = shotMap[elemId];
+      if (linked) {
+        const p = resolvePrevisPath(linked);
+        if (p) return { path: p, videoPath: (linked as any).videoPath, generations: linked.generations };
+      }
+      // Check previsualizations.shots by shotElementId
+      const previsEntry = previsByElementId[elemId];
+      if (previsEntry) {
+        const fp = previsEntry._generatedFilePath || previsEntry.filePath;
+        const refImgs = previsEntry._referenceImages || [];
+        const vGens = previsEntry.videoGenerations || [];
+        const selVideoId = previsEntry.selectedVideoGenerationId;
+        if (previsEntry.generations?.length > 0) {
+          const sel = previsEntry.selectedGenerationId
+            ? previsEntry.generations.find((g: any) => g.id === previsEntry.selectedGenerationId)
+            : previsEntry.generations[previsEntry.generations.length - 1];
+          if (sel?.filePath) return { path: sel.filePath, videoPath: previsEntry.videoPath, generations: previsEntry.generations, videoGenerations: vGens, selectedVideoGenerationId: selVideoId, refImages: sel.referenceImages || refImgs };
+        }
+        if (fp) return { path: fp, videoPath: previsEntry.videoPath, generations: previsEntry.generations, videoGenerations: vGens, selectedVideoGenerationId: selVideoId, refImages: refImgs };
+      }
+      return {};
+    };
+
+    // Helper: check if element is a shot
+    const isShot = (elem: Element): { shotType: string; description: string; linkedShot?: SceneShot; previsPath?: string; videoPath?: string; generations?: any[]; videoGenerations?: any[]; selectedVideoGenerationId?: string; refImages?: string[] } | null => {
+      const text = (elem as any).shotText || elem.content || '';
+      const shotMatch = text.match(SHOT_PATTERN);
+      const linkedShot = shotMap[elem.id];
+      // Also match if elem.type is explicitly 'shot'
+      if (shotMatch || linkedShot || elem.type === 'shot') {
+        const shotType = shotMatch ? shotMatch[1].toUpperCase()
+          : (elem as any).frameSize || linkedShot?.shotType || '';
+        const description = shotMatch ? shotMatch[2]
+          : (elem as any).shotText || linkedShot?.description || elem.content || '';
+        const resolved = resolveElementPrevisPath(elem.id);
+        return { shotType, description, linkedShot, previsPath: resolved.path, videoPath: resolved.videoPath, generations: resolved.generations, videoGenerations: resolved.videoGenerations, selectedVideoGenerationId: resolved.selectedVideoGenerationId, refImages: resolved.refImages };
+      }
+      return null;
+    };
+
+    // Group elements into shot groups for dual-column layout
+    // Each group: { shotElem?, shotInfo?, contentElems[] }
+    type ShotGroup = {
+      id: string;
+      shotElem?: Element;
+      shotInfo?: { shotType: string; description: string; linkedShot?: SceneShot; previsPath?: string; videoPath?: string };
+      anchoredShots: SceneShot[]; // anchored shots that follow this group's shot
+      contentElems: Element[];
+    };
+
+    const groups: ShotGroup[] = [];
+    let currentGroup: ShotGroup | null = null;
+
+    for (const elem of sceneElems) {
+      const shotInfo = (elem.type === 'shot' || elem.type === 'action' || elem.type === 'transition') ? isShot(elem) : null;
+      if (shotInfo) {
+        // Start a new shot group
+        renderedShotIds.current.add(elem.id);
+        currentGroup = {
+          id: elem.id,
+          shotElem: elem,
+          shotInfo,
+          anchoredShots: shotsAfterElement[elem.id] || [],
+          contentElems: [],
+        };
+        // Mark anchored shots as rendered
+        for (const as of currentGroup.anchoredShots) {
+          renderedShotIds.current.add(as.id);
+        }
+        groups.push(currentGroup);
+      } else {
+        // Non-shot element: add to current group or create orphan group
+        if (!currentGroup) {
+          currentGroup = {
+            id: `orphan-${elem.id}`,
+            contentElems: [],
+            anchoredShots: [],
+          };
+          groups.push(currentGroup);
+        }
+        currentGroup.contentElems.push(elem);
+        // Check for anchored shots after this element
+        const anchored = shotsAfterElement[elem.id];
+        if (anchored) {
+          for (const as of anchored) {
+            renderedShotIds.current.add(as.id);
+          }
+          currentGroup.anchoredShots.push(...anchored);
+        }
+      }
+    }
+
+    // Render a content element (dialogue, action, etc.)
+    const renderContentElem = (elem: Element, i: number) => {
+      const isDragging = dragElemId === elem.id;
+      if (elem.type === 'dialogue') {
+        const dlg: SceneDialogue = {
+          elementId: elem.id,
+          characterId: elem.characterId || '',
+          characterName: elem.characterName || 'UNKNOWN',
+          lines: elem.lines || [elem.content],
+          modifiers: elem.modifiers,
+        };
         return (
-          <div key={shot.id}>
-            <InlineShotCard
-              shotType={shot.shotType}
-              description={shot.description}
-              previsPath={previsImgPath}
-              characters={shot.characterIds?.map(cid => charMap[cid]).filter(Boolean) || []}
-              duration={shot.duration}
-              onDurationChange={(sec) => handleShotDuration(shot.id, sec)}
-              shot={shot}
+          <React.Fragment key={elem.id || `elem-${i}`}>
+            {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
+            <DialogueBlock
+              dialogue={dlg}
+              character={charMap[elem.characterId || '']}
               pipelineId={pipelineId}
-              onRegenerate={() => handleGeneratePrevis(shot.id)}
-              isGenerating={generatingSet.has(shot.id)}
-              globalAspectRatio={globalAspectRatio}
-              onAspectRatioChange={(ar) => handleShotAspectRatio(shot.id, ar)}
+              onSaveLines={(lines) => handleSaveDialogue(elem.id, lines)}
+              onSplit={(lineIdx) => splitDialogue(elem.id, lineIdx)}
+              onAddActionAfter={() => addActionAfter(elem.id)}
+              draggable
+              onDragStart={() => setDragElemId(elem.id)}
+              onDragEnd={() => setDragElemId(null)}
+              isDragging={isDragging}
             />
-          </div>
+          </React.Fragment>
         );
-      });
+      } else if (elem.type === 'action' || elem.type === 'transition') {
+        return (
+          <React.Fragment key={elem.id || `elem-${i}`}>
+            {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
+            <EditableAction element={elem} onSave={(text) => handleSaveAction(elem.id, text)} />
+          </React.Fragment>
+        );
+      }
+      return null;
     };
 
     if (sceneElems.length > 0) {
       return (
         <>
-          {sceneElems.map((elem, i) => {
-            const isDragging = dragElemId === elem.id;
+          {groups.map((group, gi) => {
+            const { shotElem, shotInfo, anchoredShots, contentElems } = group;
 
-            if (elem.type === 'dialogue') {
-              const dlg: SceneDialogue = {
-                elementId: elem.id,
-                characterId: elem.characterId || '',
-                characterName: elem.characterName || 'UNKNOWN',
-                lines: elem.lines || [elem.content],
-                modifiers: elem.modifiers,
-              };
+            // Compute shot duration from audio if available
+            // For now use the linked shot's duration
+            const linkedShot = shotInfo?.linkedShot;
+
+            if (!shotInfo) {
+              // Orphan group — no shot, just content elements (before the first shot)
               return (
-                <React.Fragment key={elem.id || `elem-${i}`}>
-                  {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
-                  <DialogueBlock
-                    dialogue={dlg}
-                    character={charMap[elem.characterId || '']}
-                    pipelineId={pipelineId}
-                    onSaveLines={(lines) => handleSaveDialogue(elem.id, lines)}
-                    onSplit={(lineIdx) => splitDialogue(elem.id, lineIdx)}
-                    onAddActionAfter={() => addActionAfter(elem.id)}
-                    draggable
-                    onDragStart={() => setDragElemId(elem.id)}
-                    onDragEnd={() => setDragElemId(null)}
-                    isDragging={isDragging}
-                  />
-                  {renderAnchoredShots(elem.id)}
-                </React.Fragment>
-              );
-            } else if (elem.type === 'action' || elem.type === 'transition') {
-              // Check if this action is a shot description
-              const shotMatch = elem.content?.match(SHOT_PATTERN);
-              const linkedShot = shotMap[elem.id];
-
-              if (shotMatch || linkedShot) {
-                renderedShotIds.current.add(elem.id);
-                const shotType = shotMatch ? shotMatch[1].toUpperCase() : linkedShot?.shotType || '';
-                const description = shotMatch ? shotMatch[2] : linkedShot?.description || elem.content;
-                const previsPath = linkedShot?.previsPath;
-                const generations = linkedShot?.generations;
-                const selectedGen = linkedShot?.selectedGenerationId;
-
-                let previsImgPath = previsPath;
-                if (generations && generations.length > 0) {
-                  const selected = selectedGen
-                    ? generations.find(g => g.id === selectedGen)
-                    : generations[generations.length - 1];
-                  if (selected?.filePath) previsImgPath = selected.filePath;
-                }
-
-                return (
-                  <React.Fragment key={elem.id || `elem-${i}`}>
-                    {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
-                    <div
-                      draggable
-                      onDragStart={() => setDragElemId(elem.id)}
-                      onDragEnd={() => setDragElemId(null)}
-                      style={{ opacity: isDragging ? 0.4 : 1, cursor: 'grab' }}
-                    >
-                      <InlineShotCard
-                        shotType={shotType}
-                        description={description}
-                        previsPath={previsImgPath}
-                        characters={linkedShot?.characterIds?.map(cid => charMap[cid]).filter(Boolean) || []}
-                        duration={linkedShot?.duration}
-                        onDurationChange={linkedShot ? (sec) => handleShotDuration(linkedShot.id, sec) : undefined}
-                        shot={linkedShot}
-                        pipelineId={pipelineId}
-                        onRegenerate={linkedShot ? () => handleGeneratePrevis(linkedShot.id) : undefined}
-                        isGenerating={generatingSet.has(elem.id) || (linkedShot ? generatingSet.has(linkedShot.id) : false)}
-                        globalAspectRatio={globalAspectRatio}
-                        onAspectRatioChange={linkedShot ? (ar) => handleShotAspectRatio(linkedShot.id, ar) : undefined}
-                      />
-                    </div>
-                    {renderAnchoredShots(elem.id)}
-                  </React.Fragment>
-                );
-              }
-
-              // Regular action/transition — editable
-              return (
-                <React.Fragment key={elem.id || `elem-${i}`}>
-                  {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
-                  <EditableAction element={elem} onSave={(text) => handleSaveAction(elem.id, text)} />
-                  {renderAnchoredShots(elem.id)}
-                </React.Fragment>
+                <div key={group.id} className="sp-shot-group sp-shot-group--orphan" style={{
+                  display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  minHeight: 40,
+                }}>
+                  {/* Empty left column placeholder */}
+                  <div className="sp-shot-strip" style={{
+                    width: 200, flexShrink: 0,
+                    background: 'rgba(255,255,255,0.01)',
+                    borderRight: '1px solid rgba(255,255,255,0.04)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: 8,
+                  }}>
+                    <span style={{ fontSize: 10, color: '#374151', fontStyle: 'italic' }}>No shot</span>
+                  </div>
+                  {/* Right column: content */}
+                  <div className="sp-shot-content" style={{ flex: 1, minWidth: 0, padding: '8px 0' }}>
+                    {contentElems.map((elem, i) => renderContentElem(elem, i))}
+                  </div>
+                </div>
               );
             }
-            return null;
+
+            // Shot group with dual-column layout
+            const shotTypeColors: Record<string, string> = {
+              'WIDE SHOT': '#3b82f6', 'ESTABLISHING SHOT': '#3b82f6', 'AERIAL SHOT': '#3b82f6',
+              'MEDIUM SHOT': '#8b5cf6', 'MEDIUM CLOSE-UP': '#8b5cf6', 'TWO SHOT': '#8b5cf6',
+              'CLOSE-UP': '#ec4899', 'EXTREME CLOSE-UP': '#ef4444',
+              'INSERT': '#f59e0b', 'POV': '#10b981', 'TRACKING SHOT': '#06b6d4', 'ANGLE ON': '#6366f1',
+            };
+            const color = shotTypeColors[shotInfo.shotType] || '#6366f1';
+            const isGen = shotElem ? (generatingSet.has(shotElem.id) || (linkedShot ? generatingSet.has(linkedShot.id) : false)) : false;
+            const isGenVideo = shotElem ? generatingSet.has('video_' + shotElem.id) : false;
+            const previsImgPath = shotInfo.previsPath;
+            const videoPath = shotInfo.videoPath;
+            const genCount = shotInfo.generations?.length || linkedShot?.generations?.length || 0;
+            const refImages: string[] = shotInfo.refImages || [];
+            // Build a shot object for gallery — use linkedShot or create synthetic from previs data
+            const galleryShot: SceneShot | null = linkedShot || (shotInfo.generations?.length ? {
+              id: shotElem?.id || group.id,
+              shotType: shotInfo.shotType,
+              description: shotInfo.description,
+              generations: shotInfo.generations,
+              previsPath: shotInfo.previsPath,
+            } as SceneShot : null);
+
+            return (
+              <div
+                key={group.id}
+                className="sp-shot-group"
+                style={{
+                  display: 'flex',
+                  borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  minHeight: 80,
+                  background: `linear-gradient(90deg, ${color}04, transparent 200px)`,
+                }}
+              >
+                {/* LEFT COLUMN: Shot thumbnail strip */}
+                <div
+                  className="sp-shot-strip"
+                  style={{
+                    width: 200, flexShrink: 0,
+                    borderRight: '1px solid rgba(255,255,255,0.04)',
+                    display: 'flex', flexDirection: 'column',
+                    padding: 8, gap: 6,
+                    position: 'relative',
+                  }}
+                  draggable
+                  onDragStart={() => { if (shotElem) setDragElemId(shotElem.id); }}
+                  onDragEnd={() => setDragElemId(null)}
+                >
+                  {/* Duration bar on left edge */}
+                  <div style={{
+                    position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
+                    background: `${color}40`, borderRadius: '0 2px 2px 0',
+                  }} />
+
+                  {/* Shot type badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+                      padding: '2px 6px', borderRadius: 3,
+                      background: `${color}20`, color, textTransform: 'uppercase',
+                    }}>
+                      {shotInfo.shotType}
+                    </span>
+                    {linkedShot?.duration && (
+                      <span style={{ fontSize: 9, color: '#64748b' }}>{linkedShot.duration}s</span>
+                    )}
+                  </div>
+
+                  {/* Thumbnail image or video */}
+                  <div style={{ position: 'relative', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                    {videoPath ? (
+                      <video
+                        src={`/api/file?path=${encodeURIComponent(videoPath)}`}
+                        autoPlay muted loop playsInline
+                        style={{
+                          width: '100%', height: 'auto', minHeight: 60, maxHeight: 200,
+                          objectFit: 'cover', display: 'block',
+                          borderRadius: 6, border: `1px solid ${color}25`,
+                          cursor: 'pointer',
+                        }}
+                        title="Click to view full size"
+                        onClick={() => setVideoModalSrc(`/api/file?path=${encodeURIComponent(videoPath)}`)}
+                      />
+                    ) : previsImgPath ? (
+                      <ImageZoom
+                        src={`/api/file?path=${encodeURIComponent(previsImgPath)}`}
+                        alt={shotInfo.description}
+                        style={{
+                          width: '100%', height: 'auto', minHeight: 60, maxHeight: 200,
+                          objectFit: 'cover', display: 'block',
+                          opacity: isGen ? 0.4 : 1, transition: 'opacity 0.3s',
+                          borderRadius: 6, border: `1px solid ${color}25`,
+                        }}
+                      />
+                    ) : isGen ? (
+                      <div style={{
+                        width: '100%', height: 80, borderRadius: 6,
+                        background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <div style={{
+                          width: 20, height: 20, borderRadius: '50%',
+                          border: '2px solid rgba(139,92,246,0.3)', borderTopColor: '#a78bfa',
+                          animation: 'spin 1s linear infinite',
+                        }} />
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: '100%', height: 60, borderRadius: 6,
+                        background: `${color}08`, border: `1px dashed ${color}20`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <span style={{ fontSize: 10, color: '#374151' }}>No image</span>
+                      </div>
+                    )}
+                    {/* Reference images overlay — small thumbnails in bottom-left corner */}
+                    {refImages.length > 0 && !isGen && (
+                      <div style={{
+                        position: 'absolute', bottom: 4, left: 4,
+                        display: 'flex', gap: 2, zIndex: 2,
+                      }}>
+                        {refImages.slice(0, 3).map((refPath: string, ri: number) => (
+                          <img
+                            key={ri}
+                            src={`/api/file?path=${encodeURIComponent(refPath)}`}
+                            alt={`Ref ${ri + 1}`}
+                            title={refPath.split('/').pop() || 'Reference'}
+                            style={{
+                              width: 28, height: 28, borderRadius: 3, objectFit: 'cover',
+                              border: '1.5px solid rgba(255,255,255,0.4)',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                            }}
+                          />
+                        ))}
+                        {refImages.length > 3 && (
+                          <span style={{
+                            width: 28, height: 28, borderRadius: 3,
+                            background: 'rgba(0,0,0,0.6)', border: '1.5px solid rgba(255,255,255,0.3)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 9, color: '#e2e8f0', fontWeight: 600,
+                          }}>+{refImages.length - 3}</span>
+                        )}
+                      </div>
+                    )}
+                    {/* Generation count badge */}
+                    {genCount > 1 && !isGen && galleryShot && (
+                      <ShotGalleryBadge shot={galleryShot} pipelineId={pipelineId} genCount={genCount} />
+                    )}
+                    {isGen && previsImgPath && (
+                      <div style={{
+                        position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.3)', borderRadius: 6,
+                      }}>
+                        <span style={{ fontSize: 10, color: '#c4b5fd', fontWeight: 500 }}>Generating...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Controls: Duration, Ratio, Regen */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto' }}>
+                    {/* Duration input */}
+                    {(linkedShot || shotElem) && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 9, color: '#64748b' }}>Dur:</span>
+                        <input
+                          type="number"
+                          min={0.5} max={300} step={0.5}
+                          value={linkedShot?.duration ?? ''}
+                          placeholder="auto"
+                          onChange={e => {
+                            const v = parseFloat(e.target.value);
+                            const shotId = linkedShot?.id || shotElem?.id || '';
+                            if (v > 0 && isFinite(v) && shotId) handleShotDuration(shotId, v);
+                          }}
+                          style={{
+                            width: 44, padding: '2px 3px', borderRadius: 3, fontSize: 10,
+                            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                            color: '#e2e8f0', textAlign: 'center', outline: 'none',
+                          }}
+                        />
+                        <span style={{ fontSize: 9, color: '#64748b' }}>s</span>
+                        {linkedShot?.duration && (
+                          <button
+                            onClick={() => { const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleShotDuration(sid, 0); }}
+                            style={{ fontSize: 8, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px' }}
+                            title="Reset to auto"
+                          >x</button>
+                        )}
+                      </div>
+                    )}
+                    {/* Aspect ratio selector */}
+                    {(linkedShot || shotElem) && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 9, color: '#64748b' }}>Ratio:</span>
+                        <select
+                          value={linkedShot?.aspectRatio || ''}
+                          onChange={e => { const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleShotAspectRatio(sid, e.target.value); }}
+                          title={`Aspect ratio: ${linkedShot?.aspectRatio || globalAspectRatio || '9:16'}${!linkedShot?.aspectRatio ? ' (global)' : ''}`}
+                          style={{
+                            fontSize: 9, padding: '2px 3px', borderRadius: 3, cursor: 'pointer',
+                            background: linkedShot?.aspectRatio ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${linkedShot?.aspectRatio ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                            color: linkedShot?.aspectRatio ? '#c4b5fd' : '#94a3b8',
+                            outline: 'none', flex: 1, minWidth: 0,
+                          }}
+                        >
+                          <option value="">{globalAspectRatio || '9:16'} (global)</option>
+                          {ASPECT_RATIOS.map(r => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {/* Regen / Generate button */}
+                    {(linkedShot || shotElem) && !isGen && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleGeneratePrevis(sid); }}
+                        style={{
+                          fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
+                          background: previsImgPath ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.15)',
+                          border: `1px solid rgba(139,92,246,${previsImgPath ? '0.15' : '0.3'})`,
+                          color: '#a78bfa', cursor: 'pointer', whiteSpace: 'nowrap', width: '100%',
+                          textAlign: 'center',
+                        }}
+                        title={previsImgPath ? 'Generate another version' : 'Generate previs image'}
+                      >
+                        {previsImgPath ? 'Regen' : 'Generate'}
+                      </button>
+                    )}
+                    {isGen && (
+                      <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 500, textAlign: 'center' }}>Generating...</span>
+                    )}
+                    {/* Gen Video button */}
+                    {motionApproach !== 'ken-burns' && (linkedShot || shotElem) && !isGenVideo && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const sid = linkedShot?.id || shotElem?.id || '';
+                          if (sid) handleGenerateVideoPrevis(sid);
+                        }}
+                        style={{
+                          fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
+                          background: 'rgba(6,182,212,0.15)',
+                          border: '1px solid rgba(6,182,212,0.3)',
+                          color: '#22d3ee', cursor: 'pointer', whiteSpace: 'nowrap', width: '100%',
+                          textAlign: 'center',
+                        }}
+                        title="Generate AI video clip (Veo 3.1)"
+                      >
+                        🎬 {videoPath ? 'Regen Video' : 'Gen Video'}
+                      </button>
+                    )}
+                    {isGenVideo && (
+                      <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 500, textAlign: 'center' }}>Generating video...</span>
+                    )}
+                    {/* Image gallery link */}
+                    {genCount > 1 && !isGen && (
+                      <ShotGalleryLink shot={galleryShot || linkedShot!} pipelineId={pipelineId} genCount={genCount} />
+                    )}
+                    {/* Video gallery link */}
+                    {(shotInfo.videoGenerations?.length || 0) > 0 && !isGenVideo && (
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setVideoGallery({
+                            elementId: shotElem?.id || group.id,
+                            videoGenerations: shotInfo.videoGenerations || [],
+                            selectedVideoId: shotInfo.selectedVideoGenerationId,
+                          });
+                        }}
+                        style={{
+                          fontSize: 10, color: '#22d3ee', textDecoration: 'underline',
+                          textAlign: 'center', display: 'block',
+                        }}
+                      >
+                        🎬 {shotInfo.videoGenerations!.length} video{shotInfo.videoGenerations!.length !== 1 ? 's' : ''}
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Anchored shots — only show if main shot has NO image (avoid duplicates) */}
+                  {!previsImgPath && anchoredShots.filter(as => resolvePrevisPath(as)).map(aShot => {
+                    const aPrevis = resolvePrevisPath(aShot)!;
+                    return (
+                      <div key={aShot.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 6 }}>
+                        <span style={{
+                          fontSize: 8, fontWeight: 700, color: '#64748b',
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                        }}>
+                          {aShot.shotType}
+                        </span>
+                        <ImageZoom
+                          src={`/api/file?path=${encodeURIComponent(aPrevis)}`}
+                          alt={aShot.description || 'Shot'}
+                          style={{
+                            width: '100%', height: 'auto', maxHeight: 120, objectFit: 'cover',
+                            borderRadius: 4, marginTop: 4, border: '1px solid rgba(139,92,246,0.15)',
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* RIGHT COLUMN: Dialogue, action, content */}
+                <div className="sp-shot-content" style={{ flex: 1, minWidth: 0, padding: '8px 0' }}>
+                  {contentElems.length > 0 ? (
+                    contentElems.map((elem, i) => renderContentElem(elem, i))
+                  ) : (
+                    <div style={{ padding: '12px 16px' }}>
+                      <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, fontStyle: 'italic' }}>
+                        {shotInfo.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
           })}
           {/* Final drop zone at end of scene */}
           {dragElemId && <DropZone onDrop={() => { moveElementToEnd(dragElemId); setDragElemId(null); }} label="Drop at end" />}
+          {/* Video Gallery Modal */}
+          {videoGallery && (
+            <VideoGalleryModal
+              videoGenerations={videoGallery.videoGenerations}
+              selectedVideoId={videoGallery.selectedVideoId}
+              elementId={videoGallery.elementId}
+              pipelineId={pipelineId}
+              onClose={() => setVideoGallery(null)}
+              onSelect={async (genId) => {
+                try {
+                  await fetch(`/api/app/${encodeURIComponent(pipelineId)}/select-video-generation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ elementId: videoGallery.elementId, generationId: genId }),
+                  });
+                  setVideoGallery(null);
+                  pipeline.refresh?.();
+                } catch {}
+              }}
+            />
+          )}
+          {/* Video Modal */}
+          {videoModalSrc && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              style={{
+                position: 'fixed', inset: 0, zIndex: 10000,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)',
+                cursor: 'pointer',
+              }}
+              onClick={() => setVideoModalSrc(null)}
+            >
+              <div
+                style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <video
+                  src={videoModalSrc}
+                  autoPlay loop playsInline controls
+                  style={{
+                    maxWidth: '90vw', maxHeight: '85vh',
+                    borderRadius: 12, boxShadow: '0 24px 80px rgba(0,0,0,0.8)',
+                  }}
+                />
+                <button
+                  onClick={() => setVideoModalSrc(null)}
+                  style={{
+                    position: 'absolute', top: -12, right: -12,
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: '#1e293b', border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff', fontSize: 16, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                  aria-label="Close video"
+                >✕</button>
+              </div>
+            </div>
+          )}
         </>
       );
     }
@@ -798,11 +1339,16 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
     }
   }, [editLines, dialogue.lines, onSaveLines]);
 
-  // Check if voice is assigned
+  // Check if voice is assigned — read from React pipeline state (project metadata)
+  // with fallback to window.appBindings for backward compat
+  const pipeline = usePipeline();
   const voiceBinding = useMemo(() => {
-    const bindings = (window as any).appBindings;
-    if (!bindings?.bindings || !dialogue.characterId) return null;
-    for (const b of bindings.bindings) {
+    if (!dialogue.characterId) return null;
+    // Primary: project metadata voiceBindings (React state)
+    const metaBindings = pipeline.project?.metadata?.voiceBindings || [];
+    // Fallback: window global (populated by Voices tab or auto-load)
+    const allBindings = metaBindings.length > 0 ? metaBindings : ((window as any).appBindings?.bindings || []);
+    for (const b of allBindings) {
       if (b.type === 'voice' && b.source?.entityType === 'character' && b.source?.entityId === dialogue.characterId) {
         return {
           voiceId: b.target?.entityId,
@@ -810,8 +1356,12 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
         };
       }
     }
+    // Also check character.voiceId directly
+    if (character?.voiceId) {
+      return { voiceId: character.voiceId, voiceName: character.voiceName || 'Assigned' };
+    }
     return null;
-  }, [dialogue.characterId]);
+  }, [dialogue.characterId, pipeline.project?.metadata?.voiceBindings, character]);
 
   const handleGenerateAudio = useCallback(async () => {
     if (!voiceBinding?.voiceId) return;
@@ -1129,6 +1679,113 @@ function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
   );
 }
 
+// ── Video Gallery Modal ─────────────────────────────────────
+
+function VideoGalleryModal({ videoGenerations, selectedVideoId, elementId, pipelineId, onClose, onSelect }: {
+  videoGenerations: any[];
+  selectedVideoId?: string;
+  elementId: string;
+  pipelineId: string;
+  onClose: () => void;
+  onSelect: (generationId: string) => void;
+}) {
+  const count = videoGenerations.length;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      style={{
+        position: 'fixed', inset: 0, zIndex: 10000,
+        display: 'flex', flexDirection: 'column',
+        background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>
+            🎬 Video Gallery — {count} Generation{count !== 1 ? 's' : ''}
+          </h3>
+          <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>
+            Click a video to select it as the active preview. Selected video will be used for export.
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none', border: '1px solid rgba(255,255,255,0.15)',
+            color: '#fff', padding: '6px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+          }}
+        >Close</button>
+      </div>
+
+      <div
+        style={{
+          flex: 1, overflow: 'auto', padding: 24,
+          display: 'grid',
+          gridTemplateColumns: count <= 2 ? `repeat(${count}, 1fr)` : 'repeat(2, 1fr)',
+          gap: 16, alignContent: 'start',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {videoGenerations.map((gen, i) => {
+          const isSelected = gen.id === selectedVideoId || (!selectedVideoId && i === count - 1);
+          return (
+            <div
+              key={gen.id}
+              style={{
+                position: 'relative', borderRadius: 10, overflow: 'hidden',
+                border: isSelected ? '3px solid #a78bfa' : '2px solid rgba(255,255,255,0.08)',
+                cursor: 'pointer', transition: 'border-color 0.2s',
+                background: '#0f172a',
+              }}
+              onClick={() => onSelect(gen.id)}
+            >
+              <video
+                src={`/api/file?path=${encodeURIComponent(gen.filePath)}`}
+                autoPlay muted loop playsInline
+                style={{ width: '100%', height: 'auto', display: 'block' }}
+              />
+              {isSelected && (
+                <div style={{
+                  position: 'absolute', top: 8, right: 8,
+                  background: '#a78bfa', color: '#fff',
+                  fontSize: 10, fontWeight: 700, borderRadius: 4,
+                  padding: '3px 8px',
+                }}>
+                  ✓ SELECTED
+                </div>
+              )}
+              <div style={{
+                position: 'absolute', top: 8, left: 8,
+                background: 'rgba(0,0,0,0.7)', color: '#e2e8f0',
+                fontSize: 10, fontWeight: 600, borderRadius: 4,
+                padding: '3px 8px',
+              }}>
+                #{i + 1}
+              </div>
+              <div style={{
+                padding: '8px 10px', fontSize: 10, color: '#94a3b8',
+                display: 'flex', justifyContent: 'space-between',
+              }}>
+                <span>{gen.aspectRatio || '—'} • {gen.duration || '?'}s</span>
+                <span>{gen.generatedAt ? new Date(gen.generatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Shot Block ───────────────────────────────────────────────
 
 function ShotBlock({ shot, charMap, onGenerate, isGenerating, globalAspectRatio, onAspectRatioChange, pipelineId, draggable: isDraggable, onDragStart, onDragEnd, isDragging, isCut, onCut, onCancelCut }: {
@@ -1389,17 +2046,20 @@ function SceneDialogueButton({ scene, pipelineId }: { scene: SceneData; pipeline
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState('');
 
+  const pipeline = usePipeline();
   const handleRender = useCallback(async () => {
-    const bindings = (window as any).appBindings;
-    if (!bindings?.bindings) {
-      if (typeof (window as any).toast === 'function') (window as any).toast('Load voice bindings first (visit Voices tab)', 'warning');
+    // Read voice bindings from React state (project metadata), then fallback to window global
+    const metaBindings = pipeline.project?.metadata?.voiceBindings || [];
+    const allBindings = metaBindings.length > 0 ? metaBindings : ((window as any).appBindings?.bindings || []);
+    if (allBindings.length === 0) {
+      if (typeof (window as any).toast === 'function') (window as any).toast('No voice assignments found. Assign voices in the Voices tab.', 'warning');
       return;
     }
 
     // Resolve voice for each dialogue
     const dialogWithVoice = scene.dialogue.map(d => {
       let voiceId: string | null = null;
-      for (const b of bindings.bindings) {
+      for (const b of allBindings) {
         if (b.type === 'voice' && b.source?.entityType === 'character' && b.source?.entityId === d.characterId) {
           voiceId = b.target?.entityId;
           break;
@@ -1444,12 +2104,13 @@ function SceneDialogueButton({ scene, pipelineId }: { scene: SceneData; pipeline
   );
 }
 
-const SceneCard = React.memo(function SceneCard({ scene, charMap, locMap, pipelineId, globalAspectRatio }: {
+const SceneCard = React.memo(function SceneCard({ scene, charMap, locMap, pipelineId, globalAspectRatio, motionApproach }: {
   scene: SceneData;
   charMap: Record<string, Character>;
   locMap: Record<string, Location>;
   pipelineId: string;
   globalAspectRatio: string;
+  motionApproach?: string;
 }) {
   const pipeline = usePipeline();
   const location = scene.locationId ? locMap[scene.locationId] : (scene.location ? (locMap[scene.location] || locMap[scene.location.toUpperCase()]) : null);
@@ -1672,20 +2333,6 @@ Return ONLY a JSON array, no markdown, no explanation.`;
         </div>
       )}
 
-      {/* Previs strip — show generated previs images */}
-      {scene.shots.some(s => s.previsPath) && (
-        <div style={{ display: 'flex', gap: 4, padding: '6px 12px', overflowX: 'auto', background: 'rgba(0,0,0,0.2)' }}>
-          {scene.shots.filter(s => s.previsPath).map((shot, i) => (
-            <ImageZoom
-              key={shot.id}
-              src={`/api/file?path=${encodeURIComponent(shot.previsPath!)}`}
-              alt={shot.description || `Shot ${i + 1}`}
-              style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: '1px solid rgba(139,92,246,0.2)' }}
-            />
-          ))}
-        </div>
-      )}
-
       {/* Scene heading */}
       <div role="region" aria-label={scene.title} className="bg-[#1a1d2e] px-4 py-2.5 border-b border-white/5" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
@@ -1754,6 +2401,7 @@ Return ONLY a JSON array, no markdown, no explanation.`;
           charMap={charMap}
           pipelineId={pipelineId}
           globalAspectRatio={globalAspectRatio}
+          motionApproach={motionApproach}
         />
 
         {/* Camera Shots — only show shots that weren't rendered inline */}
@@ -1820,15 +2468,17 @@ Return ONLY a JSON array, no markdown, no explanation.`;
     && prev.scene.dialogue.length === next.scene.dialogue.length
     && prev.pipelineId === next.pipelineId
     && prev.globalAspectRatio === next.globalAspectRatio
+    && prev.motionApproach === next.motionApproach
     && JSON.stringify(prev.scene.shots.map(s => [s.aspectRatio, s.previsPath, s.generations?.length, s.selectedGenerationId]))
        === JSON.stringify(next.scene.shots.map(s => [s.aspectRatio, s.previsPath, s.generations?.length, s.selectedGenerationId]));
 });
 
 // ── Toolbar ──────────────────────────────────────────────────
 
-function Toolbar({ projectData, onAction }: {
+function Toolbar({ projectData, onAction, motionApproach }: {
   projectData: any;
   onAction: (action: string) => void;
+  motionApproach?: string;
 }) {
   const charCount = projectData?.characters?.length || 0;
   const locCount = projectData?.locations?.length || 0;
@@ -1859,6 +2509,14 @@ function Toolbar({ projectData, onAction }: {
       <button onClick={() => onAction('render-dialogue')} aria-label="Render audio for all dialogue" className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition-colors">
         🔊 Render All Dialogue
       </button>
+      <button onClick={() => onAction('compact-timing')} aria-label="Compact timeline — tighten shot timing to match dialogue audio" className="px-3 py-1.5 rounded-md text-xs font-medium bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-colors">
+        ⏩ Compact Timing
+      </button>
+      {motionApproach !== 'ken-burns' && (
+        <button onClick={() => onAction('generate-video-batch')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-colors">
+          🎬 Generate All Videos
+        </button>
+      )}
     </div>
   );
 }
@@ -1879,18 +2537,50 @@ function ScreenplayViewInner() {
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [globalAspectRatio, setGlobalAspectRatio] = useState<string>('9:16');
+  const [globalAspectRatio, setGlobalAspectRatio] = useState<string>(
+    projectData?.metadata?.globalAspectRatio || '9:16'
+  );
+  const [motionApproach, setMotionApproach] = useState<string>(
+    projectData?.metadata?.motionApproach || 'ken-burns'
+  );
   const [shotPrefix, setShotPrefix] = useState<string>(projectData?.metadata?.shotImagePromptPrefix || '');
   const [savingShotPrefix, setSavingShotPrefix] = useState(false);
   const [showShotPrefix, setShowShotPrefix] = useState(false);
   const shotPrefixTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Auto-load voice bindings so dialogue rendering works without visiting Voices tab
+  useEffect(() => {
+    if (!pipelineId) return;
+    // Only load if not already loaded
+    if ((window as any).appBindings?.bindings?.length > 0) return;
+    fetch(`/api/app/${encodeURIComponent(pipelineId)}/voice-bindings`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.bindings) {
+          (window as any).appBindings = data;
+        }
+      })
+      .catch(() => {}); // silent — not critical
+  }, [pipelineId]);
+
   // Sync prefix state when project data loads or reloads
   useEffect(() => {
     const saved = projectData?.metadata?.shotImagePromptPrefix || '';
     setShotPrefix(prev => prev || saved);
   }, [projectData?.metadata?.shotImagePromptPrefix]);
+
+  // Sync global aspect ratio from project data
+  useEffect(() => {
+    const saved = projectData?.metadata?.globalAspectRatio;
+    if (saved) setGlobalAspectRatio(saved);
+  }, [projectData?.metadata?.globalAspectRatio]);
+
+  // Sync motion approach from project data
+  useEffect(() => {
+    const saved = projectData?.metadata?.motionApproach;
+    if (saved) setMotionApproach(saved);
+  }, [projectData?.metadata?.motionApproach]);
 
   const saveShotPrefix = useCallback(async (value: string) => {
     setSavingShotPrefix(true);
@@ -1994,11 +2684,161 @@ function ScreenplayViewInner() {
         }
         case 'render-dialogue': {
           setActionStatus('Rendering dialogue audio...');
-          const rdRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/render-dialogue`, { method: 'POST' });
-          const rdData = await rdRes.json().catch(() => ({}));
-          setActionStatus(`Rendered ${rdData.rendered || 0}/${rdData.total || 0} dialogue lines`);
+          const rdRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/render-dialogue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stream: true }),
+          });
+
+          if (!rdRes.body) {
+            // Fallback: non-streaming response
+            const rdData = await rdRes.json().catch(() => ({}));
+            setActionStatus(`Rendered ${rdData.rendered || 0}/${rdData.total || 0} dialogue lines`);
+            await pipeline.reload();
+            setTimeout(() => setActionStatus(null), 2000);
+            break;
+          }
+
+          const reader = rdRes.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let lastRendered = 0;
+          let lastTotal = 0;
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+
+              for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                  const evt = JSON.parse(line);
+                  if (evt.type === 'quota') {
+                    const quotaStr = evt.remainingChars != null
+                      ? ` — ${evt.remainingChars.toLocaleString()} chars remaining`
+                      : '';
+                    setActionStatus(`Starting dialogue render (${evt.total} items)${quotaStr}`);
+                  } else if (evt.type === 'progress') {
+                    lastRendered = evt.rendered;
+                    lastTotal = evt.total;
+                    const charsStr = evt.remainingChars != null
+                      ? ` — ${evt.remainingChars.toLocaleString()} chars remaining`
+                      : '';
+                    setActionStatus(`Rendering dialogue ${evt.rendered}/${evt.total}${evt.characterName ? ` (${evt.characterName})` : ''}${charsStr}`);
+                  } else if (evt.type === 'complete') {
+                    lastRendered = evt.rendered;
+                    lastTotal = evt.total;
+                    const charsStr = evt.remainingChars != null
+                      ? ` — ${evt.remainingChars.toLocaleString()} chars remaining`
+                      : '';
+                    setActionStatus(`Rendered ${evt.rendered}/${evt.total} dialogue lines${charsStr}`);
+                  } else if (evt.type === 'error') {
+                    setActionStatus(`Error: ${evt.error}`);
+                  }
+                } catch { /* skip malformed lines */ }
+              }
+            }
+          } catch (streamErr: any) {
+            setActionStatus(`Stream error: ${streamErr.message}`);
+          }
+
           await pipeline.reload();
-          setTimeout(() => setActionStatus(null), 2000);
+          if (lastRendered > 0) {
+            setActionStatus(`Rendered ${lastRendered}/${lastTotal} dialogue lines`);
+          }
+          setTimeout(() => setActionStatus(null), 3000);
+          break;
+        }
+        case 'compact-timing': {
+          setActionStatus('Compacting timeline...');
+          try {
+            const res = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/compact-timing`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({}),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.success) {
+              setActionStatus(`Timeline compacted: ${data.totalDuration?.toFixed(1)}s total (was ${data.previousDuration?.toFixed(1)}s)`);
+              await pipeline.reload();
+            } else {
+              setActionStatus(data.error || 'Compact timing failed');
+            }
+          } catch (err: any) {
+            setActionStatus(`Error: ${err.message}`);
+          }
+          setTimeout(() => setActionStatus(null), 4000);
+          break;
+        }
+        case 'generate-video-batch': {
+          // First get cost estimate
+          setActionStatus('Estimating video generation cost...');
+          const estRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dryRun: true }),
+          });
+          const estimate = await estRes.json();
+
+          if (!estimate.success || estimate.shotCount === 0) {
+            setActionStatus('No shots need video generation');
+            setTimeout(() => setActionStatus(null), 2000);
+            break;
+          }
+
+          const confirmed = confirm(
+            `Generate AI video for ${estimate.shotCount} shots?\n` +
+            `Estimated cost: $${estimate.estimatedCost.toFixed(2)}\n` +
+            `Estimated time: ~${Math.ceil(estimate.shotCount * 30 / 60)} minutes`
+          );
+
+          if (!confirmed) {
+            setActionStatus(null);
+            break;
+          }
+
+          // Stream the actual generation
+          setActionStatus(`Generating videos: 0/${estimate.shotCount}...`);
+          const genRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stream: true }),
+          });
+
+          // Read NDJSON stream
+          if (genRes.body) {
+            const reader = genRes.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                  if (!line.trim()) continue;
+                  try {
+                    const evt = JSON.parse(line);
+                    if (evt.type === 'progress') {
+                      setActionStatus(`Generating video ${evt.current}/${evt.total} (${evt.elementId})`);
+                    } else if (evt.type === 'complete') {
+                      setActionStatus(`Generated ${evt.rendered}/${evt.total} video clips`);
+                    }
+                  } catch {}
+                }
+              }
+            } catch {}
+          }
+
+          await pipeline.reload();
+          setTimeout(() => setActionStatus(null), 3000);
           break;
         }
       }
@@ -2057,18 +2897,46 @@ function ScreenplayViewInner() {
       {/* Toolbar + Search */}
       <div className="flex-shrink-0 px-4 flex items-center gap-2">
         <div className="flex-1">
-          <Toolbar projectData={projectData} onAction={handleAction} />
+          <Toolbar projectData={projectData} onAction={handleAction} motionApproach={motionApproach} />
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-slate-500">Ratio:</span>
           <select
             value={globalAspectRatio}
-            onChange={e => setGlobalAspectRatio(e.target.value)}
+            onChange={e => {
+              const newRatio = e.target.value;
+              setGlobalAspectRatio(newRatio);
+              // Persist to project metadata
+              fetch(`/api/app/${encodeURIComponent(pipelineId)}/update-prompt-prefix`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ globalAspectRatio: newRatio }),
+              }).catch(() => {});
+            }}
             className="px-2 py-1.5 rounded-md text-xs bg-white/[0.04] border border-white/8 text-slate-300 outline-none cursor-pointer"
           >
             {ASPECT_RATIOS.map(r => (
               <option key={r} value={r}>{ASPECT_LABELS[r] || r}</option>
             ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-slate-500">Motion:</span>
+          <select
+            value={motionApproach}
+            onChange={e => {
+              setMotionApproach(e.target.value);
+              fetch(`/api/app/${encodeURIComponent(pipelineId)}/update-prompt-prefix`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motionApproach: e.target.value }),
+              }).catch(() => {});
+            }}
+            className="px-2 py-1.5 rounded-md text-xs bg-white/[0.04] border border-white/8 text-slate-300 outline-none cursor-pointer"
+          >
+            <option value="ken-burns">Ken Burns (Free)</option>
+            <option value="ai-video">AI Video (Veo)</option>
+            <option value="hybrid">Hybrid</option>
           </select>
         </div>
         <input
@@ -2165,7 +3033,7 @@ function ScreenplayViewInner() {
                     {scene.actTitle}
                   </h2>
                 )}
-                <SceneCard scene={scene} charMap={charMap} locMap={locMap} pipelineId={pipelineId} globalAspectRatio={globalAspectRatio} />
+                <SceneCard scene={scene} charMap={charMap} locMap={locMap} pipelineId={pipelineId} globalAspectRatio={globalAspectRatio} motionApproach={motionApproach} />
               </React.Fragment>
             );
           }).filter(Boolean);

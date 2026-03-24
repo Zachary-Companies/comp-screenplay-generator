@@ -219,3 +219,9 @@ The stitched state contains these key fields across nodes:
 - Use `createMockContext()` from `./_test-helpers.ts` for mock context
 - Run tests: `npx vitest run`
 - When you write or edit code, ALWAYS write/update the test, then run it to verify
+
+## Documentation
+
+Detailed documentation lives in the `docs/` folder:
+
+- **[React Frontend Integration](docs/react-frontend-integration.md)** — How pipeline outputs map to domain files and React state, critical fields, common pitfalls, and debugging workflow

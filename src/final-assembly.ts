@@ -18,13 +18,14 @@
  * @input previsualizationPlan: object - Previsualization plan
  * @input validationResults: object - Rule validation results
  * @input dialogueAudio: object[] - Generated dialogue audio assets
+ * @input motionGraphicsPlan: object - Motion graphics plan (Ken Burns, transitions, etc.)
  * @output scriptPackage: object - Complete GeneratedScriptPackage
  */
 export async function execute(
-  inputs: { validatedInput: any; metadata: any; characters: any[]; locations: any[]; processedSections: any[]; elements: any[]; productionMetadata: any; revisionMetadata: any; assetCollection: any; previsualizationPlan: any; validationResults: any; dialogueAudio?: any[] },
+  inputs: { validatedInput: any; metadata: any; characters: any[]; locations: any[]; processedSections: any[]; elements: any[]; productionMetadata: any; revisionMetadata: any; assetCollection: any; previsualizationPlan: any; validationResults: any; dialogueAudio?: any[]; motionGraphicsPlan?: any },
   context: ScriptContext,
 ): Promise<{ scriptPackage: object }> {
-  const { validatedInput, metadata, characters, locations, processedSections, elements, productionMetadata, revisionMetadata, assetCollection, previsualizationPlan, validationResults, dialogueAudio } = inputs;
+  const { validatedInput, metadata, characters, locations, processedSections, elements, productionMetadata, revisionMetadata, assetCollection, previsualizationPlan, validationResults, dialogueAudio, motionGraphicsPlan } = inputs;
 
   try {
     // Parse all input components (handle both string and object inputs)
@@ -53,6 +54,9 @@ export async function execute(
       ? dialogueAudio.map(audio => typeof audio === 'string' ? JSON.parse(audio) : audio)
       : [];
 
+    // Parse motion graphics plan (optional input)
+    const parsedMotionGraphics = typeof motionGraphicsPlan === 'string' ? JSON.parse(motionGraphicsPlan) : (motionGraphicsPlan || {});
+
     context.log('Assembling complete GeneratedScriptPackage');
     context.log(`Script title: ${scriptMetadata.title}`);
     context.log(`Characters: ${characterDefinitions.length}`);
@@ -61,6 +65,7 @@ export async function execute(
     context.log(`Elements: ${scriptElements.length}`);
     context.log(`Assets: ${assets.assets?.length || 0}`);
     context.log(`Dialogue audio: ${dialogueAudioAssets.length}`);
+    context.log(`Motion graphics: ${parsedMotionGraphics.kenBurns?.length || 0} Ken Burns, ${parsedMotionGraphics.transitions?.length || 0} transitions`);
     context.log(`Previs shots: ${previs.shots?.length || 0}`);
 
     // Link asset image paths back to character and location objects
@@ -95,6 +100,11 @@ export async function execute(
     // Elements are generated per-section in order, so we distribute them back
     const populatedSections = populateSectionChildren(scriptSections, scriptElements, context);
 
+    // Build scenes array with proper elementRange for the app frontend
+    const scenes = buildScenesWithElementRange(
+      scriptSections, scriptElements, charactersWithImages, locationsWithImages, previs, context
+    );
+
     // Link dialogue audio to their corresponding dialogue elements
     const elementsWithAudio = linkDialogueAudio(scriptElements, dialogueAudioAssets, context);
 
@@ -113,8 +123,10 @@ export async function execute(
     const scriptPackage = {
       input: input,
       script: scriptDocument,
+      scenes: scenes,
       assets: assets,
       dialogueAudio: dialogueAudioAssets,
+      motionGraphicsPlan: parsedMotionGraphics,
       previsualizations: previs,
       validationResults: valResults,
       generatedAt: new Date().toISOString(),
@@ -147,6 +159,7 @@ export async function execute(
       },
       assets: { id: "error", name: "Error", description: "Failed to generate assets", assets: [] },
       dialogueAudio: [],
+      motionGraphicsPlan: {},
       previsualizations: { collectionName: "Error", shots: [] },
       validationResults: { valid: false, errors: [error.message] },
       generatedAt: new Date().toISOString(),
@@ -191,6 +204,138 @@ function linkDialogueAudio(elements: any[], dialogueAudio: any[], context: Scrip
     }
     return element;
   });
+}
+
+/**
+ * Builds a scenes array with proper elementRange for the app frontend.
+ * Each scene maps to a contiguous range of elements in the flat elements array.
+ * This is critical: without correct elementRange, the editor/screenplay views
+ * will create duplicate clips (one per scene × all elements) and crash.
+ */
+function buildScenesWithElementRange(
+  sections: any[],
+  elements: any[],
+  characters: any[],
+  locations: any[],
+  previs: any,
+  context: ScriptContext,
+): any[] {
+  const allScenes = flattenScenes(sections);
+  if (allScenes.length === 0 || elements.length === 0) return [];
+
+  // Build element ID → index lookup
+  const elemIdToIdx = new Map<string, number>();
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i]?.id) elemIdToIdx.set(elements[i].id, i);
+  }
+
+  // Build character ID → character lookup
+  const charMap = new Map<string, any>();
+  for (const c of characters) {
+    if (c?.id) charMap.set(c.id, c);
+  }
+
+  // Build location name → location ID lookup
+  const locNameToId = new Map<string, string>();
+  for (const l of locations) {
+    if (l?.name) locNameToId.set(l.name.toLowerCase(), l.id);
+  }
+
+  // Build previs shots by element ID
+  const previsShots = previs?.shots || [];
+  const previsByShotElemId = new Map<string, any>();
+  for (const ps of previsShots) {
+    if (ps?.shotElementId) previsByShotElemId.set(ps.shotElementId, ps);
+  }
+
+  const scenes: any[] = [];
+  let elementIndex = 0;
+
+  // Compute beat-proportional distribution (same logic as populateSectionChildren)
+  const sceneBeatCounts = allScenes.map((s: any) => {
+    const beats = s.beats || [];
+    return Array.isArray(beats) ? beats.length : 0;
+  });
+  const totalBeats = sceneBeatCounts.reduce((sum: number, c: number) => sum + c, 0);
+
+  for (let i = 0; i < allScenes.length; i++) {
+    const section = allScenes[i];
+    let elemCount: number;
+
+    if (totalBeats > 0) {
+      const proportion = sceneBeatCounts[i] / totalBeats;
+      elemCount = Math.round(elements.length * proportion);
+      elemCount = Math.min(elemCount, elements.length - elementIndex);
+      if (i === allScenes.length - 1) elemCount = elements.length - elementIndex;
+    } else {
+      const perScene = Math.ceil(elements.length / allScenes.length);
+      elemCount = Math.min(perScene, elements.length - elementIndex);
+      if (i === allScenes.length - 1) elemCount = elements.length - elementIndex;
+    }
+
+    const rangeStart = elementIndex;
+    const rangeEnd = elementIndex + elemCount;
+    const sceneElements = elements.slice(rangeStart, rangeEnd);
+
+    // Extract dialogue from this scene's elements
+    const dialogue = sceneElements
+      .filter((e: any) => e.type === 'dialogue')
+      .map((e: any) => ({
+        characterName: e.characterName || 'UNKNOWN',
+        characterId: e.characterId,
+        lines: e.lines || [e.content],
+        modifiers: e.modifiers || [],
+        elementId: e.id,
+      }));
+
+    // Extract actions
+    const actions = sceneElements
+      .filter((e: any) => e.type === 'action')
+      .map((e: any) => e.content || '');
+
+    // Extract shots with previs info
+    const shotElements = sceneElements.filter((e: any) => e.type === 'shot');
+    const shots = shotElements.map((e: any) => {
+      const previsEntry = previsByShotElemId.get(e.id);
+      return {
+        id: e.id,
+        shotType: e.frameSize || '',
+        description: e.shotText || e.content || '',
+        characterIds: e.characterIds || [],
+        previsPath: previsEntry?.filePath || null,
+        videoPath: previsEntry?.videoPath || null,
+        duration: null as number | null,
+      };
+    });
+
+    // Determine location for this scene
+    const heading = section.sceneHeading;
+    const locationName = heading?.location || section.title || '';
+    const locationId = locNameToId.get(locationName.toLowerCase()) || null;
+
+    // Determine which characters appear
+    const sceneCharIds = new Set<string>();
+    for (const d of dialogue) {
+      if (d.characterId) sceneCharIds.add(d.characterId);
+    }
+
+    scenes.push({
+      id: section.id || `scene-${i}`,
+      title: heading?.location || section.title || `Scene ${i + 1}`,
+      location: locationName,
+      locationId: locationId,
+      characterIds: Array.from(sceneCharIds),
+      dialogue: dialogue,
+      actions: actions,
+      shots: shots,
+      elementRange: [rangeStart, rangeEnd],
+    });
+
+    elementIndex = rangeEnd;
+  }
+
+  context.log(`Built ${scenes.length} scenes with elementRange mappings`);
+  return scenes;
 }
 
 /**
