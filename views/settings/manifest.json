@@ -1,0 +1,9 @@
+{
+  "name": "settings",
+  "label": "Settings",
+  "icon": "⚙️",
+  "type": "react",
+  "bundle": "view.bundle.js",
+  "order": 90,
+  "description": "Pipeline settings, LLM proxy management, and usage stats"
+}

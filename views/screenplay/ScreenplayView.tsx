@@ -416,6 +416,31 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
   const [generatingSet, setGeneratingSet] = useState<Set<string>>(new Set());
   const [videoModalSrc, setVideoModalSrc] = useState<string | null>(null);
   const [videoGallery, setVideoGallery] = useState<{ elementId: string; videoGenerations: any[]; selectedVideoId?: string } | null>(null);
+  const [refEditorShotId, setRefEditorShotId] = useState<string | null>(null);
+  // Track manual ref overrides per shot: { [shotElemId]: { characters: Set<charId>, locations: Set<locId> } }
+  const [manualRefs, setManualRefs] = useState<Record<string, { characters: Set<string>; locations: Set<string> }>>({});
+  // Load bindings for the currently open ref editor
+  useEffect(() => {
+    if (!refEditorShotId) return;
+    // Already loaded?
+    if (manualRefs[refEditorShotId]) return;
+    (async () => {
+      try {
+        const resp = await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings`);
+        const data = await resp.json();
+        const bindings = data.bindings || [];
+        const chars = new Set<string>();
+        const locs = new Set<string>();
+        for (const b of bindings) {
+          if (b.source?.entityId === refEditorShotId) {
+            if (b.type === 'depicts' && b.target?.entityId) chars.add(b.target.entityId);
+            if (b.type === 'set-in' && b.target?.entityId) locs.add(b.target.entityId);
+          }
+        }
+        setManualRefs(prev => ({ ...prev, [refEditorShotId]: { characters: chars, locations: locs } }));
+      } catch {}
+    })();
+  }, [refEditorShotId, pipelineId]);
 
   // Handle previs generation for a specific shot
   const handleGeneratePrevis = useCallback(async (shotId: string) => {
@@ -935,20 +960,20 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                         )}
                       </div>
                     )}
-                    {/* Manual ref editor button */}
+                    {/* Manual ref editor button - positioned inside thumbnail */}
                     {shotElem && !isGen && (
                       <div style={{ position: 'absolute', bottom: 4, right: 4, zIndex: 3 }}>
-                        <RefEditor
-                          elementId={shotElem.id}
-                          currentRefs={refImages}
-                          allCharacters={Object.values(charMap)}
-                          allLocations={Object.values(locMap || {})}
-                          pipelineId={pipelineId}
-                          onUpdate={() => {
-                            // Force re-fetch by triggering a state update
-                            if (typeof (window as any).toast === 'function') (window as any).toast('Bindings updated — Regen to apply', 'success');
+                        <button
+                          onClick={() => setRefEditorShotId(refEditorShotId === shotElem.id ? null : shotElem.id)}
+                          title="Edit references for this shot"
+                          style={{
+                            background: 'rgba(139,92,246,0.3)', border: '1px solid rgba(139,92,246,0.5)',
+                            borderRadius: 4, color: '#e9d5ff', fontSize: 10, padding: '2px 8px',
+                            cursor: 'pointer', fontWeight: 600, backdropFilter: 'blur(4px)',
                           }}
-                        />
+                        >
+                          ✏️ Refs
+                        </button>
                       </div>
                     )}
                     {/* Generation count badge */}
@@ -1088,6 +1113,107 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                       </a>
                     )}
                   </div>
+
+                  {/* Reference editor panel — renders OUTSIDE the thumbnail */}
+                  {shotElem && refEditorShotId === shotElem.id && (
+                    <div style={{
+                      background: '#1e1b2e', border: '1px solid rgba(139,92,246,0.3)',
+                      borderRadius: 8, padding: 12, marginTop: 4,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600 }}>Edit References</span>
+                        <button
+                          onClick={() => setRefEditorShotId(null)}
+                          style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}
+                        >×</button>
+                      </div>
+                      {(() => {
+                        const shotRefs = manualRefs[shotElem!.id] || { characters: new Set(), locations: new Set() };
+                        const uniqueChars: Character[] = []; const seenC = new Set<string>();
+                        for (const c of Object.values(charMap)) { if (!seenC.has(c.id)) { seenC.add(c.id); uniqueChars.push(c); } }
+                        const uniqueLocs: Location[] = []; const seenL = new Set<string>();
+                        for (const l of Object.values(locMap || {})) { if (!seenL.has(l.id)) { seenL.add(l.id); uniqueLocs.push(l); } }
+
+                        const toggleRef = async (type: 'depicts' | 'set-in', targetId: string, add: boolean) => {
+                          // Optimistic update
+                          setManualRefs(prev => {
+                            const cur = prev[shotElem!.id] || { characters: new Set<string>(), locations: new Set<string>() };
+                            const key = type === 'depicts' ? 'characters' : 'locations';
+                            const next = new Set(cur[key]);
+                            if (add) next.add(targetId); else next.delete(targetId);
+                            return { ...prev, [shotElem!.id]: { ...cur, [key]: next } };
+                          });
+                          // Persist
+                          try {
+                            if (add) {
+                              await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings`, {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  type, source: { entityType: 'shot', entityId: shotElem!.id },
+                                  target: { entityType: type === 'depicts' ? 'character' : 'location', entityId: targetId },
+                                  confidence: 1.0, origin: 'manual',
+                                }),
+                              });
+                            } else {
+                              const resp = await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings`);
+                              const data = await resp.json();
+                              const toRemove = (data.bindings || []).find((b: any) =>
+                                b.type === type && b.source?.entityId === shotElem!.id && b.target?.entityId === targetId
+                              );
+                              if (toRemove) await fetch(`/api/compositions/${encodeURIComponent(pipelineId)}/bindings/${toRemove.id}`, { method: 'DELETE' });
+                            }
+                            if (typeof (window as any).toast === 'function') (window as any).toast('Binding updated — Regen to apply', 'success');
+                          } catch (e) { console.error('Binding update failed', e); }
+                        };
+
+                        return (<>
+                          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginBottom: 6 }}>Characters</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {uniqueChars.map(c => {
+                              const isChecked = shotRefs.characters.has(c.id);
+                              return (
+                                <label key={c.id} style={{
+                                  display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0',
+                                  fontSize: 12, color: isChecked ? '#a78bfa' : '#94a3b8', cursor: 'pointer',
+                                }}>
+                                  <input type="checkbox" checked={isChecked}
+                                    onChange={() => toggleRef('depicts', c.id, !isChecked)}
+                                    style={{ accentColor: '#8b5cf6', width: 16, height: 16 }} />
+                                  {c.imagePath && (
+                                    <img src={`/api/file?path=${encodeURIComponent(c.imagePath)}`}
+                                      style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover', border: isChecked ? '2px solid #8b5cf6' : '2px solid transparent' }} alt="" />
+                                  )}
+                                  <span style={{ fontWeight: isChecked ? 600 : 400 }}>{c.displayName || c.name}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 10, marginBottom: 6 }}>Locations</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {uniqueLocs.slice(0, 8).map(l => {
+                              const isChecked = shotRefs.locations.has(l.id);
+                              return (
+                                <label key={l.id} style={{
+                                  display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0',
+                                  fontSize: 12, color: isChecked ? '#22d3ee' : '#94a3b8', cursor: 'pointer',
+                                }}>
+                                  <input type="checkbox" checked={isChecked}
+                                    onChange={() => toggleRef('set-in', l.id, !isChecked)}
+                                    style={{ accentColor: '#06b6d4', width: 16, height: 16 }} />
+                                  {l.imagePath && (
+                                    <img src={`/api/file?path=${encodeURIComponent(l.imagePath)}`}
+                                      style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover', border: isChecked ? '2px solid #06b6d4' : '2px solid transparent' }} alt="" />
+                                  )}
+                                  <span style={{ fontWeight: isChecked ? 600 : 400 }}>{l.name}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </>);
+                      })()}
+                    </div>
+                  )}
 
                   {/* Anchored shots — only show if main shot has NO image (avoid duplicates) */}
                   {!previsImgPath && anchoredShots.filter(as => resolvePrevisPath(as)).map(aShot => {

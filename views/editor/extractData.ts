@@ -133,6 +133,40 @@ export function extractData(
       sceneRanges.push({ sceneId: 'all', start: 0, end: project.elements.length });
     }
 
+    // ── Pre-populate previsShots and sceneGroupedShots for videoMap ──
+    if (project.scenes) {
+      for (const scene of project.scenes) {
+        if (!scene || !scene.shots) continue;
+        for (const shot of scene.shots) {
+          if (shot && shot.id) sceneGroupedShots.push(shot);
+        }
+      }
+    }
+    if ((project as any).previsualizations?.shots) {
+      for (const s of (project as any).previsualizations.shots) {
+        previsShots.push(s);
+      }
+    }
+
+    // Build videoMap early so clip creation can use it
+    const videoMap: Record<string, string> = {};
+    for (const pv of previsShots) {
+      if (!pv.shotElementId) continue;
+      if (pv.videoGenerations && pv.videoGenerations.length > 0) {
+        const selVideo = pv.selectedVideoGenerationId
+          ? pv.videoGenerations.find((g: any) => g.id === pv.selectedVideoGenerationId)
+          : pv.videoGenerations[pv.videoGenerations.length - 1];
+        if (selVideo?.filePath) videoMap[pv.shotElementId] = selVideo.filePath;
+      } else if (pv.videoPath) {
+        videoMap[pv.shotElementId] = pv.videoPath;
+      }
+    }
+    for (const shot of sceneGroupedShots) {
+      if ((shot as any).videoPath && !videoMap[shot.id]) {
+        videoMap[shot.id] = (shot as any).videoPath;
+      }
+    }
+
     // Process elements scene by scene
     if (project.elements) {
       for (const range of sceneRanges) {
@@ -308,22 +342,7 @@ export function extractData(
       }
     }
 
-    // ── Scene-grouped shots ───────────────────────────────
-    if (project.scenes) {
-      for (const scene of project.scenes) {
-        if (!scene || !scene.shots) continue;
-        for (const shot of scene.shots) {
-          if (shot && shot.id) sceneGroupedShots.push(shot);
-        }
-      }
-    }
-
-    if ((project as any).previsualizations?.shots) {
-      for (const s of (project as any).previsualizations.shots) {
-        previsShots.push(s);
-      }
-    }
-
+    // ── Assets ──────────────────────────────────────────
     const projectAssets = Array.isArray((project as any).assets)
       ? (project as any).assets
       : ((project as any).assets?.assets || []);
@@ -387,25 +406,6 @@ export function extractData(
           ? shot.generations.find(g => g.id === shot.selectedGenerationId)
           : shot.generations[shot.generations.length - 1];
         if (selected?.filePath) previsMap[shot.id] = selected.filePath;
-      }
-    }
-
-    // Build videoMap: element ID → video file path (prefer selected video generation)
-    const videoMap: Record<string, string> = {};
-    for (const pv of previsShots) {
-      if (!pv.shotElementId) continue;
-      if (pv.videoGenerations && pv.videoGenerations.length > 0) {
-        const selVideo = pv.selectedVideoGenerationId
-          ? pv.videoGenerations.find((g: any) => g.id === pv.selectedVideoGenerationId)
-          : pv.videoGenerations[pv.videoGenerations.length - 1];
-        if (selVideo?.filePath) videoMap[pv.shotElementId] = selVideo.filePath;
-      } else if (pv.videoPath) {
-        videoMap[pv.shotElementId] = pv.videoPath;
-      }
-    }
-    for (const shot of sceneGroupedShots) {
-      if ((shot as any).videoPath && !videoMap[shot.id]) {
-        videoMap[shot.id] = (shot as any).videoPath;
       }
     }
 

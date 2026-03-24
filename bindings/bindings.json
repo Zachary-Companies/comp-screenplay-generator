@@ -11244,6 +11244,70 @@
       "origin": "auto:rule-location-in-shot",
       "createdAt": "2026-03-24T13:25:23.921Z",
       "updatedAt": "2026-03-24T13:25:23.921Z"
+    },
+    {
+      "id": "bind-mn4pkipa",
+      "type": "depicts",
+      "source": {
+        "entityType": "shot",
+        "entityId": "element_1"
+      },
+      "target": {
+        "entityType": "character",
+        "entityId": "david-chen"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-24T14:26:56.302Z",
+      "updatedAt": "2026-03-24T14:26:56.302Z"
+    },
+    {
+      "id": "bind-mn4pknmq",
+      "type": "set-in",
+      "source": {
+        "entityType": "shot",
+        "entityId": "element_1"
+      },
+      "target": {
+        "entityType": "location",
+        "entityId": "childrens-bedroom"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-24T14:27:02.690Z",
+      "updatedAt": "2026-03-24T14:27:02.690Z"
+    },
+    {
+      "id": "bind-mn4pp54j",
+      "type": "depicts",
+      "source": {
+        "entityType": "shot",
+        "entityId": "element_1"
+      },
+      "target": {
+        "entityType": "character",
+        "entityId": "sarah-chen"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-24T14:30:31.987Z",
+      "updatedAt": "2026-03-24T14:30:31.987Z"
+    },
+    {
+      "id": "bind-mn4pp6oy",
+      "type": "depicts",
+      "source": {
+        "entityType": "shot",
+        "entityId": "element_1"
+      },
+      "target": {
+        "entityType": "character",
+        "entityId": "david-chen"
+      },
+      "confidence": 1,
+      "origin": "manual",
+      "createdAt": "2026-03-24T14:30:34.018Z",
+      "updatedAt": "2026-03-24T14:30:34.018Z"
     }
   ]
 }
