@@ -12,7 +12,9 @@
     "lint": "tsc --noEmit --pretty",
     "test": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@google/genai": "^1.46.0"
+  },
   "devDependencies": {
     "vitest": "^3.0.0"
   }

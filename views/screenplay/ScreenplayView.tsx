@@ -7,6 +7,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { usePipeline, ImageZoom } from './sdk';
 import type { Character, Location, SceneData, SceneShot, SceneDialogue, PrevisGeneration, Element } from './sdk';
 import { DialogueAudioProvider, useDialogueAudio } from './DialogueAudioContext';
+import { buildDialogueDurationMap, computeSlotDuration, computeVideoGapInfo } from './computeSlotDuration';
 
 // ── Aspect Ratio Options ─────────────────────────────────────
 
@@ -26,7 +27,7 @@ const ASPECT_LABELS: Record<string, string> = {
 if (typeof document !== 'undefined' && !document.getElementById('previs-spinner-css')) {
   const style = document.createElement('style');
   style.id = 'previs-spinner-css';
-  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }\n.group\\/action .sp-insert-shot-btn { opacity: 0; transition: opacity 0.15s; }\n.group\\/action:hover .sp-insert-shot-btn { opacity: 1; }';
   document.head.appendChild(style);
 }
 
@@ -90,7 +91,7 @@ const SHOT_PATTERN = /^(WIDE SHOT|MEDIUM SHOT|CLOSE-UP|EXTREME CLOSE-UP|TWO SHOT
 
 // ── Editable Action Block ────────────────────────────────────
 
-function EditableAction({ element, onSave }: { element: Element; onSave: (text: string) => void }) {
+function EditableAction({ element, onSave, onInsertShot }: { element: Element; onSave: (text: string) => void; onInsertShot?: () => void }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(element.content || '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -125,10 +126,22 @@ function EditableAction({ element, onSave }: { element: Element; onSave: (text: 
   }
 
   return (
-    <div className="my-2 px-4 group/action cursor-text" onClick={() => setEditing(true)}>
-      <p className="text-sm text-slate-400 leading-relaxed group-hover/action:text-slate-300 transition-colors">
+    <div className="my-2 px-4 group/action" style={{ position: 'relative' }}>
+      <p className="text-sm text-slate-400 leading-relaxed group-hover/action:text-slate-300 transition-colors cursor-text" onClick={() => setEditing(true)}>
         {element.content || <span className="italic text-slate-600">Click to add description...</span>}
       </p>
+      {onInsertShot && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onInsertShot(); }}
+          title="Insert a new shot at this point"
+          className="sp-insert-shot-btn"
+          style={{
+            position: 'absolute', top: -2, right: 8, fontSize: 8, padding: '1px 5px',
+            borderRadius: 3, background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)',
+            color: '#a78bfa', cursor: 'pointer',
+          }}
+        >🎬 + Shot</button>
+      )}
     </div>
   );
 }
@@ -415,9 +428,20 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
   const [dragElemId, setDragElemId] = useState<string | null>(null);
   const [generatingSet, setGeneratingSet] = useState<Set<string>>(new Set());
   const [videoModalSrc, setVideoModalSrc] = useState<string | null>(null);
+  const [imagePromptModal, setImagePromptModal] = useState<{ elementId: string; description: string } | null>(null);
   const [videoGallery, setVideoGallery] = useState<{ elementId: string; videoGenerations: any[]; selectedVideoId?: string } | null>(null);
-  const [videoPromptModal, setVideoPromptModal] = useState<{ elementId: string } | null>(null);
+  const [videoPromptModal, setVideoPromptModal] = useState<{
+    elementId: string;
+    continueChain?: boolean;
+    prevLastFrameElementId?: string;  // auto-resolve last frame from this shot's video
+    nextFirstFrameElementId?: string; // auto-resolve first frame (previs image) from this shot
+  } | null>(null);
   const [refEditorShotId, setRefEditorShotId] = useState<string | null>(null);
+  // Dialogue duration map — computed from project.dialogueAudio.assets
+  const dialogDurationMap = useMemo(
+    () => buildDialogueDurationMap((project as any)?.dialogueAudio?.assets),
+    [project]
+  );
   // Track manual ref overrides per shot: { [shotElemId]: { characters: Set<charId>, locations: Set<locId> } }
   const [manualRefs, setManualRefs] = useState<Record<string, { characters: Set<string>; locations: Set<string> }>>({});
   // Load bindings for the currently open ref editor
@@ -468,13 +492,15 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
   }, [pipelineId, scene, globalAspectRatio, pipeline]);
 
   // Handle video previs generation for a specific shot
-  const handleGenerateVideoPrevis = useCallback(async (shotId: string, promptOverride?: string) => {
+  const handleGenerateVideoPrevis = useCallback(async (shotId: string, promptOverride?: string, continueChain?: boolean, lastFrameImage?: string) => {
     setGeneratingSet(prev => new Set(prev).add('video_' + shotId));
     const toastFn = typeof (window as any).toast === 'function' ? (window as any).toast : null;
     try {
       const ratio = globalAspectRatio || '9:16';
-      const payload: Record<string, string> = { elementId: shotId, aspectRatio: ratio };
+      const payload: Record<string, any> = { elementId: shotId, aspectRatio: ratio };
       if (promptOverride) payload.promptOverride = promptOverride;
+      if (continueChain) payload.continueChain = true;
+      if (lastFrameImage) payload.lastFrameImage = lastFrameImage;
       const resp = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-previs`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -600,6 +626,36 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
     updateProject({ elements: elems });
   }, [project?.elements, updateProject]);
 
+  // Delete an element (shot, dialogue, action) from the elements array
+  const deleteElement = useCallback((elemId: string) => {
+    if (!project?.elements) return;
+    const elems = project.elements.filter((e: any) => e.id !== elemId);
+    updateProject({ elements: elems });
+    const toastFn = typeof (window as any).toast === 'function' ? (window as any).toast : toast;
+    toastFn('Element removed', 'success');
+  }, [project?.elements, updateProject]);
+
+  // Insert a new shot element before a given element (typically an action/description line)
+  const insertShotBefore = useCallback((beforeElemId: string, shotType?: string) => {
+    if (!project?.elements) return;
+    const elems = [...project.elements];
+    const idx = elems.findIndex(e => e.id === beforeElemId);
+    if (idx < 0) return;
+    const targetElem = elems[idx];
+    const desc = targetElem.content || '';
+    const newShotId = 'element_shot_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newElem: Element = {
+      id: newShotId,
+      type: 'shot',
+      content: `${shotType || 'MEDIUM'} — ${desc.slice(0, 80)}`,
+      shotText: `${shotType || 'MEDIUM'} — ${desc.slice(0, 80)}`,
+      frameSize: shotType || 'MEDIUM',
+    } as any;
+    elems.splice(idx, 0, newElem);
+    updateProject({ elements: elems });
+    toast(`Shot inserted before "${desc.slice(0, 30)}..."`, 'success');
+  }, [project?.elements, updateProject]);
+
   // Save shot duration to scene.shots[]
   const handleShotDuration = useCallback((shotId: string, seconds: number) => {
     if (!project?.scenes) return;
@@ -660,7 +716,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
     }
 
     // Helper: resolve previs path for an element ID (checks both scene shots and previs plan)
-    const resolveElementPrevisPath = (elemId: string): { path?: string; videoPath?: string; generations?: any[]; videoGenerations?: any[]; selectedVideoGenerationId?: string; refImages?: string[] } => {
+    const resolveElementPrevisPath = (elemId: string): { path?: string; videoPath?: string; generations?: any[]; videoGenerations?: any[]; selectedVideoGenerationId?: string; videoChain?: string[]; refImages?: string[] } => {
       // Check scene shots first
       const linked = shotMap[elemId];
       if (linked) {
@@ -674,19 +730,20 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
         const refImgs = previsEntry._referenceImages || [];
         const vGens = previsEntry.videoGenerations || [];
         const selVideoId = previsEntry.selectedVideoGenerationId;
+        const vChain = previsEntry.videoChain;
         if (previsEntry.generations?.length > 0) {
           const sel = previsEntry.selectedGenerationId
             ? previsEntry.generations.find((g: any) => g.id === previsEntry.selectedGenerationId)
             : previsEntry.generations[previsEntry.generations.length - 1];
-          if (sel?.filePath) return { path: sel.filePath, videoPath: previsEntry.videoPath, generations: previsEntry.generations, videoGenerations: vGens, selectedVideoGenerationId: selVideoId, refImages: sel.referenceImages || refImgs };
+          if (sel?.filePath) return { path: sel.filePath, videoPath: previsEntry.videoPath, generations: previsEntry.generations, videoGenerations: vGens, selectedVideoGenerationId: selVideoId, videoChain: vChain, refImages: sel.referenceImages || refImgs };
         }
-        if (fp) return { path: fp, videoPath: previsEntry.videoPath, generations: previsEntry.generations, videoGenerations: vGens, selectedVideoGenerationId: selVideoId, refImages: refImgs };
+        if (fp) return { path: fp, videoPath: previsEntry.videoPath, generations: previsEntry.generations, videoGenerations: vGens, selectedVideoGenerationId: selVideoId, videoChain: vChain, refImages: refImgs };
       }
       return {};
     };
 
     // Helper: check if element is a shot
-    const isShot = (elem: Element): { shotType: string; description: string; linkedShot?: SceneShot; previsPath?: string; videoPath?: string; generations?: any[]; videoGenerations?: any[]; selectedVideoGenerationId?: string; refImages?: string[] } | null => {
+    const isShot = (elem: Element): { shotType: string; description: string; linkedShot?: SceneShot; previsPath?: string; videoPath?: string; generations?: any[]; videoGenerations?: any[]; selectedVideoGenerationId?: string; videoChain?: string[]; refImages?: string[] } | null => {
       const text = (elem as any).shotText || elem.content || '';
       const shotMatch = text.match(SHOT_PATTERN);
       const linkedShot = shotMap[elem.id];
@@ -697,7 +754,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
         const description = shotMatch ? shotMatch[2]
           : (elem as any).shotText || linkedShot?.description || elem.content || '';
         const resolved = resolveElementPrevisPath(elem.id);
-        return { shotType, description, linkedShot, previsPath: resolved.path, videoPath: resolved.videoPath, generations: resolved.generations, videoGenerations: resolved.videoGenerations, selectedVideoGenerationId: resolved.selectedVideoGenerationId, refImages: resolved.refImages };
+        return { shotType, description, linkedShot, previsPath: resolved.path, videoPath: resolved.videoPath, generations: resolved.generations, videoGenerations: resolved.videoGenerations, selectedVideoGenerationId: resolved.selectedVideoGenerationId, videoChain: resolved.videoChain, refImages: resolved.refImages };
       }
       return null;
     };
@@ -775,6 +832,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
               onSaveLines={(lines) => handleSaveDialogue(elem.id, lines)}
               onSplit={(lineIdx) => splitDialogue(elem.id, lineIdx)}
               onAddActionAfter={() => addActionAfter(elem.id)}
+              onInsertShot={() => insertShotBefore(elem.id)}
               draggable
               onDragStart={() => setDragElemId(elem.id)}
               onDragEnd={() => setDragElemId(null)}
@@ -786,7 +844,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
         return (
           <React.Fragment key={elem.id || `elem-${i}`}>
             {dragElemId && <DropZone onDrop={() => { moveElementBefore(dragElemId, elem.id); setDragElemId(null); }} />}
-            <EditableAction element={elem} onSave={(text) => handleSaveAction(elem.id, text)} />
+            <EditableAction element={elem} onSave={(text) => handleSaveAction(elem.id, text)} onInsertShot={() => insertShotBefore(elem.id)} />
           </React.Fragment>
         );
       }
@@ -800,8 +858,15 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
             const { shotElem, shotInfo, anchoredShots, contentElems } = group;
 
             // Compute shot duration from audio if available
-            // For now use the linked shot's duration
             const linkedShot = shotInfo?.linkedShot;
+
+            // Chain link button between this group and the previous
+            const prevGroup = gi > 0 ? groups[gi - 1] : null;
+            const prevShotInfo = prevGroup?.shotInfo;
+            const prevShotElem = prevGroup?.shotElem;
+            const prevHasVideo = prevShotInfo?.videoGenerations?.length > 0;
+            const thisHasPrevis = !!(shotInfo?.previsPath || shotInfo?.generations?.length);
+            const showChainLink = prevHasVideo && thisHasPrevis && shotElem && prevShotElem;
 
             if (!shotInfo) {
               // Orphan group — no shot, just content elements (before the first shot)
@@ -852,8 +917,37 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
             } as SceneShot : null);
 
             return (
+              <React.Fragment key={group.id}>
+              {/* Chain link button between shots */}
+              {showChainLink && (
+                <div className="sp-chain-link-row" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '2px 0', background: 'rgba(139,92,246,0.03)',
+                  borderBottom: '1px solid rgba(139,92,246,0.1)',
+                  cursor: 'pointer', transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.08)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.03)')}
+                onClick={() => {
+                  const prevId = prevShotElem!.id;
+                  const nextId = shotElem!.id;
+                  // Open prompt modal with prev/next frames pre-selected
+                  // The modal will auto-resolve the images and let user edit prompt
+                  setVideoPromptModal({
+                    elementId: prevId, // use prev shot as base (source image = last frame)
+                    continueChain: true,
+                    prevLastFrameElementId: prevId,
+                    nextFirstFrameElementId: nextId,
+                  });
+                }}
+                title={`Generate transition: ${prevShotInfo?.shotType || 'prev'} → ${shotInfo.shotType || 'next'}`}
+                >
+                  <span style={{ fontSize: 9, color: '#a78bfa', fontWeight: 600, letterSpacing: 0.5 }}>
+                    ⛓ Generate Transition
+                  </span>
+                </div>
+              )}
               <div
-                key={group.id}
                 className="sp-shot-group"
                 style={{
                   display: 'flex',
@@ -893,6 +987,24 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                     </span>
                     {linkedShot?.duration && (
                       <span style={{ fontSize: 9, color: '#64748b' }}>{linkedShot.duration}s</span>
+                    )}
+                    {shotElem && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Remove this shot? Its content will merge into the previous shot.')) {
+                            deleteElement(shotElem.id);
+                          }
+                        }}
+                        style={{
+                          marginLeft: 'auto', fontSize: 8, padding: '1px 4px', borderRadius: 3,
+                          background: 'none', border: '1px solid rgba(239,68,68,0.3)',
+                          color: '#ef4444', cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+                        title="Remove this shot"
+                      >✕</button>
                     )}
                   </div>
 
@@ -1059,19 +1171,37 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                     )}
                     {/* Regen / Generate button */}
                     {(linkedShot || shotElem) && !isGen && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleGeneratePrevis(sid); }}
-                        style={{
-                          fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
-                          background: previsImgPath ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.15)',
-                          border: `1px solid rgba(139,92,246,${previsImgPath ? '0.15' : '0.3'})`,
-                          color: '#a78bfa', cursor: 'pointer', whiteSpace: 'nowrap', width: '100%',
-                          textAlign: 'center',
-                        }}
-                        title={previsImgPath ? 'Generate another version' : 'Generate previs image'}
-                      >
-                        {previsImgPath ? 'Regen' : 'Generate'}
-                      </button>
+                      <div style={{ display: 'flex', gap: 3, width: '100%' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleGeneratePrevis(sid); }}
+                          style={{
+                            flex: 1, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
+                            background: previsImgPath ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.15)',
+                            border: `1px solid rgba(139,92,246,${previsImgPath ? '0.15' : '0.3'})`,
+                            color: '#a78bfa', cursor: 'pointer', whiteSpace: 'nowrap',
+                            textAlign: 'center',
+                          }}
+                          title={previsImgPath ? 'Generate another version' : 'Generate previs image'}
+                        >
+                          {previsImgPath ? 'Regen' : 'Generate'}
+                        </button>
+                        {previsImgPath && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const sid = linkedShot?.id || shotElem?.id || '';
+                              if (sid) setImagePromptModal({ elementId: sid, description: shotInfo.description || '' });
+                            }}
+                            style={{
+                              fontSize: 10, padding: '3px 6px', borderRadius: 4,
+                              background: 'rgba(139,92,246,0.08)',
+                              border: '1px solid rgba(139,92,246,0.15)',
+                              color: '#a78bfa', cursor: 'pointer',
+                            }}
+                            title="Edit prompt before regenerating"
+                          >✏️</button>
+                        )}
+                      </div>
                     )}
                     {isGen && (
                       <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 500, textAlign: 'center' }}>Generating...</span>
@@ -1082,7 +1212,14 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                         onClick={(e) => {
                           e.stopPropagation();
                           const sid = linkedShot?.id || shotElem?.id || '';
-                          if (sid) setVideoPromptModal({ elementId: sid });
+                          const prevElemId = prevShotElem?.id || prevGroup?.shotElem?.id;
+                          const nextGroup = gi + 1 < groups.length ? groups[gi + 1] : null;
+                          const nextElemId = nextGroup?.shotElem?.id;
+                          if (sid) setVideoPromptModal({
+                            elementId: sid,
+                            prevLastFrameElementId: prevElemId,
+                            nextFirstFrameElementId: nextElemId,
+                          });
                         }}
                         style={{
                           fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
@@ -1101,38 +1238,57 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                     )}
                     {/* Video chain duration indicator + continue button */}
                     {(shotInfo.videoGenerations?.length || 0) > 0 && !isGenVideo && (() => {
-                      const vGens = shotInfo.videoGenerations || [];
-                      const chainIds: string[] = shotInfo.videoChain || [];
-                      const chainGens = chainIds.length > 0
-                        ? chainIds.map(id => vGens.find((g: any) => g.id === id)).filter(Boolean)
-                        : [shotInfo.selectedVideoGenerationId ? vGens.find((g: any) => g.id === shotInfo.selectedVideoGenerationId) : vGens[vGens.length - 1]].filter(Boolean);
-                      const totalDur = chainGens.reduce((s: number, g: any) => s + (g.actualDuration || g.duration || 0), 0);
-                      const showContinue = totalDur > 0;
+                      // Calculate slot duration from dialogue audio (no compact timing needed)
+                      const audioSlotDur = computeSlotDuration(group.contentElems, dialogDurationMap);
+                      // Use audio-calculated slot, fall back to linkedShot.duration from compact timing
+                      const slotDur = audioSlotDur > 0 ? audioSlotDur : (linkedShot?.duration || 0);
+                      const gapInfo = computeVideoGapInfo(
+                        shotInfo.videoGenerations, shotInfo.videoChain,
+                        shotInfo.selectedVideoGenerationId, slotDur,
+                      );
+                      const showContinue = gapInfo.totalVideoDur > 0;
                       return showContinue ? (
-                        <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
-                          <span style={{ fontSize: 9, color: totalDur < 5 ? '#f59e0b' : '#4ade80', fontWeight: 500 }}>
-                            {totalDur.toFixed(1)}s{chainIds.length > 1 ? ` (${chainIds.length} clips)` : ''}
-                          </span>
+                        <div style={{ marginTop: 2 }}>
+                          {/* Duration comparison + progress bar */}
+                          {slotDur > 0 && (
+                            <div style={{ marginBottom: 3 }}>
+                              <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${gapInfo.fillPercent}%`, background: gapInfo.isFilled ? '#4ade80' : '#f59e0b', borderRadius: 2, transition: 'width 0.3s' }} />
+                              </div>
+                              <div style={{ fontSize: 8, textAlign: 'center', marginTop: 1, color: gapInfo.isFilled ? '#4ade80' : '#f59e0b', fontWeight: 600 }}>
+                                {gapInfo.totalVideoDur.toFixed(1)}s / {slotDur.toFixed(1)}s
+                                {!gapInfo.isFilled && ` (${gapInfo.gap.toFixed(1)}s gap)`}
+                                {gapInfo.isFilled && ' ✓'}
+                              </div>
+                            </div>
+                          )}
+                          {slotDur === 0 && (
+                            <div style={{ fontSize: 8, textAlign: 'center', color: '#64748b' }}>
+                              {gapInfo.totalVideoDur.toFixed(1)}s{gapInfo.chainLength > 1 ? ` (${gapInfo.chainLength} clips)` : ''} — no dialogue audio yet
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               const sid = linkedShot?.id || shotElem?.id || '';
-                              if (!sid) return;
-                              fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-previs`, {
-                                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ elementId: sid, continueChain: true }),
-                              }).then(r => r.json()).then(resp => {
-                                if (!resp.success) toast(resp.error || 'Failed', 'error');
-                                else toast('Continuation generated', 'success');
-                              }).catch(() => toast('Failed to continue chain', 'error'));
+                              const prevElemIdC = prevShotElem?.id || prevGroup?.shotElem?.id;
+                              const nextGroupC = gi + 1 < groups.length ? groups[gi + 1] : null;
+                              const nextElemIdC = nextGroupC?.shotElem?.id;
+                              if (sid) setVideoPromptModal({
+                                elementId: sid, continueChain: true,
+                                prevLastFrameElementId: prevElemIdC,
+                                nextFirstFrameElementId: nextElemIdC,
+                              });
                             }}
                             style={{
                               fontSize: 8, padding: '1px 5px', borderRadius: 3,
                               background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)',
                               color: '#a78bfa', cursor: 'pointer',
                             }}
-                            title="Generate continuation from last frame"
+                            title="Generate continuation from last frame — opens prompt editor"
                           >⟳ Continue</button>
+                          </div>
                         </div>
                       ) : null;
                     })()}
@@ -1301,6 +1457,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                   )}
                 </div>
               </div>
+              </React.Fragment>
             );
           })}
           {/* Final drop zone at end of scene */}
@@ -1326,15 +1483,63 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
               }}
             />
           )}
-          {videoPromptModal && (
+          {/* Image Prompt Modal */}
+          {imagePromptModal && (
+            <ImagePromptModal
+              elementId={imagePromptModal.elementId}
+              description={imagePromptModal.description}
+              onClose={() => setImagePromptModal(null)}
+              onGenerate={(desc) => {
+                const sid = imagePromptModal.elementId;
+                setImagePromptModal(null);
+                setGeneratingSet(prev => new Set(prev).add(sid));
+                fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-previs`, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    elementId: sid, sceneId: scene.id,
+                    sceneLocation: scene.location, sceneLocationId: scene.locationId,
+                    aspectRatio: globalAspectRatio || '16:9',
+                    promptOverrides: { description: desc },
+                  }),
+                }).then(() => pipeline.reload()).finally(() => {
+                  setGeneratingSet(prev => { const s = new Set(prev); s.delete(sid); return s; });
+                });
+              }}
+            />
+          )}
+          {videoPromptModal && (() => {
+            // Collect available images for end-frame picker from previs generations
+            const pvEntry = (project as any)?.previsualizations?.shots?.find((s: any) => s.shotElementId === videoPromptModal.elementId);
+            const availImgs: Array<{ id: string; filePath: string }> = [];
+            if (pvEntry?.generations) {
+              for (const g of pvEntry.generations) {
+                if (g?.id && g?.filePath) availImgs.push({ id: g.id, filePath: g.filePath });
+              }
+            }
+            // Also include images from other nearby shots for cross-shot interpolation
+            const allPvShots = (project as any)?.previsualizations?.shots || [];
+            for (const pv of allPvShots) {
+              if (pv.shotElementId === videoPromptModal.elementId) continue;
+              if (pv.generations) {
+                const sel = pv.selectedGenerationId
+                  ? pv.generations.find((g: any) => g.id === pv.selectedGenerationId)
+                  : pv.generations[pv.generations.length - 1];
+                if (sel?.id && sel?.filePath) availImgs.push({ id: sel.id, filePath: sel.filePath });
+              }
+            }
+            return (
             <VideoPromptModal
               elementId={videoPromptModal.elementId}
               pipelineId={pipelineId}
               aspectRatio={globalAspectRatio || '16:9'}
+              continueChain={videoPromptModal.continueChain}
+              availableImages={availImgs}
+              prevLastFrameElementId={videoPromptModal.prevLastFrameElementId}
+              nextFirstFrameElementId={videoPromptModal.nextFirstFrameElementId}
               onClose={() => setVideoPromptModal(null)}
-              onGenerate={(eid: string, prompt: string) => handleGenerateVideoPrevis(eid, prompt)}
-            />
-          )}
+              onGenerate={(eid: string, prompt: string, chain?: boolean, lastFrame?: string) => handleGenerateVideoPrevis(eid, prompt, chain, lastFrame)}
+            />);
+          })()}
           {/* Video Modal */}
           {videoModalSrc && (
             <div
@@ -1645,7 +1850,7 @@ function InlineShotCard({ shotType, description, previsPath, characters, duratio
 
 // ── Dialogue Block ───────────────────────────────────────────
 
-function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSaveLines, onSplit, onAddActionAfter, draggable: isDraggable, onDragStart, onDragEnd, isDragging }: {
+function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSaveLines, onSplit, onAddActionAfter, onInsertShot, draggable: isDraggable, onDragStart, onDragEnd, isDragging }: {
   dialogue: SceneDialogue;
   character?: Character;
   pipelineId?: string;
@@ -1653,6 +1858,7 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
   onSaveLines?: (lines: string[]) => void;
   onSplit?: (afterLineIdx: number) => void;
   onAddActionAfter?: () => void;
+  onInsertShot?: () => void;
   draggable?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
@@ -1803,6 +2009,13 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
                   onMouseEnter={e => (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)'}
                   onMouseLeave={e => (e.target as HTMLElement).style.background = 'none'}
                 >📝 Add description after</button>
+                {onInsertShot && (
+                  <button onClick={() => { onInsertShot(); setShowMenu(false); }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '5px 8px', border: 'none', background: 'none', color: '#cbd5e1', fontSize: 11, cursor: 'pointer', borderRadius: 4 }}
+                    onMouseEnter={e => (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)'}
+                    onMouseLeave={e => (e.target as HTMLElement).style.background = 'none'}
+                  >🎬 Insert shot before</button>
+                )}
               </div>
             )}
           </span>
@@ -1873,6 +2086,79 @@ function DialogueBlock({ dialogue, character, pipelineId, onAudioGenerated, onSa
 
 // ── Previs Gallery Modal ─────────────────────────────────────
 
+function ImagePromptModal({ elementId, description, onClose, onGenerate }: {
+  elementId: string; description: string;
+  onClose: () => void; onGenerate: (description: string) => void;
+}) {
+  const { project } = usePipeline();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load saved description from previs data (persisted promptOverrides or description)
+  const savedDesc = useMemo(() => {
+    const pvShots = (project as any)?.previsualizations?.shots || [];
+    const pv = pvShots.find((s: any) => s.shotElementId === elementId);
+    return pv?.promptOverrides?.description || pv?.description || description;
+  }, [project, elementId, description]);
+
+  const [text, setText] = useState(savedDesc);
+
+  // Resolve reference images for this shot
+  const refImages = useMemo(() => {
+    const pvShots = (project as any)?.previsualizations?.shots || [];
+    const pv = pvShots.find((s: any) => s.shotElementId === elementId);
+    return (pv?._referenceImages || []) as string[];
+  }, [project, elementId]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
+    }
+  }, []);
+
+  return (
+    <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
+      <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>Edit Image Prompt</h3>
+            <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>Edit the description used for image generation. Camera, lighting, and style are added automatically.</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '4px 10px', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+        </div>
+        <div style={{ padding: '14px 18px', flex: 1, overflow: 'auto' }}>
+          {/* Reference images */}
+          {refImages.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>REFERENCE IMAGES</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {refImages.map((ref, i) => (
+                  <img key={i} src={'/api/file?path=' + encodeURIComponent(ref)} alt={`Ref ${i + 1}`}
+                    style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)' }} />
+                ))}
+              </div>
+            </div>
+          )}
+          <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>SCENE DESCRIPTION</div>
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onGenerate(text.trim()); } }}
+            style={{ width: '100%', minHeight: 140, padding: 10, boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e2e8f0', fontSize: 12, lineHeight: '1.5', fontFamily: 'inherit', resize: 'vertical' }}
+            placeholder="Describe the scene..."
+          />
+          <p style={{ fontSize: 9, color: '#475569', marginTop: 4 }}>Tip: Remove or change character descriptions to avoid content filter issues. Press ⌘+Enter to generate.</p>
+        </div>
+        <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '7px 14px', borderRadius: 6, fontSize: 12, background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#94a3b8', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => onGenerate(text.trim())} disabled={!text.trim()} style={{ padding: '7px 18px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa', cursor: text.trim() ? 'pointer' : 'not-allowed', opacity: text.trim() ? 1 : 0.5 }}>Generate Image</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
   shot: SceneShot;
   pipelineId: string;
@@ -1927,96 +2213,67 @@ function PrevisGalleryModal({ shot, pipelineId, onClose, onSelect }: {
         </button>
       </div>
 
-      {/* Image area — fills remaining space */}
+      {/* Image grid — responsive, maximizes image space */}
       <div
         style={{
-          flex: 1, overflow: 'auto', padding: 12,
-          display: 'flex', alignItems: 'stretch', justifyContent: 'center',
+          flex: 1, overflow: 'auto', padding: 8,
         }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{
-          display: 'flex',
-          gap: 8,
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: count <= 2 ? `repeat(${count}, 1fr)` : count <= 4 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+          gap: 6,
           height: '100%',
+          gridAutoRows: '1fr',
         }}>
           {generations.map((gen, i) => {
             const isSelected = gen.id === selectedId;
-
             return (
               <div
                 key={gen.id}
                 onClick={() => onSelect(gen.id)}
                 style={{
-                  position: 'relative', borderRadius: 8, overflow: 'hidden',
-                  border: isSelected ? '3px solid #a78bfa' : '3px solid rgba(255,255,255,0.08)',
+                  position: 'relative', borderRadius: 6, overflow: 'hidden',
+                  border: isSelected ? '3px solid #a78bfa' : '2px solid rgba(255,255,255,0.06)',
                   cursor: 'pointer', transition: 'border-color 0.15s',
                   background: '#0c1018',
-                  display: 'flex', flexDirection: 'column',
-                  flex: '1 1 0',
-                  minWidth: 0,
                 }}
                 onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(139,92,246,0.5)'; }}
-                onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = isSelected ? '#a78bfa' : 'rgba(255,255,255,0.06)'; }}
               >
                 <img
                   src={`/api/file?path=${encodeURIComponent(gen.filePath)}`}
                   alt={`Generation ${i + 1}`}
+                  loading="lazy"
                   style={{
-                    width: '100%',
-                    flex: 1,
-                    minHeight: 0,
-                    objectFit: 'contain',
+                    width: '100%', height: '100%',
+                    objectFit: 'cover',
                     display: 'block',
-                    background: '#0c1018',
                   }}
                 />
-                {/* Selected badge */}
                 {isSelected && (
                   <div style={{
-                    position: 'absolute', top: 8, right: 8,
+                    position: 'absolute', top: 4, right: 4,
                     background: '#a78bfa', color: '#fff',
-                    fontSize: 10, fontWeight: 700, borderRadius: 4,
-                    padding: '3px 8px',
-                  }}>
-                    ✓ SELECTED
-                  </div>
+                    fontSize: 9, fontWeight: 700, borderRadius: 3,
+                    padding: '2px 6px',
+                  }}>✓</div>
                 )}
-                {/* Generation number */}
                 <div style={{
-                  position: 'absolute', top: 8, left: 8,
-                  background: 'rgba(0,0,0,0.7)', color: '#e2e8f0',
-                  fontSize: 10, fontWeight: 600, borderRadius: 4,
-                  padding: '3px 8px',
-                }}>
-                  #{i + 1}
-                </div>
-                {/* Info bar at bottom */}
-                <div style={{
-                  flexShrink: 0, padding: '6px 10px',
-                  background: 'rgba(0,0,0,0.4)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 10, color: '#94a3b8' }}>
-                      {gen.generatedAt ? new Date(gen.generatedAt).toLocaleString(undefined, {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                      }) : 'Unknown'}
-                    </span>
-                    {gen.generationModel && <span style={{ fontSize: 10, color: '#7c3aed', fontWeight: 600 }}>{gen.generationModel}</span>}
-                    {gen.aspectRatio && <span style={{ fontSize: 10, color: '#64748b' }}>{gen.aspectRatio}</span>}
-                    {!isSelected && (
-                      <span style={{ marginLeft: 'auto', fontSize: 10, color: '#a78bfa', fontWeight: 500 }}>Click to select</span>
-                    )}
-                  </div>
-                  {gen.generationPrompt && (
-                    <p style={{ margin: '4px 0 0', fontSize: 9, color: '#94a3b8', lineHeight: 1.4, wordBreak: 'break-word', maxHeight: 60, overflow: 'auto' }}>
-                      {gen.generationPrompt}
-                    </p>
-                  )}
-                </div>
+                  position: 'absolute', top: 4, left: 4,
+                  background: 'rgba(0,0,0,0.6)', color: '#e2e8f0',
+                  fontSize: 9, fontWeight: 600, borderRadius: 3,
+                  padding: '1px 5px',
+                }}>#{i + 1}</div>
+                {!isSelected && (
+                  <div style={{
+                    position: 'absolute', bottom: 4, right: 4,
+                    background: 'rgba(0,0,0,0.6)', color: '#a78bfa',
+                    fontSize: 8, fontWeight: 500, borderRadius: 3,
+                    padding: '1px 5px',
+                  }}>Select</div>
+                )}
               </div>
             );
           })}
@@ -2135,36 +2392,110 @@ function VideoGalleryModal({ videoGenerations, selectedVideoId, elementId, pipel
 
 // ── Video Prompt Modal ────────────────────────────────────────
 
-function VideoPromptModal({ elementId, pipelineId, aspectRatio, onClose, onGenerate }: {
-  elementId: string; pipelineId: string; aspectRatio: string;
-  onClose: () => void; onGenerate: (elementId: string, promptOverride: string) => void;
+function VideoPromptModal({ elementId, pipelineId, aspectRatio, continueChain, availableImages, prevLastFrameElementId, nextFirstFrameElementId, onClose, onGenerate }: {
+  elementId: string; pipelineId: string; aspectRatio: string; continueChain?: boolean;
+  availableImages?: Array<{ id: string; filePath: string }>;
+  prevLastFrameElementId?: string;
+  nextFirstFrameElementId?: string;
+  onClose: () => void; onGenerate: (elementId: string, promptOverride: string, continueChain?: boolean, lastFrameImage?: string) => void;
 }) {
+  const { project } = usePipeline();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(true);
   const [sourceImage, setSourceImage] = useState<string | null>(null);
+  const [endFrame, setEndFrame] = useState<string | null>(null);
+  const [showEndFramePicker, setShowEndFramePicker] = useState(false);
+
+  // Auto-resolve next shot's previs image as end frame
+  useEffect(() => {
+    if (!nextFirstFrameElementId || !project) return;
+    const previsShots = (project as any)?.previsualizations?.shots || [];
+    const nextPv = previsShots.find((s: any) => s.shotElementId === nextFirstFrameElementId);
+    if (nextPv) {
+      // Use selected generation or latest image
+      let nextImg: string | undefined;
+      if (nextPv.selectedGenerationId && nextPv.generations?.length > 0) {
+        const sel = nextPv.generations.find((g: any) => g.id === nextPv.selectedGenerationId);
+        if (sel?.filePath) nextImg = sel.filePath;
+      }
+      if (!nextImg && nextPv.filePath) nextImg = nextPv.filePath;
+      if (nextImg) setEndFrame(nextImg);
+    }
+  }, [nextFirstFrameElementId, project]);
 
   useEffect(() => {
     fetch('/api/app/' + encodeURIComponent(pipelineId) + '/preview-video-prompt', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ elementId, aspectRatio }),
+      body: JSON.stringify({ elementId, aspectRatio, continueChain }),
     })
     .then(r => r.json())
     .then(d => { setPrompt(d.prompt || ''); setSourceImage(d.sourceImage || null); setLoading(false); })
     .catch(() => setLoading(false));
-  }, [elementId, pipelineId, aspectRatio]);
+  }, [elementId, pipelineId, aspectRatio, continueChain]);
 
   return (
     <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
       <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>Video Generation Prompt</h3>
-            <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>Edit the prompt before generating. {sourceImage ? 'Image-to-video.' : 'Text-to-video.'}</p>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>{continueChain ? 'Continue Video Chain' : 'Video Generation Prompt'}</h3>
+            <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>Edit the prompt before generating. {continueChain ? 'Continues from last frame.' : sourceImage ? 'Image-to-video.' : 'Text-to-video.'}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '4px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
         </div>
         <div style={{ padding: '16px 20px', flex: 1, overflow: 'auto' }}>
-          {sourceImage && <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>SOURCE IMAGE</div><img src={'/api/file?path=' + encodeURIComponent(sourceImage)} alt="" style={{ width: 120, borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }} /></div>}
+          {/* Start + End Frame Display */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+            {sourceImage && (
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>START FRAME</div>
+                {/\.(mp4|mov|webm|avi)$/i.test(sourceImage) ? (
+                  <video src={'/api/file?path=' + encodeURIComponent(sourceImage)} muted
+                    style={{ width: '100%', maxWidth: 180, borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }}
+                    onLoadedData={e => { const v = e.target as HTMLVideoElement; v.currentTime = Math.max(0, v.duration - 0.1); }}
+                  />
+                ) : (
+                  <img src={'/api/file?path=' + encodeURIComponent(sourceImage)} alt="Start frame"
+                    style={{ width: '100%', maxWidth: 180, borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }} />
+                )}
+              </div>
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
+                END FRAME <span style={{ fontWeight: 400, color: '#475569' }}>(optional)</span>
+              </div>
+              {endFrame ? (
+                <div style={{ position: 'relative' }}>
+                  <img src={'/api/file?path=' + encodeURIComponent(endFrame)} alt="End frame"
+                    style={{ width: '100%', maxWidth: 180, borderRadius: 6, border: '2px solid #8b5cf6' }} />
+                  <button onClick={() => setEndFrame(null)} style={{
+                    position: 'absolute', top: 2, right: 2, background: 'rgba(239,68,68,0.8)', border: 'none',
+                    color: '#fff', borderRadius: '50%', width: 18, height: 18, fontSize: 10, cursor: 'pointer', lineHeight: '18px', textAlign: 'center',
+                  }}>×</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowEndFramePicker(!showEndFramePicker)} style={{
+                  width: '100%', maxWidth: 180, aspectRatio: '16/9', borderRadius: 6,
+                  border: '2px dashed rgba(139,92,246,0.4)', background: 'rgba(139,92,246,0.05)',
+                  color: '#a78bfa', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>+ Add End Frame</button>
+              )}
+              {showEndFramePicker && availableImages && availableImages.length > 0 && (
+                <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, maxHeight: 120, overflow: 'auto' }}>
+                  {availableImages.map(img => (
+                    <img key={img.id} src={'/api/file?path=' + encodeURIComponent(img.filePath)} alt=""
+                      style={{ width: '100%', borderRadius: 4, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                      onClick={() => { setEndFrame(img.filePath); setShowEndFramePicker(false); }} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {endFrame && (
+            <div style={{ fontSize: 10, color: '#a78bfa', marginBottom: 8, fontWeight: 500 }}>
+              🎬 Start→End frame interpolation: Veo 3.1 will generate a smooth transition between the two images.
+            </div>
+          )}
           <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>PROMPT</div>
           {loading
             ? <div style={{ color: '#64748b', fontSize: 12, padding: 20, textAlign: 'center' }}>Loading...</div>
@@ -2173,7 +2504,7 @@ function VideoPromptModal({ elementId, pipelineId, aspectRatio, onClose, onGener
         </div>
         <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 12, background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#94a3b8', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={() => { onGenerate(elementId, prompt); onClose(); }} disabled={loading || !prompt.trim()} style={{ padding: '8px 20px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: 'rgba(6,182,212,0.2)', border: '1px solid rgba(6,182,212,0.4)', color: '#22d3ee', cursor: loading ? 'not-allowed' : 'pointer', opacity: (loading || !prompt.trim()) ? 0.5 : 1 }}>Generate Video</button>
+          <button onClick={() => { onGenerate(elementId, prompt, continueChain, endFrame || undefined); onClose(); }} disabled={loading || !prompt.trim()} style={{ padding: '8px 20px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: continueChain ? 'rgba(139,92,246,0.2)' : 'rgba(6,182,212,0.2)', border: `1px solid ${continueChain ? 'rgba(139,92,246,0.4)' : 'rgba(6,182,212,0.4)'}`, color: continueChain ? '#a78bfa' : '#22d3ee', cursor: loading ? 'not-allowed' : 'pointer', opacity: (loading || !prompt.trim()) ? 0.5 : 1 }}>{continueChain ? '⟳ Continue Chain' : 'Generate Video'}</button>
         </div>
       </div>
     </div>

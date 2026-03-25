@@ -20,7 +20,7 @@ await build({
   platform: 'node',
   target: ['node18'],
   // pdfjs-dist is imported dynamically at runtime — mark as external
-  external: ['pdfjs-dist', 'pdfjs-dist/*'],
+  external: ['pdfjs-dist', 'pdfjs-dist/*', '@google/genai'],
   define: {
     'process.env.NODE_ENV': '"production"',
   },

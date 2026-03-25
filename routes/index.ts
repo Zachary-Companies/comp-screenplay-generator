@@ -141,6 +141,7 @@ function formatSrtTime(seconds: number): string {
 async function callVeoApi(params: {
   prompt: string;
   sourceImage?: string;
+  lastFrameImage?: string;
   duration: number;
   aspectRatio: string;
   outputPath: string;
@@ -171,7 +172,9 @@ async function callVeoApi(params: {
         if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) mimeType = 'image/jpeg';
         else if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50) mimeType = 'image/png';
         else if (imageBuffer[0] === 0x52 && imageBuffer[1] === 0x49) mimeType = 'image/webp';
-        instance.image = { bytesBase64Encoded: b64, mimeType };
+        // Store raw data for now — format depends on which model is chosen later
+        instance._imageB64 = b64;
+        instance._imageMime = mimeType;
         sdk.log('info', 'veo-api', `Source image: ${params.sourceImage.split('/').pop()}, mime=${mimeType}, size=${imageBuffer.length} bytes, b64=${b64.length} chars`);
       }
     } catch (imgErr: any) {
@@ -179,10 +182,147 @@ async function callVeoApi(params: {
     }
   }
 
-  // Veo 2.0 for image-to-video: respects source image, no audio filter issues, cheaper
-  // Veo 3.1 for text-to-video: higher quality when generating from scratch
-  const hasImage = !!instance.image;
-  const modelId = hasImage ? 'veo-2.0-generate-001' : 'veo-3.1-generate-preview';
+  // Last frame support (Veo 3.1 interpolation: start → end frame)
+  if (params.lastFrameImage && sdk.fileExists(params.lastFrameImage)) {
+    try {
+      const { readFileSync } = await import('fs');
+      const lastBuffer = readFileSync(params.lastFrameImage);
+      const lastB64 = lastBuffer.toString('base64');
+      if (lastB64) {
+        let lastMime = 'image/png';
+        if (lastBuffer[0] === 0xFF && lastBuffer[1] === 0xD8) lastMime = 'image/jpeg';
+        else if (lastBuffer[0] === 0x89 && lastBuffer[1] === 0x50) lastMime = 'image/png';
+        else if (lastBuffer[0] === 0x52 && lastBuffer[1] === 0x49) lastMime = 'image/webp';
+        instance._lastFrameB64 = lastB64;
+        instance._lastFrameMime = lastMime;
+        sdk.log('info', 'veo-api', `Last frame: ${params.lastFrameImage.split('/').pop()}, mime=${lastMime}, size=${lastBuffer.length} bytes`);
+      }
+    } catch (lastErr: any) {
+      sdk.log('warn', 'veo-api', `Could not load last frame image: ${params.lastFrameImage} — ${lastErr.message}`);
+    }
+  }
+
+  const hasImage = !!instance._imageB64;
+  const hasLastFrame = !!instance._lastFrameB64;
+
+  // ── SDK path: use @google/genai for lastFrame interpolation ──
+  if (hasLastFrame && hasImage) {
+    sdk.log('info', 'veo-api', `Using @google/genai SDK for first+last frame interpolation`);
+    sdk.log('info', 'veo-api', `First image: ${instance._imageMime}, ${instance._imageB64.length} b64 chars`);
+    sdk.log('info', 'veo-api', `Last frame: ${instance._lastFrameMime}, ${instance._lastFrameB64.length} b64 chars`);
+
+    // Convert PNGs to JPEG to reduce size (PNGs can be 2MB+ which may exceed limits)
+    const convertToJpeg = async (b64: string, mime: string, label: string): Promise<{ b64: string; mime: string }> => {
+      if (mime === 'image/jpeg') return { b64, mime };
+      try {
+        // Decode b64 to temp file, convert with ffmpeg, re-encode
+        const tmpIn = params.outputPath + `_${label}_in.png`;
+        const tmpOut = params.outputPath + `_${label}_out.jpg`;
+        const { writeFileSync, readFileSync, unlinkSync } = await import('fs');
+        writeFileSync(tmpIn, Buffer.from(b64, 'base64'));
+        await sdk.exec(`ffmpeg -i "${tmpIn}" -q:v 2 -y "${tmpOut}"`, { timeout: 10000 });
+        const jpgBuf = readFileSync(tmpOut);
+        try { unlinkSync(tmpIn); } catch {}
+        try { unlinkSync(tmpOut); } catch {}
+        sdk.log('info', 'veo-api', `Converted ${label} to JPEG: ${b64.length} → ${jpgBuf.length * 4/3|0} b64 chars`);
+        return { b64: jpgBuf.toString('base64'), mime: 'image/jpeg' };
+      } catch (convErr) {
+        sdk.log('warn', 'veo-api', `JPEG conversion failed for ${label}: ${convErr}`);
+        return { b64, mime };
+      }
+    };
+
+    const first = await convertToJpeg(instance._imageB64, instance._imageMime, 'first');
+    const last = await convertToJpeg(instance._lastFrameB64, instance._lastFrameMime, 'last');
+
+    try {
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey });
+      const firstImage = { imageBytes: first.b64, mimeType: first.mime };
+      const lastImage = { imageBytes: last.b64, mimeType: last.mime };
+
+      sdk.log('info', 'veo-api', `Calling ai.models.generateVideos with prompt: ${params.prompt.substring(0, 100)}...`);
+
+      let operation = await ai.models.generateVideos({
+        model: 'veo-3.1-generate-preview',
+        prompt: params.prompt,
+        image: firstImage,
+        config: {
+          lastFrame: lastImage,
+          aspectRatio: params.aspectRatio,
+        },
+      });
+
+      const opName = (operation as any).name;
+      sdk.log('info', 'veo-api', `Operation started: name=${opName}`);
+
+      if (!opName) {
+        return { success: false, error: 'No operation name returned from SDK' };
+      }
+
+      // Poll with REST — the SDK's getVideosOperation doesn't return done/response
+      let opData: any = {};
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 5000));
+        const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${opName}?key=${apiKey}`;
+        const pollResp = await fetch(pollUrl);
+        opData = await pollResp.json();
+        sdk.log('info', 'veo-api', `Poll ${i + 1}: done=${opData.done}`);
+        if (opData.done) break;
+        if (opData.error) {
+          return { success: false, error: `Veo error: ${opData.error.message || JSON.stringify(opData.error)}` };
+        }
+      }
+
+      if (!opData.done) {
+        return { success: false, error: 'Video generation timed out (5 min)' };
+      }
+
+      // Check for content filter (RAI = Responsible AI)
+      const videoResp = opData.response?.generateVideoResponse;
+      if (videoResp?.raiMediaFilteredCount > 0) {
+        const reasons = videoResp.raiMediaFilteredReasons?.join('; ') || 'Content filtered by safety policy';
+        sdk.log('warn', 'veo-api', `Content filtered: ${reasons}`);
+        return { success: false, error: `Content filtered: ${reasons}` };
+      }
+
+      // Response: { generateVideoResponse: { generatedSamples: [{ video: { uri } }] } }
+      const samples = videoResp?.generatedSamples;
+      if (!samples?.length || !samples[0].video?.uri) {
+        sdk.log('error', 'veo-api', `Unexpected response: ${JSON.stringify(opData).substring(0, 1000)}`);
+        return { success: false, error: 'No video URI in response' };
+      }
+
+      // Download the video
+      const videoUri = samples[0].video.uri;
+      sdk.log('info', 'veo-api', `Downloading video from: ${videoUri.substring(0, 80)}...`);
+      const dlUrl = videoUri.includes('?') ? `${videoUri}&key=${apiKey}` : `${videoUri}?key=${apiKey}`;
+      const dlResp = await fetch(dlUrl);
+      if (!dlResp.ok) {
+        return { success: false, error: `Video download failed: ${dlResp.status}` };
+      }
+      const { writeFileSync } = await import('fs');
+      const videoBuffer = Buffer.from(await dlResp.arrayBuffer());
+      writeFileSync(params.outputPath, videoBuffer);
+      sdk.log('info', 'veo-api', `Video saved: ${params.outputPath} (${(videoBuffer.length / 1024).toFixed(0)}KB)`);
+      return { success: true, filePath: params.outputPath };
+    } catch (sdkErr: any) {
+      sdk.log('error', 'veo-api', `SDK error: ${sdkErr.message}\n${sdkErr.stack || ''}`);
+      return { success: false, error: `Veo SDK error: ${sdkErr.message}` };
+    }
+  }
+
+  // ── REST path: standard image-to-video or text-to-video ──
+  const useVeo31 = !hasImage;
+  const modelId = useVeo31 ? 'veo-3.1-generate-preview' : 'veo-2.0-generate-001';
+
+  if (hasImage) {
+    instance.image = { bytesBase64Encoded: instance._imageB64, mimeType: instance._imageMime };
+  }
+
+  // Clean up temp fields
+  delete instance._imageB64; delete instance._imageMime;
+  delete instance._lastFrameB64; delete instance._lastFrameMime;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning`;
   const body = {
     instances: [instance],
@@ -219,9 +359,17 @@ async function callVeoApi(params: {
     if (opData.error) return { success: false, error: `Veo error: ${opData.error.message}` };
   }
 
+  // Check for content filter (RAI)
+  const respData = opData.response || opData;
+  const gvrCheck = respData.generateVideoResponse || respData;
+  if (gvrCheck.raiMediaFilteredCount > 0) {
+    const reasons = gvrCheck.raiMediaFilteredReasons?.join('; ') || 'Content filtered by safety policy';
+    return { success: false, error: `Content filtered: ${reasons}` };
+  }
+
   // Extract video URI — handle various response formats
   let videoUri: string | undefined;
-  const resp = opData.response || opData;
+  const resp = respData;
   const gvr = resp.generateVideoResponse || resp;
   const samples = gvr.generatedSamples || gvr.generated_samples || [];
   if (samples[0]?.video?.uri) {
@@ -726,17 +874,20 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
             existing._generatedFilePath = filePath;
             existing._generatedAt = generation.generatedAt;
             // Don't update selectedGenerationId — only gallery selection changes it
-            existing.description = shotText;
+            existing.description = previsDescription; // Use overridden description if provided
+            if (Object.keys(promptOverrides).length > 0) existing.promptOverrides = promptOverrides;
             generationCount = existing.generations.length;
           } else {
-            projData.previsualizations.shots.push({
+            const newEntry: any = {
               shotElementId: elementId,
               filePath,
               _generatedFilePath: filePath,
               _generatedAt: generation.generatedAt,
-              description: shotText,
+              description: previsDescription,
               generations: [generation],
-            });
+            };
+            if (Object.keys(promptOverrides).length > 0) newEntry.promptOverrides = promptOverrides;
+            projData.previsualizations.shots.push(newEntry);
           }
 
           // Update scene-grouped shot data
@@ -805,8 +956,28 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       const lighting = previs?.lighting || '';
       const lensDesc = (actionConfig.frameSizeLensMap || {})[((element.frameSize || '') as string).toUpperCase()] || '';
       const movementDesc = (actionConfig.cameraMovementPromptMap || {})[cameraMovement.toUpperCase()] || '';
+      const continueChainPreview: boolean = body.continueChain === true;
       let sourceImage: string | undefined;
-      if (previs?.selectedGenerationId && previs.generations?.length > 0) {
+
+      // For chain continuation, show the last video's file path as the source reference
+      if (continueChainPreview && sdk.isProjectLoaded()) {
+        const projData = sdk.getProject()!;
+        const pvShot = projData.previsualizations?.shots?.find((s: any) => s.shotElementId === elementId);
+        if (pvShot) {
+          let lastVideoPath: string | undefined;
+          if (pvShot.videoChain?.length > 0 && pvShot.videoGenerations) {
+            const lastId = pvShot.videoChain[pvShot.videoChain.length - 1];
+            lastVideoPath = pvShot.videoGenerations.find((g: any) => g.id === lastId)?.filePath;
+          } else if (pvShot.selectedVideoGenerationId && pvShot.videoGenerations) {
+            lastVideoPath = pvShot.videoGenerations.find((g: any) => g.id === pvShot.selectedVideoGenerationId)?.filePath;
+          } else if (pvShot.videoPath) {
+            lastVideoPath = pvShot.videoPath;
+          }
+          if (lastVideoPath && sdk.fileExists(lastVideoPath)) sourceImage = lastVideoPath;
+        }
+      }
+
+      if (!sourceImage && previs?.selectedGenerationId && previs.generations?.length > 0) {
         const g = previs.generations.find((g: any) => g.id === previs.selectedGenerationId);
         if (g?.filePath && sdk.fileExists(g.filePath)) sourceImage = g.filePath;
       }
@@ -842,6 +1013,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       const elementId: string = body.elementId;
       const sceneId: string | undefined = body.sceneId;
       const sceneLocationId: string | undefined = body.sceneLocationId;
+      const lastFrameImagePath: string | undefined = body.lastFrameImage; // end-frame for interpolation
 
       if (!elementId) {
         sdk.sendJson(res, 400, { error: 'elementId required' });
@@ -970,7 +1142,11 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
             const projFolder = await sdk.getProjectFolder();
             const tempFrame = sdk.join(projFolder, 'assets', 'video-previs', `_lastframe_${elementId}.png`);
             try {
-              await sdk.exec(`ffmpeg -sseof -0.04 -i "${lastVideoPath}" -frames:v 1 -update 1 -y "${tempFrame}"`, { timeout: 15000 });
+              // Get duration first, then seek to near end (more reliable than -sseof)
+              const durResult = await sdk.exec(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${lastVideoPath}"`, { timeout: 5000 });
+              const vidDur = parseFloat((durResult.stdout || '').trim()) || 5;
+              const seekTo = Math.max(0, vidDur - 0.1);
+              await sdk.exec(`ffmpeg -ss ${seekTo} -i "${lastVideoPath}" -frames:v 1 -update 1 -y "${tempFrame}"`, { timeout: 15000 });
               if (sdk.fileExists(tempFrame)) {
                 sourceImage = tempFrame;
                 sdk.log('info', 'generate-video-previs', `Chain continuation: extracted last frame from ${sdk.basename(lastVideoPath)}`);
@@ -1018,7 +1194,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       if (sourceImage) {
         try {
           const sizeResult = await sdk.exec(
-            `python3 -c "from PIL import Image; i=Image.open('${sourceImage}'); print(f'{i.width}x{i.height}')"`,
+            `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${sourceImage}"`,
             { timeout: 5000 }
           );
           const dims = (sizeResult.stdout || '').trim().split('x');
@@ -1052,9 +1228,17 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         // Call Veo API directly (inline, no external tool dependency)
         let result: { success: boolean; filePath?: string; error?: string };
         try {
+          // Resolve last frame image for start+end interpolation
+          let lastFrameImage: string | undefined = lastFrameImagePath;
+          if (lastFrameImage && !sdk.fileExists(lastFrameImage)) {
+            sdk.log('warn', 'generate-video-previs', `Last frame image not found: ${lastFrameImage}`);
+            lastFrameImage = undefined;
+          }
+
           result = await callVeoApi({
             prompt,
             sourceImage,
+            lastFrameImage,
             duration,
             aspectRatio: effectiveAspectRatio,
             outputPath,
@@ -2098,6 +2282,193 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         sdk.sendJson(res, 200, { success: true, filePath: destPath, fileName: srcBase, duration });
       } catch (err) {
         sdk.sendJson(res, 500, { error: 'Import failed: ' + (err instanceof Error ? err.message : String(err)) });
+      }
+      return true;
+    }
+
+    // ── POST /generate-transition-video ─────────────────────────
+    // Generates a transition video between two shots using first/last frame interpolation.
+    // Takes the last frame of prevElementId's video chain and the start image of nextElementId.
+    if (req.method === 'POST' && subPath === '/generate-transition-video') {
+      const body = await sdk.readBody(req);
+      const prevElementId: string = body.prevElementId;
+      const nextElementId: string = body.nextElementId;
+      const insertBeforeElementId: string | undefined = body.insertBeforeElementId; // element ID to insert the new shot before
+      const promptOverride: string | undefined = body.promptOverride;
+
+      if (!prevElementId || !nextElementId) {
+        sdk.sendJson(res, 400, { error: 'prevElementId and nextElementId required' });
+        return true;
+      }
+
+      if (!sdk.isProjectLoaded()) {
+        sdk.sendJson(res, 404, { error: 'Project not loaded' });
+        return true;
+      }
+
+      const projData = sdk.getProject()!;
+      const previsShots = projData.previsualizations?.shots || [];
+
+      // Get last frame from previous shot's video chain
+      const prevShot = previsShots.find((s: any) => s.shotElementId === prevElementId);
+      let prevLastFrame: string | undefined;
+      if (prevShot) {
+        let lastVideoPath: string | undefined;
+        if (prevShot.videoChain?.length > 0 && prevShot.videoGenerations) {
+          const lastId = prevShot.videoChain[prevShot.videoChain.length - 1];
+          lastVideoPath = prevShot.videoGenerations.find((g: any) => g.id === lastId)?.filePath;
+        } else if (prevShot.selectedVideoGenerationId && prevShot.videoGenerations) {
+          lastVideoPath = prevShot.videoGenerations.find((g: any) => g.id === prevShot.selectedVideoGenerationId)?.filePath;
+        } else if (prevShot.videoPath) {
+          lastVideoPath = prevShot.videoPath;
+        }
+        if (lastVideoPath && sdk.fileExists(lastVideoPath)) {
+          // Extract last frame
+          const projFolder = await sdk.getProjectFolder();
+          const tempFrame = sdk.join(projFolder, 'assets', 'video-previs', `_transition_prev_${prevElementId}.png`);
+          try {
+            // Get duration first, then seek to near end (more reliable than -sseof)
+              const durResult = await sdk.exec(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${lastVideoPath}"`, { timeout: 5000 });
+              const vidDur = parseFloat((durResult.stdout || '').trim()) || 5;
+              const seekTo = Math.max(0, vidDur - 0.1);
+              await sdk.exec(`ffmpeg -ss ${seekTo} -i "${lastVideoPath}" -frames:v 1 -update 1 -y "${tempFrame}"`, { timeout: 15000 });
+            if (sdk.fileExists(tempFrame)) prevLastFrame = tempFrame;
+          } catch { /* non-fatal */ }
+        }
+      }
+
+      // Get start image from next shot
+      const nextShot = previsShots.find((s: any) => s.shotElementId === nextElementId);
+      let nextStartImage: string | undefined;
+      if (nextShot) {
+        if (nextShot.selectedGenerationId && nextShot.generations?.length > 0) {
+          const sel = nextShot.generations.find((g: any) => g.id === nextShot.selectedGenerationId);
+          if (sel?.filePath && sdk.fileExists(sel.filePath)) nextStartImage = sel.filePath;
+        }
+        if (!nextStartImage && nextShot.filePath && sdk.fileExists(nextShot.filePath)) {
+          nextStartImage = nextShot.filePath;
+        }
+      }
+
+      if (!prevLastFrame && !nextStartImage) {
+        sdk.sendJson(res, 400, { error: 'No source images available. Previous shot needs a video and next shot needs a previs image.' });
+        return true;
+      }
+
+      // Build transition prompt
+      const actionConfig = await sdk.loadActionConfig('generate-video');
+      const duration: number = body.duration || 4; // transitions are typically short
+      const aspectRatio: string = body.aspectRatio || actionConfig.generation?.aspectRatio || '16:9';
+      let prompt = promptOverride || 'Smooth cinematic camera movement transitioning away from this scene. The camera slowly pans or dollies, creating a natural bridge to the next shot. Subtle motion, cinematic lighting changes, and fluid movement.';
+
+      // Generate video with start + end frame
+      const projFolder = await sdk.getProjectFolder();
+      const videoDir = sdk.join(projFolder, 'assets', 'video-previs');
+      await sdk.mkdir(videoDir);
+      const outputPath = sdk.join(videoDir, `transition_${prevElementId}_${nextElementId}_${Date.now().toString(36)}.mp4`);
+
+      try {
+        const result = await callVeoApi({
+          prompt,
+          sourceImage: prevLastFrame,
+          lastFrameImage: nextStartImage,
+          duration,
+          aspectRatio,
+          outputPath,
+        }, sdk);
+
+        if (!result.success) {
+          sdk.sendJson(res, 500, { error: result.error || 'Transition generation failed' });
+          return true;
+        }
+
+        const filePath = result.filePath || outputPath;
+
+        // Probe actual duration
+        let actualDuration: number | undefined;
+        try {
+          const probeResult = sdk.spawnSync('ffprobe', [
+            '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', filePath,
+          ]);
+          if (probeResult.stdout) {
+            const parsed = parseFloat(String(probeResult.stdout).trim());
+            if (!isNaN(parsed) && parsed > 0) actualDuration = parsed;
+          }
+        } catch { /* non-fatal */ }
+
+        // Insert transition shot element into elements array if requested
+        let newShotId: string | undefined;
+        if (insertBeforeElementId && projData.elements) {
+          newShotId = 'element_transition_' + Date.now().toString(36);
+          const idx = projData.elements.findIndex((e: any) => e.id === insertBeforeElementId);
+          if (idx >= 0) {
+            projData.elements.splice(idx, 0, {
+              id: newShotId,
+              type: 'shot',
+              content: 'TRANSITION — ' + (prevElementId.split('_').pop() || '') + ' → ' + (nextElementId.split('_').pop() || ''),
+              shotText: 'TRANSITION',
+              frameSize: 'TRANSITION',
+            });
+          }
+        }
+
+        // Store the video as a previs for the transition shot
+        if (newShotId) {
+          if (!projData.previsualizations) projData.previsualizations = { shots: [] };
+          const videoGeneration = {
+            id: `vgen_${Date.now().toString(36)}`,
+            filePath,
+            generatedAt: new Date().toISOString(),
+            aspectRatio,
+            duration,
+            actualDuration,
+            sourceImage: prevLastFrame || null,
+            prompt: prompt.substring(0, 500),
+          };
+          projData.previsualizations.shots.push({
+            shotElementId: newShotId,
+            filePath: prevLastFrame || nextStartImage, // use as previs image
+            videoPath: filePath,
+            selectedVideoGenerationId: videoGeneration.id,
+            videoGenerations: [videoGeneration],
+            videoChain: [videoGeneration.id],
+            description: 'Transition shot',
+          });
+        }
+
+        sdk.markDirty(['elements', 'previsualizations']);
+        await sdk.flushProject();
+
+        sdk.sendJson(res, 200, {
+          success: true,
+          filePath,
+          duration,
+          actualDuration,
+          newShotId,
+          prevLastFrame,
+          nextStartImage,
+        });
+      } catch (err) {
+        sdk.sendJson(res, 500, { error: 'Transition generation failed: ' + (err instanceof Error ? err.message : String(err)) });
+      }
+      return true;
+    }
+
+    // ── POST /open-render-folder ─────────────────────────────────
+    if (req.method === 'POST' && subPath === '/open-render-folder') {
+      try {
+        const projFolder = await sdk.getProjectFolder();
+        const renderDir = sdk.join(projFolder, 'renders');
+        await sdk.mkdir(renderDir);
+        // Use platform-appropriate command to open folder in file manager
+        const platform = typeof process !== 'undefined' ? process.platform : 'darwin';
+        const cmd = platform === 'win32' ? `explorer "${renderDir}"`
+          : platform === 'darwin' ? `open "${renderDir}"`
+          : `xdg-open "${renderDir}"`;
+        sdk.exec(cmd, { timeout: 5000 }).catch(() => {}); // fire-and-forget
+        sdk.sendJson(res, 200, { success: true, path: renderDir });
+      } catch (err) {
+        sdk.sendJson(res, 500, { error: 'Failed to open folder: ' + (err instanceof Error ? err.message : String(err)) });
       }
       return true;
     }

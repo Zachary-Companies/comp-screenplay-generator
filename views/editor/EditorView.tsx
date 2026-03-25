@@ -1123,6 +1123,11 @@ function RenderTab() {
               {state.renderStatus === 'error' && state.renderError && <div className="ed-render-error">❌ {state.renderError}</div>}
               <button className="ed-render-main-btn" onClick={() => handleRender(false)}>🎬 Render Full Sequence</button>
               <button className="ed-render-main-btn ed-render-main-btn--secondary" onClick={() => handleRender(true)}>✂ Render Range Only</button>
+              <button className="ed-render-main-btn ed-render-main-btn--secondary" onClick={() => {
+                fetch('/api/app/' + encodeURIComponent(pipelineId) + '/open-render-folder', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+                }).catch(() => {});
+              }} style={{ marginTop: 4 }}>📂 Open Render Folder</button>
             </>
           )}
         </div>
