@@ -416,6 +416,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
   const [generatingSet, setGeneratingSet] = useState<Set<string>>(new Set());
   const [videoModalSrc, setVideoModalSrc] = useState<string | null>(null);
   const [videoGallery, setVideoGallery] = useState<{ elementId: string; videoGenerations: any[]; selectedVideoId?: string } | null>(null);
+  const [videoPromptModal, setVideoPromptModal] = useState<{ elementId: string } | null>(null);
   const [refEditorShotId, setRefEditorShotId] = useState<string | null>(null);
   // Track manual ref overrides per shot: { [shotElemId]: { characters: Set<charId>, locations: Set<locId> } }
   const [manualRefs, setManualRefs] = useState<Record<string, { characters: Set<string>; locations: Set<string> }>>({});
@@ -467,18 +468,29 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
   }, [pipelineId, scene, globalAspectRatio, pipeline]);
 
   // Handle video previs generation for a specific shot
-  const handleGenerateVideoPrevis = useCallback(async (shotId: string) => {
+  const handleGenerateVideoPrevis = useCallback(async (shotId: string, promptOverride?: string) => {
     setGeneratingSet(prev => new Set(prev).add('video_' + shotId));
+    const toastFn = typeof (window as any).toast === 'function' ? (window as any).toast : null;
     try {
       const ratio = globalAspectRatio || '9:16';
-      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-previs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ elementId: shotId, aspectRatio: ratio }),
+      const payload: Record<string, string> = { elementId: shotId, aspectRatio: ratio };
+      if (promptOverride) payload.promptOverride = promptOverride;
+      const resp = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-previs`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
+      const data = await resp.json().catch(() => null);
+      if (!resp.ok || !data?.success) {
+        const errMsg = data?.error || 'Video generation failed (' + resp.status + ')';
+        console.error('Video generation failed:', errMsg);
+        if (toastFn) toastFn(errMsg, 'error');
+      } else {
+        if (toastFn) toastFn('Video generated', 'success');
+      }
       await pipeline.reload();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Video generation failed:', err);
+      if (toastFn) toastFn('Video generation failed: ' + (err?.message || err), 'error');
     }
     setGeneratingSet(prev => { const next = new Set(prev); next.delete('video_' + shotId); return next; });
   }, [pipelineId, globalAspectRatio, pipeline]);
@@ -1070,7 +1082,7 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                         onClick={(e) => {
                           e.stopPropagation();
                           const sid = linkedShot?.id || shotElem?.id || '';
-                          if (sid) handleGenerateVideoPrevis(sid);
+                          if (sid) setVideoPromptModal({ elementId: sid });
                         }}
                         style={{
                           fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
@@ -1087,6 +1099,43 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                     {isGenVideo && (
                       <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 500, textAlign: 'center' }}>Generating video...</span>
                     )}
+                    {/* Video chain duration indicator + continue button */}
+                    {(shotInfo.videoGenerations?.length || 0) > 0 && !isGenVideo && (() => {
+                      const vGens = shotInfo.videoGenerations || [];
+                      const chainIds: string[] = shotInfo.videoChain || [];
+                      const chainGens = chainIds.length > 0
+                        ? chainIds.map(id => vGens.find((g: any) => g.id === id)).filter(Boolean)
+                        : [shotInfo.selectedVideoGenerationId ? vGens.find((g: any) => g.id === shotInfo.selectedVideoGenerationId) : vGens[vGens.length - 1]].filter(Boolean);
+                      const totalDur = chainGens.reduce((s: number, g: any) => s + (g.actualDuration || g.duration || 0), 0);
+                      const showContinue = totalDur > 0;
+                      return showContinue ? (
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+                          <span style={{ fontSize: 9, color: totalDur < 5 ? '#f59e0b' : '#4ade80', fontWeight: 500 }}>
+                            {totalDur.toFixed(1)}s{chainIds.length > 1 ? ` (${chainIds.length} clips)` : ''}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const sid = linkedShot?.id || shotElem?.id || '';
+                              if (!sid) return;
+                              fetch(`/api/app/${encodeURIComponent(pipelineId)}/generate-video-previs`, {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ elementId: sid, continueChain: true }),
+                              }).then(r => r.json()).then(resp => {
+                                if (!resp.success) toast(resp.error || 'Failed', 'error');
+                                else toast('Continuation generated', 'success');
+                              }).catch(() => toast('Failed to continue chain', 'error'));
+                            }}
+                            style={{
+                              fontSize: 8, padding: '1px 5px', borderRadius: 3,
+                              background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)',
+                              color: '#a78bfa', cursor: 'pointer',
+                            }}
+                            title="Generate continuation from last frame"
+                          >⟳ Continue</button>
+                        </div>
+                      ) : null;
+                    })()}
                     {/* Image gallery link */}
                     {genCount > 1 && !isGen && (
                       <ShotGalleryLink shot={galleryShot || linkedShot!} pipelineId={pipelineId} genCount={genCount} />
@@ -1275,6 +1324,15 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                   pipeline.refresh?.();
                 } catch {}
               }}
+            />
+          )}
+          {videoPromptModal && (
+            <VideoPromptModal
+              elementId={videoPromptModal.elementId}
+              pipelineId={pipelineId}
+              aspectRatio={globalAspectRatio || '16:9'}
+              onClose={() => setVideoPromptModal(null)}
+              onGenerate={(eid: string, prompt: string) => handleGenerateVideoPrevis(eid, prompt)}
             />
           )}
           {/* Video Modal */}
@@ -2070,6 +2128,53 @@ function VideoGalleryModal({ videoGenerations, selectedVideoId, elementId, pipel
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ── Video Prompt Modal ────────────────────────────────────────
+
+function VideoPromptModal({ elementId, pipelineId, aspectRatio, onClose, onGenerate }: {
+  elementId: string; pipelineId: string; aspectRatio: string;
+  onClose: () => void; onGenerate: (elementId: string, promptOverride: string) => void;
+}) {
+  const [prompt, setPrompt] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sourceImage, setSourceImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/app/' + encodeURIComponent(pipelineId) + '/preview-video-prompt', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elementId, aspectRatio }),
+    })
+    .then(r => r.json())
+    .then(d => { setPrompt(d.prompt || ''); setSourceImage(d.sourceImage || null); setLoading(false); })
+    .catch(() => setLoading(false));
+  }, [elementId, pipelineId, aspectRatio]);
+
+  return (
+    <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
+      <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>Video Generation Prompt</h3>
+            <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>Edit the prompt before generating. {sourceImage ? 'Image-to-video.' : 'Text-to-video.'}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '4px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+        </div>
+        <div style={{ padding: '16px 20px', flex: 1, overflow: 'auto' }}>
+          {sourceImage && <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>SOURCE IMAGE</div><img src={'/api/file?path=' + encodeURIComponent(sourceImage)} alt="" style={{ width: 120, borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }} /></div>}
+          <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>PROMPT</div>
+          {loading
+            ? <div style={{ color: '#64748b', fontSize: 12, padding: 20, textAlign: 'center' }}>Loading...</div>
+            : <textarea value={prompt} onChange={e => setPrompt(e.target.value)} style={{ width: '100%', minHeight: 200, padding: 12, boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e2e8f0', fontSize: 12, lineHeight: '1.5', fontFamily: 'inherit', resize: 'vertical' }} />
+          }
+        </div>
+        <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 6, fontSize: 12, background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#94a3b8', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => { onGenerate(elementId, prompt); onClose(); }} disabled={loading || !prompt.trim()} style={{ padding: '8px 20px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: 'rgba(6,182,212,0.2)', border: '1px solid rgba(6,182,212,0.4)', color: '#22d3ee', cursor: loading ? 'not-allowed' : 'pointer', opacity: (loading || !prompt.trim()) ? 0.5 : 1 }}>Generate Video</button>
+        </div>
       </div>
     </div>
   );

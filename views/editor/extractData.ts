@@ -25,6 +25,46 @@ interface SceneShot {
   [key: string]: any;
 }
 
+export interface GenerationEntry {
+  id: string;
+  filePath: string;
+  selectedId?: string;
+  duration?: number;
+  actualDuration?: number;
+}
+
+export interface VideoChainSegment {
+  id: string;
+  filePath: string;
+  duration: number;  // actualDuration or duration fallback
+}
+
+export interface VideoChainInfo {
+  chain: VideoChainSegment[];
+  totalDuration: number;
+  slotDuration: number;
+  gap: number;
+  fillPercent: number;
+  isFilled: boolean;
+}
+
+/** Pure helper — compute gap between chain duration and slot duration */
+export function computeChainGap(
+  segments: Array<{ duration?: number; actualDuration?: number }>,
+  slotDuration: number,
+): { totalDuration: number; gap: number; fillPercent: number; isFilled: boolean } {
+  const totalDuration = segments.reduce(
+    (sum, g) => sum + (g.actualDuration || g.duration || 0), 0
+  );
+  const gap = Math.max(0, slotDuration - totalDuration);
+  return {
+    totalDuration,
+    gap,
+    fillPercent: slotDuration > 0 ? Math.min(100, (totalDuration / slotDuration) * 100) : 100,
+    isFilled: totalDuration >= slotDuration - 0.01,
+  };
+}
+
 export interface ExtractionResult {
   clips: Clip[];
   scenes: EditorScene[];
@@ -34,6 +74,8 @@ export interface ExtractionResult {
   duration: number;
   previsMap: Record<string, string>;
   videoMap: Record<string, string>;
+  generationsMap: Record<string, { images: GenerationEntry[]; videos: GenerationEntry[] }>;
+  videoChainMap: Record<string, VideoChainInfo>;
   dialogAudioMap: Record<string, string>;
   dialogDurationMap: Record<string, number>;
   userClips: Clip[];
@@ -50,7 +92,7 @@ export function extractData(
       return {
         clips: [], scenes: [], characters: [], assets: [],
         tracks: DEFAULT_TRACKS.map(t => ({ ...t })),
-        duration: 120, previsMap: {}, videoMap: {}, dialogAudioMap: {}, dialogDurationMap: {}, userClips: [],
+        duration: 120, previsMap: {}, videoMap: {}, generationsMap: {}, dialogAudioMap: {}, dialogDurationMap: {}, userClips: [],
       };
     }
 
@@ -148,6 +190,26 @@ export function extractData(
       }
     }
 
+    // ── Normalize old-format scene shot IDs to element IDs ──
+    // Some scene shots use "shot_scene-0_..." IDs instead of "element_..." IDs.
+    // Build a map: oldId → elementId, so all data uses consistent element IDs.
+    const normalizeId: Record<string, string> = {};
+    if (project.scenes && project.elements) {
+      for (const sc of project.scenes) {
+        if (!sc?.shots || !sc.elementRange) continue;
+        const shotElems: string[] = [];
+        for (let ei = sc.elementRange[0]; ei < Math.min(sc.elementRange[1], project.elements.length); ei++) {
+          if (project.elements[ei]?.type === 'shot') shotElems.push(project.elements[ei].id);
+        }
+        for (let si = 0; si < sc.shots.length && si < shotElems.length; si++) {
+          const shot = sc.shots[si];
+          if (shot && shot.id && shot.id !== shotElems[si]) {
+            normalizeId[shot.id] = shotElems[si];
+          }
+        }
+      }
+    }
+
     // Build videoMap early so clip creation can use it
     const videoMap: Record<string, string> = {};
     for (const pv of previsShots) {
@@ -165,6 +227,11 @@ export function extractData(
       if ((shot as any).videoPath && !videoMap[shot.id]) {
         videoMap[shot.id] = (shot as any).videoPath;
       }
+    }
+    // Alias videoMap: if an old-format ID has a video, also set the element ID entry
+    for (const [oldId, elemId] of Object.entries(normalizeId)) {
+      if (videoMap[oldId] && !videoMap[elemId]) videoMap[elemId] = videoMap[oldId];
+      if (videoMap[elemId] && !videoMap[oldId]) videoMap[oldId] = videoMap[elemId];
     }
 
     // Process elements scene by scene
@@ -396,16 +463,62 @@ export function extractData(
     }
     for (const pv of previsShots) {
       if (!pv.shotElementId) continue;
+      if (pv.generations && pv.generations.length > 0) {
+        const sel = pv.selectedGenerationId
+          ? pv.generations.find((g: any) => g.id === pv.selectedGenerationId)
+          : pv.generations[pv.generations.length - 1];
+        if (sel?.filePath) { previsMap[pv.shotElementId] = sel.filePath; continue; }
+      }
       if (pv._generatedFilePath) previsMap[pv.shotElementId] = pv._generatedFilePath;
+      else if (pv.filePath) previsMap[pv.shotElementId] = pv.filePath;
     }
 
     for (const shot of sceneGroupedShots) {
-      if (shot.previsPath) previsMap[shot.id] = shot.previsPath;
+      const already = !!previsMap[shot.id];
+      if (!already && shot.previsPath) previsMap[shot.id] = shot.previsPath;
       if (shot.generations && shot.generations.length > 0) {
         const selected = shot.selectedGenerationId
           ? shot.generations.find(g => g.id === shot.selectedGenerationId)
-          : shot.generations[shot.generations.length - 1];
+          : (!already ? shot.generations[shot.generations.length - 1] : null);
         if (selected?.filePath) previsMap[shot.id] = selected.filePath;
+      }
+    }
+
+    // Backfill filePath on visual clips created from elements (previsMap wasn't available yet)
+    for (const c of clips) {
+      if (c.trackId === 'visuals' && !c.filePath && c.elementId && previsMap[c.elementId]) {
+        c.filePath = previsMap[c.elementId];
+      }
+    }
+
+    // Build generationsMap: all image + video generations per shot element
+    const generationsMap: ExtractionResult['generationsMap'] = {};
+    for (const pv of previsShots) {
+      if (!pv.shotElementId) continue;
+      const entry = generationsMap[pv.shotElementId] || { images: [], videos: [] };
+      if (pv.generations) {
+        for (const g of pv.generations) {
+          if (g.id && g.filePath) entry.images.push({ id: g.id, filePath: g.filePath, selectedId: pv.selectedGenerationId });
+        }
+      }
+      if (pv.videoGenerations) {
+        for (const g of pv.videoGenerations) {
+          if (g.id && g.filePath) entry.videos.push({
+            id: g.id, filePath: g.filePath, selectedId: pv.selectedVideoGenerationId,
+            duration: g.duration, actualDuration: g.actualDuration,
+          });
+        }
+      }
+      if (entry.images.length > 0 || entry.videos.length > 0) generationsMap[pv.shotElementId] = entry;
+    }
+    for (const shot of sceneGroupedShots) {
+      if (!shot.generations || shot.generations.length === 0) continue;
+      const entry = generationsMap[shot.id] || { images: [], videos: [] };
+      if (entry.images.length === 0) {
+        for (const g of shot.generations) {
+          if (g.id && g.filePath) entry.images.push({ id: g.id, filePath: g.filePath, selectedId: shot.selectedGenerationId });
+        }
+        generationsMap[shot.id] = entry;
       }
     }
 
@@ -434,7 +547,11 @@ export function extractData(
     if (project.scenes) {
       for (const sc of project.scenes) {
         if (!sc || !sc.shots || sc.shots.length === 0) continue;
-        const shotsWithPrevis = sc.shots.filter(shot => shot && shot.id && previsMap[shot.id]);
+        const shotsWithPrevis = sc.shots.filter(shot => {
+          if (!shot?.id) return false;
+          const eid = normalizeId[shot.id] || shot.id;
+          return previsMap[eid] || previsMap[shot.id] || videoMap[eid] || videoMap[shot.id];
+        });
         if (shotsWithPrevis.length === 0) continue;
 
         const sceneStart = sceneStartTimeMap[sc.id] ?? 0;
@@ -460,20 +577,23 @@ export function extractData(
 
         let shotOffset = 0;
         for (const shot of shotsWithPrevis) {
+          // Normalize old-format IDs to element IDs for consistent referencing
+          const eid = normalizeId[shot.id] || shot.id;
           const dur = shot.duration || autoShotDur;
-          const hasVisualClip = clips.find(c => c.elementId === shot.id && c.trackId === 'visuals');
+          // Check for existing clip using normalized ID
+          const hasVisualClip = clips.find(c => c.elementId === eid && c.trackId === 'visuals');
           if (!hasVisualClip) {
-            const shotHasVideo = !!videoMap[shot.id];
+            const shotHasVideo = !!(videoMap[eid] || videoMap[shot.id]);
             clips.push({
-              id: stableId('shot', shot.id),
-              elementId: shot.id,
+              id: stableId('shot', eid),
+              elementId: eid,
               trackId: 'visuals',
               type: shotHasVideo ? 'video' : 'image',
               name: (shot.shotType || '') + ' — ' + (shot.description || '').slice(0, 40),
               startTime: sceneStart + shotOffset,
               duration: dur,
               content: shot.description,
-              filePath: shotHasVideo ? videoMap[shot.id] : previsMap[shot.id],
+              filePath: shotHasVideo ? (videoMap[eid] || videoMap[shot.id]) : (previsMap[eid] || previsMap[shot.id]),
             });
           }
           shotOffset += dur;
@@ -524,6 +644,47 @@ export function extractData(
     const tracks = DEFAULT_TRACKS.map(t => ({ ...t }));
     const duration = Math.max(60, timeOffset + 10);
 
+    // Build videoChainMap: per-element chain info with gap detection
+    const videoChainMap: Record<string, VideoChainInfo> = {};
+    for (const pv of previsShots) {
+      if (!pv.shotElementId) continue;
+      const gens = pv.videoGenerations as Array<{ id: string; filePath: string; duration?: number; actualDuration?: number }> | undefined;
+      if (!gens || gens.length === 0) continue;
+
+      // Resolve chain segments (ordered IDs → generation objects)
+      let chainIds: string[];
+      if (pv.videoChain && pv.videoChain.length > 0) {
+        chainIds = pv.videoChain;
+      } else {
+        // Single-video fallback: use selected or latest
+        const selId = pv.selectedVideoGenerationId || gens[gens.length - 1]?.id;
+        chainIds = selId ? [selId] : [];
+      }
+
+      const genMap = new Map(gens.map(g => [g.id, g]));
+      const chain: VideoChainSegment[] = [];
+      for (const id of chainIds) {
+        const g = genMap.get(id);
+        if (g) chain.push({ id: g.id, filePath: g.filePath, duration: g.actualDuration || g.duration || 0 });
+      }
+      if (chain.length === 0) continue;
+
+      // Find slot duration from the timeline clip
+      const elemId = pv.shotElementId;
+      const matchClip = clips.find(c => c.elementId === elemId && c.trackId === 'visuals');
+      const slotDuration = matchClip?.duration || 0;
+
+      const gapInfo = computeChainGap(chain, slotDuration);
+      videoChainMap[elemId] = {
+        chain,
+        totalDuration: gapInfo.totalDuration,
+        slotDuration,
+        gap: gapInfo.gap,
+        fillPercent: gapInfo.fillPercent,
+        isFilled: gapInfo.isFilled,
+      };
+    }
+
     return {
       clips,
       scenes,
@@ -533,6 +694,8 @@ export function extractData(
       duration,
       previsMap,
       videoMap,
+      generationsMap,
+      videoChainMap,
       dialogAudioMap,
       dialogDurationMap,
       userClips: loadedUserClips,

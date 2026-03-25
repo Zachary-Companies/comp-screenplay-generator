@@ -785,6 +785,57 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       return true;
     }
 
+    // ── POST /preview-video-prompt ──────────────────────────────
+    if (req.method === 'POST' && subPath === '/preview-video-prompt') {
+      const body = await sdk.readBody(req);
+      const elementId: string = body.elementId;
+      if (!elementId) { sdk.sendJson(res, 400, { error: 'elementId required' }); return true; }
+      const actionConfig = await sdk.loadActionConfig('generate-video');
+      const aspectRatio: string = body.aspectRatio || actionConfig.generation?.aspectRatio || '16:9';
+      const screenplay = await collectScreenplayData(sdk);
+      if (!screenplay) { sdk.sendJson(res, 404, { error: 'No screenplay data' }); return true; }
+      const element = screenplay.elementMap[elementId];
+      if (!element) { sdk.sendJson(res, 404, { error: 'Element not found: ' + elementId }); return true; }
+      const previs = screenplay.previsMap[elementId];
+      const refs = await resolveReferences(sdk, screenplay, elementId, actionConfig, {});
+      const shotText = element.shotText || element.content || '';
+      const previsDescription = previs?.description || shotText;
+      const cameraMovement = element.cameraMovement || '';
+      const cameraIntent = previs?.cameraIntent || '';
+      const lighting = previs?.lighting || '';
+      const lensDesc = (actionConfig.frameSizeLensMap || {})[((element.frameSize || '') as string).toUpperCase()] || '';
+      const movementDesc = (actionConfig.cameraMovementPromptMap || {})[cameraMovement.toUpperCase()] || '';
+      let sourceImage: string | undefined;
+      if (previs?.selectedGenerationId && previs.generations?.length > 0) {
+        const g = previs.generations.find((g: any) => g.id === previs.selectedGenerationId);
+        if (g?.filePath && sdk.fileExists(g.filePath)) sourceImage = g.filePath;
+      }
+      if (!sourceImage && previs?.filePath && sdk.fileExists(previs.filePath)) sourceImage = previs.filePath;
+      let prompt = '';
+      if (sourceImage) {
+        const motionParts: string[] = [];
+        if (movementDesc) motionParts.push(movementDesc);
+        else if (cameraMovement) motionParts.push(cameraMovement.toLowerCase() + ' camera movement');
+        else motionParts.push('Subtle camera movement');
+        if (lensDesc) motionParts.push(lensDesc);
+        if (cameraIntent) motionParts.push(cameraIntent);
+        const genericDesc = (previsDescription || shotText || '').replace(/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?\b/g, 'the character').replace(/\b(?:David|Sarah|Marcus|Elena)\b/gi, 'the character').substring(0, 200);
+        prompt = motionParts.join('. ') + '. ' + genericDesc + '\n\nNatural, cinematic motion. Characters move subtly and expressively.';
+      } else {
+        if (refs.referenceImages.length > 0) prompt += (actionConfig.referenceInstruction || '') + '\n' + refs.refDescriptions.join('. ') + '.\n\n';
+        prompt += previsDescription;
+        if (previsDescription !== shotText && shotText) prompt += ' The camera captures: ' + shotText;
+        prompt += '\n\n';
+        if (movementDesc) prompt += 'Camera motion: ' + movementDesc + '. ';
+        if (lensDesc) prompt += 'Frame: ' + lensDesc + '. ';
+        if (lighting) prompt += 'Lighting: ' + lighting + '. ';
+        if (cameraIntent) prompt += cameraIntent + '. ';
+        prompt += '\nStyle: Cinematic video footage shot on professional cinema camera.';
+      }
+      sdk.sendJson(res, 200, { prompt, sourceImage: sourceImage || null, aspectRatio });
+      return true;
+    }
+
     // ── POST /generate-video-previs ──────────────────────────────
     if (req.method === 'POST' && subPath === '/generate-video-previs') {
       const body = await sdk.readBody(req);
@@ -887,9 +938,51 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         }
       }
 
+      // Allow prompt override from client
+      if (body.promptOverride && typeof body.promptOverride === 'string' && body.promptOverride.trim()) {
+        prompt = body.promptOverride.trim();
+      }
+
       // ── Check for existing previs still image to use as source ──
-      // Priority: 1) selected generation, 2) latest filePath, 3) scene shot previsPath
+      // For chain continuation: extract last frame from the last video in the chain
+      const continueChain: boolean = body.continueChain === true;
       let sourceImage: string | undefined;
+
+      if (continueChain && sdk.isProjectLoaded()) {
+        const projData = sdk.getProject()!;
+        const pvShot = projData.previsualizations?.shots?.find((s: any) => s.shotElementId === elementId);
+        if (pvShot) {
+          // Find the last video in the chain (or selected video if no chain)
+          let lastVideoPath: string | undefined;
+          if (pvShot.videoChain && pvShot.videoChain.length > 0 && pvShot.videoGenerations) {
+            const lastId = pvShot.videoChain[pvShot.videoChain.length - 1];
+            const lastGen = pvShot.videoGenerations.find((g: any) => g.id === lastId);
+            lastVideoPath = lastGen?.filePath;
+          } else if (pvShot.selectedVideoGenerationId && pvShot.videoGenerations) {
+            const selGen = pvShot.videoGenerations.find((g: any) => g.id === pvShot.selectedVideoGenerationId);
+            lastVideoPath = selGen?.filePath;
+          } else if (pvShot.videoPath) {
+            lastVideoPath = pvShot.videoPath;
+          }
+
+          if (lastVideoPath && sdk.fileExists(lastVideoPath)) {
+            // Extract last frame from the video
+            const projFolder = await sdk.getProjectFolder();
+            const tempFrame = sdk.join(projFolder, 'assets', 'video-previs', `_lastframe_${elementId}.png`);
+            try {
+              await sdk.exec(`ffmpeg -sseof -0.04 -i "${lastVideoPath}" -frames:v 1 -update 1 -y "${tempFrame}"`, { timeout: 15000 });
+              if (sdk.fileExists(tempFrame)) {
+                sourceImage = tempFrame;
+                sdk.log('info', 'generate-video-previs', `Chain continuation: extracted last frame from ${sdk.basename(lastVideoPath)}`);
+              }
+            } catch (frameErr) {
+              sdk.log('warn', 'generate-video-previs', `Failed to extract last frame: ${frameErr}`);
+            }
+          }
+        }
+      }
+
+      // Priority: 1) selected generation, 2) latest filePath, 3) scene shot previsPath
 
       // 1) Use the selected generation if one was picked in the gallery
       if (previs?.selectedGenerationId && previs.generations?.length > 0) {
@@ -977,13 +1070,26 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
 
         const filePath = result.filePath || outputPath;
 
+        // Probe actual video duration via ffprobe
+        let actualDuration: number | undefined;
+        try {
+          const probeResult = sdk.spawnSync('ffprobe', [
+            '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', filePath,
+          ]);
+          if (probeResult.stdout) {
+            const parsed = parseFloat(String(probeResult.stdout).trim());
+            if (!isNaN(parsed) && parsed > 0) actualDuration = parsed;
+          }
+        } catch (_) { /* probe failure is non-fatal */ }
+
         // Update project data — store videoPath + videoGenerations on previs shot and scene shot
-        const videoGeneration = {
+        const videoGeneration: any = {
           id: `vgen_${Date.now().toString(36)}`,
           filePath,
           generatedAt: new Date().toISOString(),
           aspectRatio: effectiveAspectRatio,
           duration,
+          actualDuration,
           sourceImage: sourceImage || null,
           prompt: prompt.substring(0, 500),
         };
@@ -1006,9 +1112,28 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
                 generatedAt: existing._videoGeneratedAt || new Date().toISOString(),
               });
             }
+            // If continuing chain, set continuationOf on the new generation
+            if (continueChain) {
+              const lastChainId = existing.videoChain?.length
+                ? existing.videoChain[existing.videoChain.length - 1]
+                : existing.selectedVideoGenerationId;
+              if (lastChainId) videoGeneration.continuationOf = lastChainId;
+            }
             existing.videoGenerations.push(videoGeneration);
             existing.videoPath = filePath;
             existing.selectedVideoGenerationId = videoGeneration.id;
+            // Update video chain
+            if (continueChain) {
+              if (!existing.videoChain || existing.videoChain.length === 0) {
+                // Initialize chain with previously selected video + new one
+                const prevId = existing.videoGenerations.length >= 2
+                  ? existing.videoGenerations[existing.videoGenerations.length - 2].id
+                  : undefined;
+                existing.videoChain = prevId ? [prevId, videoGeneration.id] : [videoGeneration.id];
+              } else {
+                existing.videoChain.push(videoGeneration.id);
+              }
+            }
             videoGenerationCount = existing.videoGenerations.length;
           } else {
             projData.previsualizations.shots.push({
@@ -1034,13 +1159,22 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           await sdk.flushProject();
         }
 
+        // Look up chain info for response
+        let videoChain: string[] | undefined;
+        if (sdk.isProjectLoaded()) {
+          const pv = sdk.getProject()!.previsualizations?.shots?.find((s: any) => s.shotElementId === elementId);
+          videoChain = pv?.videoChain;
+        }
+
         sdk.sendJson(res, 200, {
           success: true,
           elementId,
           filePath,
           duration,
+          actualDuration,
           generationId: videoGeneration.id,
           videoGenerationCount,
+          videoChain,
           refsUsed: refs.referenceImages.map((r: string) => sdk.basename(r)),
           refCount: { characters: refs.characterIds.length, locations: refs.locationId ? 1 : 0 },
         });
@@ -1325,6 +1459,76 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       sdk.markDirty(['previsualizations']);
       await sdk.flushProject();
       sdk.sendJson(res, 200, { success: true, elementId, generationId });
+      return true;
+    }
+
+    // ── POST /update-video-chain ─────────────────────────────────
+    if (req.method === 'POST' && subPath === '/update-video-chain') {
+      const body = await sdk.readBody(req);
+      const elementId: string = body.elementId;
+      const chain: string[] = body.chain;
+
+      if (!elementId || !Array.isArray(chain)) {
+        sdk.sendJson(res, 400, { error: 'elementId and chain[] required' });
+        return true;
+      }
+
+      if (!sdk.isProjectLoaded()) {
+        sdk.sendJson(res, 404, { error: 'Project not loaded' });
+        return true;
+      }
+
+      const projData = sdk.getProject()!;
+      const entry = projData.previsualizations?.shots?.find((s: any) => s.shotElementId === elementId);
+      if (!entry) {
+        sdk.sendJson(res, 404, { error: 'Shot not found' });
+        return true;
+      }
+
+      // Validate all chain IDs exist in videoGenerations
+      const genIds = new Set((entry.videoGenerations || []).map((g: any) => g.id));
+      const invalid = chain.filter(id => !genIds.has(id));
+      if (invalid.length > 0) {
+        sdk.sendJson(res, 400, { error: `Invalid generation IDs in chain: ${invalid.join(', ')}` });
+        return true;
+      }
+
+      entry.videoChain = chain;
+      sdk.markDirty(['previsualizations']);
+      await sdk.flushProject();
+      sdk.sendJson(res, 200, { success: true, elementId, chain });
+      return true;
+    }
+
+    // ── POST /remove-from-chain ──────────────────────────────────
+    if (req.method === 'POST' && subPath === '/remove-from-chain') {
+      const body = await sdk.readBody(req);
+      const elementId: string = body.elementId;
+      const generationId: string = body.generationId;
+
+      if (!elementId || !generationId) {
+        sdk.sendJson(res, 400, { error: 'elementId and generationId required' });
+        return true;
+      }
+
+      if (!sdk.isProjectLoaded()) {
+        sdk.sendJson(res, 404, { error: 'Project not loaded' });
+        return true;
+      }
+
+      const projData = sdk.getProject()!;
+      const entry = projData.previsualizations?.shots?.find((s: any) => s.shotElementId === elementId);
+      if (!entry || !entry.videoChain) {
+        sdk.sendJson(res, 404, { error: 'Shot or chain not found' });
+        return true;
+      }
+
+      entry.videoChain = entry.videoChain.filter((id: string) => id !== generationId);
+      if (entry.videoChain.length === 0) delete entry.videoChain;
+
+      sdk.markDirty(['previsualizations']);
+      await sdk.flushProject();
+      sdk.sendJson(res, 200, { success: true, elementId, chain: entry.videoChain || [] });
       return true;
     }
 
@@ -1968,37 +2172,89 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         }
 
         // Build ffmpeg command
+        // Extend each visual clip to fill gaps so the video timeline matches
+        // the NLE's absolute timing. Each image/video holds until the next cut.
+
+        // Pre-concat video chains into temp files (if applicable)
+        const chainConcatMap: Record<string, string> = {}; // elementId → temp concat file
+        const tempFiles: string[] = [];
+        if (projData?.previsualizations?.shots) {
+          for (const vc of visualClips) {
+            if (!vc.elementId) continue;
+            const pvShot = projData.previsualizations.shots.find((s: any) => s.shotElementId === vc.elementId);
+            if (!pvShot?.videoChain || pvShot.videoChain.length < 2) continue;
+            const chainFiles: string[] = [];
+            for (const gId of pvShot.videoChain) {
+              const gen = pvShot.videoGenerations?.find((g: any) => g.id === gId);
+              if (gen?.filePath && sdk.fileExists(gen.filePath)) chainFiles.push(gen.filePath);
+            }
+            if (chainFiles.length < 2) continue;
+
+            // Write concat list and pre-concat
+            const concatList = sdk.join(renderDir, `_concat_${vc.elementId}_${Date.now()}.txt`);
+            const concatContent = chainFiles.map(f => `file '${f.replace(/'/g, "'\\''")}'`).join('\n');
+            await sdk.writeFile(concatList, concatContent);
+            tempFiles.push(concatList);
+
+            const concatOutput = sdk.join(renderDir, `_chain_${vc.elementId}_${Date.now()}.mp4`);
+            try {
+              await sdk.exec(`ffmpeg -f concat -safe 0 -i "${concatList}" -c copy -y "${concatOutput}"`, { timeout: 60000 });
+              if (sdk.fileExists(concatOutput)) {
+                chainConcatMap[vc.elementId] = concatOutput;
+                tempFiles.push(concatOutput);
+              }
+            } catch (concatErr) {
+              sdk.log('warn', 'render-video', `Chain concat failed for ${vc.elementId}: ${concatErr}`);
+            }
+          }
+        }
+
         const ffmpegArgs: string[] = [];
-        const clipDurations: number[] = []; // track actual durations for each visual input
-        const clipIsVideo: boolean[] = []; // track whether each clip is a video file
-        for (const vc of visualClips) {
-          const clipDur = Math.min(vc.startTime + vc.duration, endTime) - Math.max(vc.startTime, startTime);
+        const clipDurations: number[] = [];
+        const clipIsVideo: boolean[] = [];
+        const effectiveVisualClips: any[] = [];
+
+        for (let vi = 0; vi < visualClips.length; vi++) {
+          const vc = visualClips[vi];
+          const clipStart = Math.max(vc.startTime, startTime);
+          // Extend this clip until the next clip starts (or endTime if last)
+          const nextStart = vi + 1 < visualClips.length
+            ? Math.max(visualClips[vi + 1].startTime, startTime)
+            : endTime;
+          const clipDur = nextStart - clipStart;
           if (clipDur <= 0) continue;
+
           clipDurations.push(clipDur);
-          const isVideo = /\.(mp4|mov|webm|avi)$/i.test(vc.filePath || '');
+          // Use chain concat file if available, otherwise original filePath
+          const effectivePath = (vc.elementId && chainConcatMap[vc.elementId]) || vc.filePath;
+          const isVideo = /\.(mp4|mov|webm|avi)$/i.test(effectivePath || '');
           clipIsVideo.push(isVideo);
+          effectiveVisualClips.push({ ...vc, filePath: effectivePath });
           if (isVideo) {
-            ffmpegArgs.push('-t', String(clipDur), '-i', vc.filePath);
+            // For videos shorter than the slot, loop them; -stream_loop -1 loops indefinitely, -t caps duration
+            ffmpegArgs.push('-stream_loop', '-1', '-t', String(clipDur), '-i', effectivePath);
           } else {
-            ffmpegArgs.push('-loop', '1', '-t', String(clipDur), '-i', vc.filePath);
+            ffmpegArgs.push('-loop', '1', '-t', String(clipDur), '-i', effectivePath);
           }
         }
 
         // Title card inputs — inserted as color sources before audio inputs
         const titleCardSegments: { spec: TitleCardSpec; inputIdx: number; filterLabel: string }[] = [];
+        // numVisuals now includes gap-filler inputs
+        const numVisuals = clipDurations.length;
+
         if (mgPlan?.titleCards?.length > 0) {
           const mainTitle = (mgPlan.titleCards as TitleCardSpec[]).find((tc: TitleCardSpec) => tc.type === 'main-title');
           const sceneTransitions = (mgPlan.titleCards as TitleCardSpec[]).filter((tc: TitleCardSpec) => tc.type === 'scene-transition');
           const titleCards = [...(mainTitle ? [mainTitle] : []), ...sceneTransitions];
           for (const tc of titleCards) {
             const seg = buildTitleCardSegment(tc, fps, resX, resY);
-            const inputIdx = visualClips.length + titleCardSegments.length;
+            const inputIdx = numVisuals + titleCardSegments.length;
             ffmpegArgs.push('-f', 'lavfi', '-i', seg.inputs[0]);
             titleCardSegments.push({ spec: tc, inputIdx, filterLabel: `tc${titleCardSegments.length}` });
           }
         }
 
-        const numVisuals = visualClips.length;
         const numTitleCards = titleCardSegments.length;
         for (const ac of audioClips) {
           ffmpegArgs.push('-i', ac.path);
@@ -2007,9 +2263,9 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
 
         const filterParts: string[] = [];
         let concatInputs = '';
-        // Process visual clip filters — video clips, Ken Burns, or default scale/pad
+        // Process visual clip filters — video clips, Ken Burns, gap-fillers, or default scale/pad
         for (let i = 0; i < numVisuals; i++) {
-          const vc = visualClips[i];
+          const vc = effectiveVisualClips[i];
           const clipDur = clipDurations[i];
           const isVideo = clipIsVideo[i];
 
@@ -2019,8 +2275,6 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           } else {
             const kbSpec = mgPlan?.kenBurns?.find((kb: any) => kb.shotElementId === vc.elementId);
             if (kbSpec) {
-              // Override Ken Burns duration with actual clip duration (audio-driven from editor)
-              // This ensures shots match dialogue pacing, not LLM-estimated durations
               const audioDrivenSpec = { ...kbSpec, durationSeconds: clipDur } as KenBurnsSpec;
               const kbFilter = buildKenBurnsFilter(audioDrivenSpec, fps, resX, resY);
               filterParts.push(`[${i}:v]${kbFilter},setsar=1[v${i}]`);
@@ -2075,7 +2329,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           let cumulativeTime = 0;
           const clipTimeMap: Record<string, number> = {};
           for (let i = 0; i < numVisuals; i++) {
-            clipTimeMap[visualClips[i].elementId] = cumulativeTime;
+            clipTimeMap[effectiveVisualClips[i].elementId] = cumulativeTime;
             cumulativeTime += clipDurations[i];
           }
 
@@ -2083,7 +2337,8 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           for (const cap of mgPlan.captions as CaptionSpec[]) {
             const clipStart = clipTimeMap[cap.elementId];
             if (clipStart == null) continue;
-            const clipDur = clipDurations[visualClips.findIndex((vc: any) => vc.elementId === cap.elementId)] || 0;
+            const clipIdx = effectiveVisualClips.findIndex((vc: any) => vc.elementId === cap.elementId);
+            const clipDur = clipIdx >= 0 ? clipDurations[clipIdx] : 0;
             if (clipDur <= 0) continue;
             const capFilter = buildCaptionFilter(cap, clipStart, clipDur, resX, resY);
             if (capFilter) captionFilters.push(capFilter);
@@ -2101,7 +2356,7 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
           let cumulativeTime = 0;
           const clipTimeMap: Record<string, number> = {};
           for (let i = 0; i < numVisuals; i++) {
-            clipTimeMap[visualClips[i].elementId] = cumulativeTime;
+            clipTimeMap[effectiveVisualClips[i].elementId] = cumulativeTime;
             cumulativeTime += clipDurations[i];
           }
 
@@ -2210,6 +2465,11 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
         const fileSizeMB = (outputStat.size / (1024 * 1024)).toFixed(1);
 
         sdk.log('info', 'render-video', `Render complete: ${outputPath} (${fileSizeMB}MB)`);
+
+        // Clean up temp chain concat files
+        for (const tf of tempFiles) {
+          try { await sdk.unlink(tf); } catch { /* ignore */ }
+        }
 
         sdk.sendJson(res, 200, {
           success: true,

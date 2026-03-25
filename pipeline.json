@@ -1682,6 +1682,36 @@
       "targetPort": "dialogueAudio"
     }
   ],
+  "appConfig": {
+    "sidebarActions": [
+      { "id": "new-project", "label": "New Project", "icon": "✨", "event": "woodbury:new-project", "placement": "primary" },
+      { "id": "import-script", "label": "Import Script", "icon": "📄", "event": "woodbury:show-import", "placement": "primary" }
+    ],
+    "nodeKeyMap": {
+      "node-4": "metadata",
+      "node-5": "characters",
+      "node-6": "locations",
+      "node-7": "sections",
+      "node-8": "processedSections",
+      "node-9": "sceneContent",
+      "node-10": "elements",
+      "node-11": "productionMetadata",
+      "node-12": "assets",
+      "node-13": "previsualizations",
+      "node-14": "ruleEnforcement",
+      "node-15": "_assembly",
+      "node-16": "_output",
+      "node-17": "dialogueAudio"
+    },
+    "importModal": { "type": "fountain", "autoShow": true },
+    "nodeRenderers": [
+      { "id": "characters", "matchFields": ["name", "role"], "excludeFields": ["lines"], "renderer": "builtin:character-grid" },
+      { "id": "locations", "matchFields": ["name", "mood"], "excludeFields": ["role", "lines"], "renderer": "builtin:location-grid" },
+      { "id": "elements", "matchFields": ["type", "content", "characterName"], "renderer": "builtin:element-list" },
+      { "id": "sections", "matchFields": ["type", "title"], "renderer": "builtin:section-tree" }
+    ],
+    "usesProjectState": true
+  },
   "metadata": {
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2026-03-23T21:35:04.150Z",

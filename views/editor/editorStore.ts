@@ -151,6 +151,9 @@ export interface EditorState {
   assets: EditorAsset[];
   markers: any[];
   previsMap: Record<string, string>;
+  videoMap: Record<string, string>;
+  generationsMap: Record<string, { images: Array<{ id: string; filePath: string; selectedId?: string; duration?: number; actualDuration?: number }>; videos: Array<{ id: string; filePath: string; selectedId?: string; duration?: number; actualDuration?: number }> }>;
+  videoChainMap: Record<string, { chain: Array<{ id: string; filePath: string; duration: number }>; totalDuration: number; slotDuration: number; gap: number; fillPercent: number; isFilled: boolean }>;
   dialogAudioMap: Record<string, string>;
   dialogDurationMap: Record<string, number>;
   previewZoom: 'fit' | number;
@@ -189,6 +192,9 @@ export const initialEditorState: EditorState = {
   assets: [],
   markers: [],
   previsMap: {},
+  videoMap: {},
+  generationsMap: {},
+  videoChainMap: {},
   dialogAudioMap: {},
   dialogDurationMap: {},
   previewZoom: 'fit',
@@ -211,7 +217,7 @@ export const initialEditorState: EditorState = {
 // ── Actions ────────────────────────────────────────────────
 
 export type EditorAction =
-  | { type: 'SET_DATA'; clips: Clip[]; scenes: EditorScene[]; characters: EditorCharacter[]; assets: EditorAsset[]; tracks: Track[]; duration: number; previsMap: Record<string, string>; dialogAudioMap: Record<string, string>; dialogDurationMap: Record<string, number>; userClips: Clip[] }
+  | { type: 'SET_DATA'; clips: Clip[]; scenes: EditorScene[]; characters: EditorCharacter[]; assets: EditorAsset[]; tracks: Track[]; duration: number; previsMap: Record<string, string>; videoMap?: Record<string, string>; generationsMap?: EditorState['generationsMap']; videoChainMap?: EditorState['videoChainMap']; dialogAudioMap: Record<string, string>; dialogDurationMap: Record<string, number>; userClips: Clip[] }
   | { type: 'SET_TIME'; time: number }
   | { type: 'TOGGLE_PLAY' }
   | { type: 'STOP_PLAY' }
@@ -260,6 +266,9 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         tracks: action.tracks,
         duration: action.duration,
         previsMap: action.previsMap,
+        videoMap: action.videoMap || state.videoMap || {},
+        generationsMap: action.generationsMap || state.generationsMap || {},
+        videoChainMap: action.videoChainMap || state.videoChainMap || {},
         dialogAudioMap: { ...state.dialogAudioMap, ...action.dialogAudioMap },
         dialogDurationMap: { ...state.dialogDurationMap, ...action.dialogDurationMap },
         userClips: action.userClips.length > 0 && state.userClips.length === 0

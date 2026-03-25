@@ -373,7 +373,7 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
           stack.future.push(stateRef.current);
           // We can't dispatch to restore full state with current reducer,
           // but we can dispatch SET_DATA with the old state's data
-          dispatch({ type: 'SET_DATA', clips: prev.clips, scenes: prev.scenes, characters: prev.characters, assets: prev.assets, tracks: prev.tracks, duration: prev.duration, previsMap: prev.previsMap, dialogAudioMap: prev.dialogAudioMap, dialogDurationMap: prev.dialogDurationMap || {}, userClips: prev.userClips });
+          dispatch({ type: 'SET_DATA', clips: prev.clips, scenes: prev.scenes, characters: prev.characters, assets: prev.assets, tracks: prev.tracks, duration: prev.duration, previsMap: prev.previsMap, videoMap: prev.videoMap, generationsMap: prev.generationsMap, videoChainMap: prev.videoChainMap, dialogAudioMap: prev.dialogAudioMap, dialogDurationMap: prev.dialogDurationMap || {}, userClips: prev.userClips });
           dispatch({ type: 'SET_SELECTION', clipIds: prev.selectedClipIds || [] });
         }
       }
@@ -383,7 +383,7 @@ export function EditorView({ pipelineId: propPipelineId, appState: propAppState 
         if (stack.future.length > 0) {
           const next = stack.future.pop()!;
           stack.past.push(stateRef.current);
-          dispatch({ type: 'SET_DATA', clips: next.clips, scenes: next.scenes, characters: next.characters, assets: next.assets, tracks: next.tracks, duration: next.duration, previsMap: next.previsMap, dialogAudioMap: next.dialogAudioMap, dialogDurationMap: next.dialogDurationMap || {}, userClips: next.userClips });
+          dispatch({ type: 'SET_DATA', clips: next.clips, scenes: next.scenes, characters: next.characters, assets: next.assets, tracks: next.tracks, duration: next.duration, previsMap: next.previsMap, videoMap: next.videoMap, generationsMap: next.generationsMap, videoChainMap: next.videoChainMap, dialogAudioMap: next.dialogAudioMap, dialogDurationMap: next.dialogDurationMap || {}, userClips: next.userClips });
           dispatch({ type: 'SET_SELECTION', clipIds: next.selectedClipIds || [] });
         }
       }
@@ -1152,9 +1152,9 @@ const ProgramMonitor = memo(function ProgramMonitor() {
   }, [showVisual, state.previsMap]);
 
   const previewVideoPath = useMemo(() => {
-    if (showVisual?.type === 'video') return showVisual.filePath || (state as any).videoMap?.[showVisual.elementId || ''];
+    if (showVisual?.type === 'video') return showVisual.filePath || state.videoMap?.[showVisual.elementId || ''];
     return null;
-  }, [showVisual, (state as any).videoMap]);
+  }, [showVisual, state.videoMap]);
 
   const handleScrubStart = useCallback((e: RMouseEvent) => {
     const scrub = scrubberRef.current;
@@ -1253,6 +1253,154 @@ const ProgramMonitor = memo(function ProgramMonitor() {
           const cuts = state.clips.flatMap(c => [c.startTime, c.startTime + c.duration]).sort((a, b) => a - b);
           for (const t of cuts) { if (t > state.currentTime + 0.05) { dispatch({ type: 'SET_TIME', time: t }); return; } }
         }} title="Next cut (↓)" aria-label="Next cut">⏭</button>
+      </div>
+    </div>
+  );
+});
+
+// ── Versions Gallery ──────────────────────────────────────────
+
+const VersionsGallery = memo(function VersionsGallery({ clip }: { clip: Clip }) {
+  const { state, dispatch, pipelineId, persistUserClips, showToast } = useEditor();
+  const gens = clip.elementId ? state.generationsMap[clip.elementId] : null;
+  if (!gens) return null;
+  const hasImages = gens.images.length > 0;
+  const hasVideos = gens.videos.length > 0;
+  if (!hasImages && !hasVideos) return null;
+
+  const selectedImageId = hasImages ? gens.images[0].selectedId : undefined;
+  const selectedVideoId = hasVideos ? gens.videos[0].selectedId : undefined;
+
+  const handleSelectImage = useCallback((gId: string) => {
+    fetch('/api/app/' + encodeURIComponent(pipelineId) + '/select-previs-generation', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shotId: clip.elementId, generationId: gId }),
+    }).then(r => r.json()).then(resp => {
+      if (resp.success) {
+        const gen = gens.images.find(g => g.id === gId);
+        if (gen) { dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates: { filePath: gen.filePath, type: 'image' } }); persistUserClips(); }
+        showToast('Image selected', 'success');
+      } else { showToast(resp.error || 'Selection failed', 'error'); }
+    }).catch(err => showToast('Selection failed: ' + err.message, 'error'));
+  }, [clip, gens, pipelineId, dispatch, persistUserClips, showToast]);
+
+  const handleSelectVideo = useCallback((gId: string) => {
+    fetch('/api/app/' + encodeURIComponent(pipelineId) + '/select-video-generation', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elementId: clip.elementId, generationId: gId }),
+    }).then(r => r.json()).then(resp => {
+      if (resp.success) {
+        const gen = gens.videos.find(g => g.id === gId);
+        if (gen) { dispatch({ type: 'UPDATE_CLIP', clipId: clip.id, updates: { filePath: gen.filePath, type: 'video' } }); persistUserClips(); }
+        showToast('Video selected', 'success');
+      } else { showToast(resp.error || 'Selection failed', 'error'); }
+    }).catch(err => showToast('Selection failed: ' + err.message, 'error'));
+  }, [clip, gens, pipelineId, dispatch, persistUserClips, showToast]);
+
+  // Chain info
+  const chainInfo = clip.elementId ? state.videoChainMap?.[clip.elementId] : null;
+  const handleContinueChain = useCallback(() => {
+    showToast('Generating continuation video...', 'info');
+    fetch('/api/app/' + encodeURIComponent(pipelineId) + '/generate-video-previs', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elementId: clip.elementId, continueChain: true }),
+    }).then(r => r.json()).then(resp => {
+      if (resp.success) showToast('Continuation video generated', 'success');
+      else showToast(resp.error || 'Generation failed', 'error');
+    }).catch(err => showToast('Generation failed: ' + err.message, 'error'));
+  }, [clip, pipelineId, showToast]);
+
+  const handleAddToChain = useCallback((gId: string) => {
+    const currentChain = chainInfo?.chain.map(s => s.id) || [];
+    const newChain = [...currentChain, gId];
+    fetch('/api/app/' + encodeURIComponent(pipelineId) + '/update-video-chain', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elementId: clip.elementId, chain: newChain }),
+    }).then(r => r.json()).then(resp => {
+      if (resp.success) showToast('Added to chain', 'success');
+      else showToast(resp.error || 'Failed', 'error');
+    }).catch(err => showToast('Failed: ' + err.message, 'error'));
+  }, [clip, chainInfo, pipelineId, showToast]);
+
+  const handleRemoveFromChain = useCallback((gId: string) => {
+    fetch('/api/app/' + encodeURIComponent(pipelineId) + '/remove-from-chain', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elementId: clip.elementId, generationId: gId }),
+    }).then(r => r.json()).then(resp => {
+      if (resp.success) showToast('Removed from chain', 'success');
+      else showToast(resp.error || 'Failed', 'error');
+    }).catch(err => showToast('Failed: ' + err.message, 'error'));
+  }, [clip, pipelineId, showToast]);
+
+  return (
+    <div className="ed-inspector-section">
+      <div className="ed-inspector-section-head">Versions</div>
+      <div className="ed-inspector-section-body">
+        {/* Video Chain Section */}
+        {chainInfo && chainInfo.chain.length > 0 && (
+          <div className="ed-chain-section">
+            <div className="ed-versions-label">
+              Video Chain ({chainInfo.chain.length} segments)
+            </div>
+            <div className="ed-chain-list">
+              {chainInfo.chain.map((seg, i) => (
+                <div key={seg.id} className="ed-chain-segment" title={`Segment ${i + 1}: ${seg.duration.toFixed(1)}s`}>
+                  <video src={imgSrc(seg.filePath)} muted preload="metadata" />
+                  <div className="ed-chain-segment-label">{seg.duration.toFixed(1)}s</div>
+                  <button className="ed-chain-segment-remove" onClick={() => handleRemoveFromChain(seg.id)} title="Remove from chain">×</button>
+                </div>
+              ))}
+            </div>
+            {/* Gap progress bar */}
+            <div className="ed-chain-progress">
+              <div className="ed-chain-progress-bar">
+                <div className="ed-chain-progress-fill" style={{ width: `${chainInfo.fillPercent}%` }} />
+              </div>
+              <div className="ed-chain-progress-text">
+                {chainInfo.totalDuration.toFixed(1)}s / {chainInfo.slotDuration.toFixed(1)}s
+                {!chainInfo.isFilled && <span className="ed-chain-gap-label"> ({chainInfo.gap.toFixed(1)}s gap)</span>}
+                {chainInfo.isFilled && <span className="ed-chain-filled-label"> ✓ Filled</span>}
+              </div>
+            </div>
+            {!chainInfo.isFilled && (
+              <button className="ed-chain-continue-btn" onClick={handleContinueChain}>
+                ⟳ Continue Chain
+              </button>
+            )}
+          </div>
+        )}
+
+        {hasImages && (<>
+          <div className="ed-versions-label">Images ({gens.images.length})</div>
+          <div className="ed-versions-grid">
+            {gens.images.map(g => {
+              const isSel = g.id === selectedImageId || (!selectedImageId && g === gens.images[gens.images.length - 1]);
+              return (<div key={g.id} className={'ed-version-thumb' + (isSel ? ' ed-version-thumb--selected' : '')}
+                onClick={() => handleSelectImage(g.id)} title={isSel ? 'Currently selected' : 'Click to use this image'}>
+                <img src={imgSrc(g.filePath)} alt="" loading="lazy" />
+                {isSel && <div className="ed-version-check">✓</div>}
+              </div>);
+            })}
+          </div>
+        </>)}
+        {hasVideos && (<>
+          <div className="ed-versions-label">Videos ({gens.videos.length})</div>
+          <div className="ed-versions-grid">
+            {gens.videos.map(g => {
+              const isSel = g.id === selectedVideoId || (!selectedVideoId && g === gens.videos[gens.videos.length - 1]);
+              const isInChain = chainInfo?.chain.some(s => s.id === g.id);
+              return (<div key={g.id} className={'ed-version-thumb ed-version-thumb--video' + (isSel ? ' ed-version-thumb--selected' : '') + (isInChain ? ' ed-version-thumb--in-chain' : '')}
+                onClick={() => handleSelectVideo(g.id)} title={isSel ? 'Currently selected' : 'Click to use this video'}>
+                <video src={imgSrc(g.filePath)} muted preload="metadata" />
+                <div className="ed-version-play">▶</div>
+                {isSel && <div className="ed-version-check">✓</div>}
+                {isInChain && <div className="ed-version-chain-badge">⛓</div>}
+                {!isInChain && <button className="ed-version-add-chain" onClick={(e) => { e.stopPropagation(); handleAddToChain(g.id); }} title="Add to chain">+⛓</button>}
+                {g.duration != null && <div className="ed-version-duration">{(g.actualDuration || g.duration).toFixed(1)}s</div>}
+              </div>);
+            })}
+          </div>
+        </>)}
       </div>
     </div>
   );
@@ -1378,6 +1526,11 @@ const ClipInspector = memo(function ClipInspector() {
         <span className="ed-inspector-type-badge" style={{ background: colors.bg, borderColor: colors.border }}>{clip.type}</span>
         <div className="ed-inspector-name">{clip.name.slice(0, 40)}</div>
       </div>
+
+      {/* Versions Gallery */}
+      {(clip.type === 'image' || clip.type === 'video') && clip.elementId && state.generationsMap[clip.elementId] && (
+        <VersionsGallery clip={clip} />
+      )}
 
       {/* Timing */}
       <div className="ed-inspector-section">
@@ -2055,12 +2208,20 @@ const TimelineClip = memo(function TimelineClip({ clip, defaultColors }: { clip:
     document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
   }, [clip, state.timelineZoom, dispatch, persistUserClips]);
 
+  // Chain gap indicator for visual clips
+  const chainInfo = clip.elementId && clip.trackId === 'visuals' ? state.videoChainMap?.[clip.elementId] : null;
+  const hasChainGap = chainInfo && !chainInfo.isFilled && chainInfo.chain.length > 0;
+
   return (
-    <div ref={clipRef} data-clip-id={clip.id} className={`ed-tl-clip${isSelected ? ' selected' : ''}${isActive ? ' ed-tl-clip-active' : ''}`}
+    <div ref={clipRef} data-clip-id={clip.id} className={`ed-tl-clip${isSelected ? ' selected' : ''}${isActive ? ' ed-tl-clip-active' : ''}${hasChainGap ? ' ed-tl-clip--has-gap' : ''}`}
       style={{ left: cx, width: Math.max(cw, 8), background: clipColors.bg, borderColor: clipColors.border }}
       onClick={handleClick} onMouseDown={handleMouseDown}>
       {isAudio && <div className="ed-tl-clip-wave" />}
+      {hasChainGap && (
+        <div className="ed-tl-clip-chain-bar" style={{ width: `${chainInfo.fillPercent}%` }} />
+      )}
       <span className="ed-tl-clip-label">{clip.name.slice(0, 24)}</span>
+      {hasChainGap && <span className="ed-tl-clip-gap-text">{chainInfo.totalDuration.toFixed(1)}s/{chainInfo.slotDuration.toFixed(1)}s</span>}
       {keyframeDiamonds.map((d, i) => <div key={i} className="ed-tl-kf-diamond" style={{ left: d.x }} title={d.prop} />)}
       <div className="ed-tl-clip-handle ed-tl-clip-handle--left" onMouseDown={e => handleTrim('left', e)} />
       <div className="ed-tl-clip-handle ed-tl-clip-handle--right" onMouseDown={e => handleTrim('right', e)} />
