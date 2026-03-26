@@ -3220,6 +3220,28 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       return true;
     }
 
+    // ── POST /update-metadata ────────────────────────────────
+    // Update editable project metadata fields (title, logline, author).
+    // Body: { title?: string, logline?: string, author?: string }
+    if (req.method === 'POST' && subPath === '/update-metadata') {
+      try {
+        const body = await sdk.readBody(req);
+        await sdk.ensureProject();
+        const project = sdk.getProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+        if (!project.metadata) project.metadata = {};
+        if (typeof body.title === 'string') project.metadata.title = body.title;
+        if (typeof body.logline === 'string') project.metadata.logline = body.logline;
+        if (typeof body.author === 'string') project.metadata.author = body.author;
+        sdk.markDirty(['metadata']);
+        await sdk.flushProject();
+        sdk.sendJson(res, 200, { success: true });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: 'Failed to update metadata: ' + (err.message || String(err)) });
+      }
+      return true;
+    }
+
     // ── POST /update-character ───────────────────────────────
     // Update a single character's editable fields. Does NOT touch image fields.
     // Body: { characterId: string, updates: { name?, description?, ... } }

@@ -7,6 +7,7 @@ import { CharacterCard } from './CharacterCard';
 import { LocationCard } from './LocationCard';
 import { CharacterImageProvider } from './CharacterImageContext';
 import { ReferencePicker } from './ReferencePicker';
+import { tagList, countTotalShots, countPrevisShots, countTotalDialogue, computeCompleteness, formatDraftDate, buildProductionDetails } from './metadataUtils';
 
 type Tab = 'characters' | 'locations' | 'metadata' | 'sections';
 
@@ -307,8 +308,8 @@ function DataViewInner() {
         )}
 
         {activeTab === 'metadata' && (
-          <div role="tabpanel" id="tabpanel-metadata" aria-labelledby="tab-metadata" className="max-w-2xl">
-            <MetadataView metadata={projectData.metadata} />
+          <div role="tabpanel" id="tabpanel-metadata" aria-labelledby="tab-metadata">
+            <MetadataView metadata={projectData.metadata} pipelineId={pipelineId} characters={projectData.characters || []} locations={projectData.locations || []} scenes={projectData.scenes || []} />
           </div>
         )}
 
@@ -324,58 +325,425 @@ function DataViewInner() {
 
 // ── Metadata View ────────────────────────────────────────────
 
-function MetadataView({ metadata }: { metadata: any }) {
+function MetadataView({ metadata, pipelineId, characters, locations, scenes }: { metadata: any; pipelineId: string; characters: any[]; locations: any[]; scenes: any[] }) {
+  const [title, setTitle] = useState(metadata?.title || '');
+  const [logline, setLogline] = useState(metadata?.logline || '');
+  const [author, setAuthor] = useState(() => {
+    const a = metadata?.author;
+    if (!a) return '';
+    if (typeof a === 'string') return a;
+    if (Array.isArray(a)) return a.map((x: any) => typeof x === 'string' ? x : x?.name || '').filter(Boolean).join(', ');
+    return String(a);
+  });
+  const [saving, setSaving] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loglineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync from project data on reload
+  useEffect(() => { if (metadata?.title) setTitle(metadata.title); }, [metadata?.title]);
+  useEffect(() => { if (metadata?.logline) setLogline(metadata.logline); }, [metadata?.logline]);
+
+  const saveField = useCallback(async (field: string, value: string) => {
+    setSaving(field);
+    try {
+      await fetch(`/api/app/${encodeURIComponent(pipelineId)}/update-metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+    } catch (err: any) {
+      console.error(`Failed to save ${field}:`, err);
+    }
+    setSaving(null);
+  }, [pipelineId]);
+
+  const handleTitleChange = useCallback((value: string) => {
+    setTitle(value);
+    if (titleTimer.current) clearTimeout(titleTimer.current);
+    titleTimer.current = setTimeout(() => saveField('title', value), 800);
+  }, [saveField]);
+
+  const handleLoglineChange = useCallback((value: string) => {
+    setLogline(value);
+    if (loglineTimer.current) clearTimeout(loglineTimer.current);
+    loglineTimer.current = setTimeout(() => saveField('logline', value), 800);
+  }, [saveField]);
+
+  const handleAuthorChange = useCallback((value: string) => {
+    setAuthor(value);
+    if (authorTimer.current) clearTimeout(authorTimer.current);
+    authorTimer.current = setTimeout(() => saveField('author', value), 800);
+  }, [saveField]);
+
   if (!metadata) return <p className="text-slate-500 text-sm" role="status">No metadata</p>;
 
-  const fields = [
-    ['Title', metadata.title],
-    ['Subtitle', metadata.subtitle],
-    ['Logline', metadata.logline],
-    ['Author', metadata.author?.map((a: any) => a.name).join(', ')],
-    ['Genre', metadata.genre?.join(', ')],
-    ['Tone', metadata.tone?.join(', ')],
-    ['Runtime', metadata.runtimeMinutes ? `${metadata.runtimeMinutes} min` : null],
-    ['Pages', metadata.estimatedPages],
-    ['Draft Date', metadata.draftDate],
-    ['Version', metadata.version],
-    ['Language', metadata.language],
-  ].filter(([, v]) => v);
+  const genres = tagList(metadata.genre);
+  const tones = tagList(metadata.tone);
+  const audiences = tagList(metadata.audience);
+  const totalShots = countTotalShots(scenes);
+  const previsCount = countPrevisShots(scenes);
+  const totalDialogue = countTotalDialogue(scenes);
+
+  const inputStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: '8px 12px',
+    color: '#f1f5f9',
+    outline: 'none',
+    width: '100%',
+    transition: 'border-color 0.15s',
+  };
+
+  // Inline editable field helper
+  const EditableField = ({ field, value, onChange, display, placeholder, multiline, style }: {
+    field: string; value: string; onChange: (v: string) => void; display: React.ReactNode; placeholder: string; multiline?: boolean; style?: React.CSSProperties;
+  }) => (
+    editingField === field ? (
+      <div className="flex items-start gap-2">
+        {multiline ? (
+          <textarea
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            onBlur={() => setEditingField(null)}
+            autoFocus
+            rows={3}
+            style={{ ...inputStyle, resize: 'vertical', ...style }}
+            onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; }}
+          />
+        ) : (
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            onBlur={() => setEditingField(null)}
+            onKeyDown={e => e.key === 'Enter' && setEditingField(null)}
+            autoFocus
+            placeholder={placeholder}
+            style={{ ...inputStyle, ...style }}
+            onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; }}
+          />
+        )}
+        {saving === field && <span className="text-[10px] text-violet-400 flex-shrink-0 mt-2">Saving...</span>}
+      </div>
+    ) : (
+      <div onClick={() => setEditingField(field)} className="cursor-pointer group/field" title={`Click to edit ${field}`}>
+        {display}
+      </div>
+    )
+  );
 
   return (
-    <dl className="space-y-2" aria-label="Project metadata">
-      {fields.map(([label, value]) => (
-        <div key={label as string} className="flex gap-3">
-          <dt className="text-xs text-slate-500 w-24 flex-shrink-0">{label}</dt>
-          <dd className="text-xs text-slate-300">{value as string}</dd>
+    <div aria-label="Project metadata">
+      {/* ── Two-column layout ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, minHeight: '70vh' }}>
+
+        {/* ── Left column: Hero + details ── */}
+        <div className="space-y-6">
+          {/* Title */}
+          <EditableField
+            field="title" value={title} onChange={handleTitleChange} placeholder="Project title"
+            style={{ fontSize: 32, fontWeight: 700, padding: '4px 12px', letterSpacing: '-0.02em' }}
+            display={
+              <div className="flex items-center gap-3 group/title">
+                <h2 style={{ fontSize: 32, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{title || 'Untitled'}</h2>
+                <span className="text-slate-600 opacity-0 group-hover/title:opacity-100 transition-opacity text-base">✎</span>
+              </div>
+            }
+          />
+
+          {/* Tags row */}
+          {(genres.length > 0 || tones.length > 0 || audiences.length > 0) && (
+            <div className="flex flex-wrap gap-2">
+              {genres.map(g => (
+                <span key={`g-${g}`} className="px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-violet-500/15 text-violet-300 border border-violet-500/20">{g}</span>
+              ))}
+              {tones.map(t => (
+                <span key={`t-${t}`} className="px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">{t}</span>
+              ))}
+              {audiences.map(a => (
+                <span key={`a-${a}`} className="px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/20">{a}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Logline */}
+          <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-5">
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-2">Logline</div>
+            <EditableField
+              field="logline" value={logline} onChange={handleLoglineChange} placeholder="Add a logline..." multiline
+              style={{ fontSize: 16, fontStyle: 'italic', lineHeight: 1.7 }}
+              display={
+                <div className="group/logline">
+                  <p style={{ fontSize: 16, fontStyle: 'italic', lineHeight: 1.7, color: '#cbd5e1' }}>
+                    {logline || <span className="text-slate-600">Add a logline...</span>}
+                    <span className="text-slate-600 opacity-0 group-hover/logline:opacity-100 transition-opacity ml-2 text-sm not-italic">✎</span>
+                  </p>
+                </div>
+              }
+            />
+          </div>
+
+          {/* Author */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Written by</span>
+            <EditableField
+              field="author" value={author} onChange={handleAuthorChange} placeholder="Author name"
+              style={{ fontSize: 14 }}
+              display={
+                <div className="flex items-center gap-1.5 group/author">
+                  <span className="text-sm font-medium text-slate-200">{author || <span className="text-slate-600">Unknown</span>}</span>
+                  <span className="text-slate-600 opacity-0 group-hover/author:opacity-100 transition-opacity text-sm">✎</span>
+                </div>
+              }
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-white/5" />
+
+          {/* Stats row — large format */}
+          <div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-3">Project Stats</div>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {[
+                { label: 'Scenes', value: scenes.length, color: 'text-indigo-300' },
+                { label: 'Characters', value: characters.length, color: 'text-emerald-300' },
+                { label: 'Locations', value: locations.length, color: 'text-rose-300' },
+                { label: 'Shots', value: totalShots, color: 'text-cyan-300' },
+                { label: 'Previs', value: previsCount, color: 'text-amber-300' },
+                { label: 'Dialogue', value: totalDialogue, color: 'text-violet-300' },
+              ].map(stat => (
+                <div key={stat.label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3 text-center">
+                  <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      ))}
-    </dl>
+
+        {/* ── Right column: Production details ── */}
+        <div className="space-y-4">
+          <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Production Details</div>
+
+          {/* Detail cards */}
+          <div className="space-y-2">
+            {buildProductionDetails(metadata).map(detail => (
+              <div key={detail.label} className="flex items-center gap-3 rounded-lg bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+                <span className="text-base" aria-hidden="true">{detail.icon}</span>
+                <div className="flex-1">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">{detail.label}</div>
+                  <div className="text-sm font-medium text-white">{detail.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Separator */}
+          <div className="border-t border-white/5 my-2" />
+
+          {/* Quick info */}
+          {metadata.subtitle && (
+            <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Subtitle</div>
+              <div className="text-sm text-slate-300">{metadata.subtitle}</div>
+            </div>
+          )}
+
+          {metadata.theme && (
+            <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Theme</div>
+              <div className="text-sm text-slate-300">{typeof metadata.theme === 'string' ? metadata.theme : tagList(metadata.theme).join(', ')}</div>
+            </div>
+          )}
+
+          {metadata.setting && (
+            <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Setting</div>
+              <div className="text-sm text-slate-300">{typeof metadata.setting === 'string' ? metadata.setting : JSON.stringify(metadata.setting)}</div>
+            </div>
+          )}
+
+          {/* Color-coded status */}
+          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Completeness</div>
+            <div className="space-y-1.5">
+              {computeCompleteness(characters, locations, previsCount, totalShots).map(item => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${item.total > 0 ? (item.done / item.total) * 100 : 0}%`,
+                        background: item.done === item.total && item.total > 0 ? '#34d399' : item.done > 0 ? '#818cf8' : 'transparent',
+                      }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 w-16 text-right">{item.done}/{item.total}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
 // ── Sections View ────────────────────────────────────────────
 
 function SectionsView({ sections }: { sections: any[] }) {
-  function renderSection(sec: any, depth: number) {
-    return (
-      <li key={sec.id || sec.title} style={{ marginLeft: depth * 16 }} className="mb-1" role="treeitem" aria-expanded={sec.children?.length > 0 ? true : undefined}>
-        <div className={`flex items-center gap-2 py-1 ${depth === 0 ? 'text-indigo-300 font-semibold' : 'text-slate-400'}`}>
-          <span className="text-[10px]" aria-hidden="true">{sec.type === 'act' ? '\uD83D\uDCC1' : '\uD83C\uDFAC'}</span>
-          <span className="text-xs">{sec.title}</span>
-          {sec.timeOfDay && <span className="text-[9px] text-slate-600">({sec.timeOfDay})</span>}
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggle = (id: string) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    const allIds = new Set<string>();
+    const walk = (items: any[]) => {
+      items.forEach(s => {
+        if (s.id && s.children?.length) { allIds.add(s.id); walk(s.children); }
+      });
+    };
+    walk(sections);
+    setExpandedIds(allIds);
+  };
+
+  const collapseAll = () => setExpandedIds(new Set());
+
+  // Icons per element type
+  const typeIcon = (type: string) => {
+    switch (type) {
+      case 'act': case 'sequence': return '📁';
+      case 'scene': case 'teaser': case 'tag': return '🎬';
+      case 'shot': return '📷';
+      case 'dialogue': return '💬';
+      case 'action': return '⚡';
+      case 'montage': return '🎞';
+      default: return '•';
+    }
+  };
+
+  const typeColor = (type: string) => {
+    switch (type) {
+      case 'act': case 'sequence': return 'text-indigo-300';
+      case 'scene': case 'teaser': case 'tag': return 'text-cyan-300';
+      case 'shot': return 'text-amber-300';
+      case 'dialogue': return 'text-emerald-300';
+      case 'action': return 'text-slate-400';
+      default: return 'text-slate-500';
+    }
+  };
+
+  function renderElement(el: any) {
+    if (el.type === 'dialogue') {
+      return (
+        <div key={el.id} className="flex items-start gap-2 py-1 pl-4">
+          <span className="text-[10px] mt-0.5" aria-hidden="true">💬</span>
+          <div className="flex-1 min-w-0">
+            <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wide">{el.characterName || 'UNKNOWN'}</span>
+            {el.modifiers?.length > 0 && (
+              <span className="text-[9px] text-slate-600 ml-1">({el.modifiers.join(', ')})</span>
+            )}
+            <p className="text-xs text-slate-400 leading-relaxed mt-0.5 line-clamp-2">{el.content || el.lines?.join(' ') || ''}</p>
+          </div>
         </div>
-        {sec.children?.length > 0 && (
-          <ul role="group">
-            {sec.children.map((child: any) => renderSection(child, depth + 1))}
-          </ul>
-        )}
-      </li>
+      );
+    }
+
+    if (el.type === 'shot') {
+      return (
+        <div key={el.id} className="flex items-start gap-2 py-1 pl-4">
+          <span className="text-[10px] mt-0.5" aria-hidden="true">📷</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              {el.frameSize && <span className="text-[9px] font-semibold text-amber-400 uppercase">{el.frameSize}</span>}
+              {el.cameraMovement && el.cameraMovement !== 'STATIC' && (
+                <span className="text-[9px] text-amber-300/60">{el.cameraMovement}</span>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{el.content || el.shotText || ''}</p>
+          </div>
+        </div>
+      );
+    }
+
+    // action or other
+    return (
+      <div key={el.id} className="flex items-start gap-2 py-1 pl-4">
+        <span className="text-[10px] mt-0.5" aria-hidden="true">{typeIcon(el.type)}</span>
+        <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 flex-1 min-w-0">{el.content || el.title || ''}</p>
+      </div>
     );
   }
 
+  function renderSection(sec: any, depth: number) {
+    const hasChildren = sec.children?.length > 0;
+    const isSection = sec.title && (sec.type === 'act' || sec.type === 'scene' || sec.type === 'sequence' || sec.type === 'teaser' || sec.type === 'tag' || sec.type === 'montage' || hasChildren);
+    const isExpanded = expandedIds.has(sec.id);
+
+    // Leaf elements (shot, dialogue, action) — render inline
+    if (!isSection) {
+      return renderElement(sec);
+    }
+
+    // Count children by type
+    const childCounts: Record<string, number> = {};
+    (sec.children || []).forEach((c: any) => {
+      childCounts[c.type] = (childCounts[c.type] || 0) + 1;
+    });
+
+    return (
+      <div key={sec.id || sec.title} style={{ marginLeft: depth > 0 ? 12 : 0 }}>
+        <div
+          className={`flex items-center gap-2 py-1.5 cursor-pointer rounded-md px-2 hover:bg-white/[0.03] transition-colors ${depth === 0 ? 'font-semibold' : ''}`}
+          onClick={() => hasChildren && toggle(sec.id)}
+        >
+          {hasChildren && (
+            <span className="text-[10px] text-slate-600 w-3 text-center select-none">{isExpanded ? '▼' : '▶'}</span>
+          )}
+          <span className="text-[11px]" aria-hidden="true">{typeIcon(sec.type)}</span>
+          <span className={`text-xs flex-1 ${typeColor(sec.type)}`}>{sec.title}</span>
+          {sec.timeOfDay && <span className="text-[9px] text-slate-600 bg-white/[0.04] px-1.5 py-0.5 rounded">{sec.timeOfDay}</span>}
+          {/* Child type badges */}
+          {hasChildren && !isExpanded && (
+            <div className="flex items-center gap-1.5">
+              {childCounts['shot'] && <span className="text-[9px] text-amber-400/60">{childCounts['shot']} shots</span>}
+              {childCounts['dialogue'] && <span className="text-[9px] text-emerald-400/60">{childCounts['dialogue']} dlg</span>}
+              {childCounts['action'] && <span className="text-[9px] text-slate-500">{childCounts['action']} act</span>}
+              {childCounts['scene'] && <span className="text-[9px] text-cyan-400/60">{childCounts['scene']} scenes</span>}
+            </div>
+          )}
+        </div>
+        {hasChildren && isExpanded && (
+          <div className="border-l border-white/[0.06] ml-3">
+            {sec.children.map((child: any) => renderSection(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!sections.length) return <p className="text-slate-500 text-sm">No sections</p>;
+
   return (
-    <ul role="tree" aria-label="Screenplay structure">
-      {sections.map(sec => renderSection(sec, 0))}
-    </ul>
+    <div>
+      <div className="flex items-center gap-3 mb-3">
+        <button onClick={expandAll} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '4px 10px', fontSize: 10, color: '#94a3b8', cursor: 'pointer', letterSpacing: '0.05em', textTransform: 'uppercase' as const }}>Expand All</button>
+        <button onClick={collapseAll} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '4px 10px', fontSize: 10, color: '#94a3b8', cursor: 'pointer', letterSpacing: '0.05em', textTransform: 'uppercase' as const }}>Collapse All</button>
+        <span className="text-[10px] text-slate-600 ml-auto">{sections.length} top-level sections</span>
+      </div>
+      <div className="space-y-0.5" role="tree" aria-label="Screenplay structure">
+        {sections.map(sec => renderSection(sec, 0))}
+      </div>
+    </div>
   );
 }

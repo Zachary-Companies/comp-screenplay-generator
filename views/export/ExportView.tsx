@@ -103,13 +103,17 @@ export function ExportView() {
       <div className="flex-shrink-0 px-4 py-3 flex gap-3 flex-wrap items-center">
         <button
           onClick={handleExportFountain}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/20 transition-colors cursor-pointer"
+          style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)', color: '#fdba74', cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.1)')}
         >
           📄 Export Fountain
         </button>
         <button
           onClick={handleExportLookbook}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-colors cursor-pointer"
+          style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#c4b5fd', cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.1)')}
         >
           📸 Generate Lookbook
         </button>
@@ -117,13 +121,17 @@ export function ExportView() {
           <>
             <button
               onClick={handlePrintLookbook}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-colors cursor-pointer"
+              style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', color: '#67e8f9', cursor: 'pointer', transition: 'background 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(6,182,212,0.2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(6,182,212,0.1)')}
             >
               🖨 Print to PDF
             </button>
             <button
               onClick={handleOpenLookbook}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-500/10 border border-slate-500/20 text-slate-300 hover:bg-slate-500/20 transition-colors cursor-pointer"
+              style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)', color: '#cbd5e1', cursor: 'pointer', transition: 'background 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(100,116,139,0.2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(100,116,139,0.1)')}
             >
               ↗ Open Lookbook
             </button>

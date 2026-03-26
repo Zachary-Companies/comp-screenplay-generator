@@ -137,9 +137,9 @@ export function OverviewView({ schema, appState }: OverviewViewProps) {
 
           {/* Author & Runtime */}
           <div className="flex items-center gap-4 mt-2">
-            {metadata?.author?.length > 0 && (
+            {metadata?.author && (
               <span style={{ fontSize: 12, color: '#64748b' }}>
-                By {metadata.author.map((a: any) => a.name).join(' & ')}
+                By {typeof metadata.author === 'string' ? metadata.author : Array.isArray(metadata.author) ? metadata.author.map((a: any) => typeof a === 'string' ? a : a.name).join(' & ') : String(metadata.author)}
               </span>
             )}
             {metadata?.runtimeMinutes && (

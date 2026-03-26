@@ -3222,44 +3222,71 @@ function Toolbar({ projectData, onAction, motionApproach }: {
   const charCount = projectData?.characters?.length || 0;
   const locCount = projectData?.locations?.length || 0;
 
+  const btnBase = 'px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer border';
+  const btnNeutral = `${btnBase} bg-white/[0.04] border-white/[0.08] text-slate-300 hover:bg-white/[0.08]`;
+  const btnPurple = `${btnBase} bg-purple-500/10 border-purple-500/20 text-purple-300 hover:bg-purple-500/20`;
+  const btnGreen = `${btnBase} bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20`;
+  const btnBlue = `${btnBase} bg-indigo-500/10 border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/20`;
+  const btnAmber = `${btnBase} bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20`;
+  const btnCyan = `${btnBase} bg-cyan-500/10 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20`;
+  const btnOrange = `${btnBase} bg-orange-500/10 border-orange-500/20 text-orange-300 hover:bg-orange-500/20`;
+  const sep = <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.06)', margin: '0 2px', flexShrink: 0 }} />;
+
   return (
-    <div className="flex items-center gap-2 flex-wrap py-2">
-      <button onClick={() => onAction('show-characters')} aria-label={`Show characters (${charCount})`} className="px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.04] border border-white/8 text-slate-300 hover:bg-white/[0.08] transition-colors">
+    <div className="flex items-center gap-1.5 flex-wrap py-2">
+      {/* Data */}
+      <button onClick={() => onAction('show-characters')} aria-label={`Show characters (${charCount})`} className={btnNeutral}>
         👥 Characters ({charCount})
       </button>
-      <button onClick={() => onAction('show-locations')} aria-label={`Show locations (${locCount})`} className="px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.04] border border-white/8 text-slate-300 hover:bg-white/[0.08] transition-colors">
+      <button onClick={() => onAction('show-locations')} aria-label={`Show locations (${locCount})`} className={btnNeutral}>
         📍 Locations ({locCount})
       </button>
-      <button onClick={() => onAction('enrich-characters')} aria-label="Enrich characters with AI" className="px-3 py-1.5 rounded-md text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors">
+
+      {sep}
+
+      {/* AI Enrich */}
+      <button onClick={() => onAction('enrich-characters')} aria-label="Enrich characters with AI" className={btnPurple}>
         ✨ Enrich Characters
       </button>
-      <button onClick={() => onAction('enrich-locations')} aria-label="Enrich locations with AI" className="px-3 py-1.5 rounded-md text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors">
+      <button onClick={() => onAction('enrich-locations')} aria-label="Enrich locations with AI" className={btnPurple}>
         ✨ Enrich Locations
       </button>
-      <button onClick={() => onAction('generate-headshots')} aria-label="Generate character headshot images" className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
-        🖼 Generate Headshots
+
+      {sep}
+
+      {/* Image Generation */}
+      <button onClick={() => onAction('generate-headshots')} aria-label="Generate character headshot images" className={btnGreen}>
+        🖼 Headshots
       </button>
-      <button onClick={() => onAction('generate-locations')} aria-label="Generate location images" className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
-        🌍 Location Shots
+      <button onClick={() => onAction('generate-locations')} aria-label="Generate location images" className={btnGreen}>
+        🌍 Locations
       </button>
-      <button onClick={() => onAction('generate-previs')} aria-label="Generate previsualization images for all shots" className="px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/20 transition-colors">
-        🎬 Generate Previs
-      </button>
-      <button onClick={() => onAction('render-dialogue')} aria-label="Render audio for all dialogue" className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition-colors">
-        🔊 Render All Dialogue
-      </button>
-      <button onClick={() => onAction('compact-timing')} aria-label="Compact timeline — tighten shot timing to match dialogue audio" className="px-3 py-1.5 rounded-md text-xs font-medium bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-colors">
-        ⏩ Compact Timing
+      <button onClick={() => onAction('generate-previs')} aria-label="Generate previsualization images for all shots" className={btnBlue}>
+        🎬 Previs
       </button>
       {motionApproach !== 'ken-burns' && (
-        <button onClick={() => onAction('generate-video-batch')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-colors">
-          🎬 Generate All Videos
+        <button onClick={() => onAction('generate-video-batch')} className={btnCyan}>
+          🎬 Videos
         </button>
       )}
-      <button onClick={() => onAction('export-fountain')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/20 transition-colors">
+
+      {sep}
+
+      {/* Audio & Timing */}
+      <button onClick={() => onAction('render-dialogue')} aria-label="Render audio for all dialogue" className={btnAmber}>
+        🔊 Dialogue
+      </button>
+      <button onClick={() => onAction('compact-timing')} aria-label="Compact timeline — tighten shot timing to match dialogue audio" className={btnCyan}>
+        ⏩ Compact
+      </button>
+
+      {sep}
+
+      {/* Export */}
+      <button onClick={() => onAction('export-fountain')} className={btnOrange}>
         📄 Fountain
       </button>
-      <button onClick={() => onAction('export-lookbook')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/20 transition-colors">
+      <button onClick={() => onAction('export-lookbook')} className={btnOrange}>
         📸 Lookbook
       </button>
     </div>
@@ -3271,6 +3298,14 @@ function Toolbar({ projectData, onAction, motionApproach }: {
 export function ScreenplayView() {
   return (
     <DialogueAudioProvider>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .sp-root button {
+          appearance: none;
+          -webkit-appearance: none;
+          color-scheme: dark;
+          font-family: inherit;
+        }
+      `}} />
       <ScreenplayViewInner />
     </DialogueAudioProvider>
   );
@@ -3656,7 +3691,7 @@ function ScreenplayViewInner() {
   const totalShots = scenes.reduce((sum, s) => sum + s.shots.length, 0);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="sp-root flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 px-4 pt-4 pb-2">
         <h1 className="text-xl font-bold text-white">{title}</h1>

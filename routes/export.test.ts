@@ -489,3 +489,103 @@ describe('Route: POST /export-lookbook', () => {
     expect(html).toContain('window.print()');
   });
 });
+
+// ── Metadata Update Tests ────────────────────────────────────────
+
+describe('POST /update-metadata', () => {
+  it('should update title', async () => {
+    const project = makeTestProject();
+    const { sdk, sentResponses } = createMockSdk(project);
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { title: 'New Title' });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(200);
+    expect(sentResponses[0].data.success).toBe(true);
+    expect(project.metadata.title).toBe('New Title');
+  });
+
+  it('should update logline only (partial update)', async () => {
+    const project = makeTestProject();
+    const originalTitle = project.metadata.title;
+    const { sdk, sentResponses } = createMockSdk(project);
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { logline: 'A new logline about hope' });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(200);
+    expect(project.metadata.logline).toBe('A new logline about hope');
+    expect(project.metadata.title).toBe(originalTitle); // unchanged
+  });
+
+  it('should update author as string', async () => {
+    const project = makeTestProject();
+    const { sdk, sentResponses } = createMockSdk(project);
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { author: 'Jane Doe' });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(200);
+    expect(project.metadata.author).toBe('Jane Doe');
+  });
+
+  it('should update multiple fields at once', async () => {
+    const project = makeTestProject();
+    const { sdk, sentResponses } = createMockSdk(project);
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { title: 'Updated', logline: 'Updated logline', author: 'New Author' });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(200);
+    expect(project.metadata.title).toBe('Updated');
+    expect(project.metadata.logline).toBe('Updated logline');
+    expect(project.metadata.author).toBe('New Author');
+  });
+
+  it('should ignore non-string values', async () => {
+    const project = makeTestProject();
+    const originalTitle = project.metadata.title;
+    const { sdk, sentResponses } = createMockSdk(project);
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { title: 123, logline: null });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(200);
+    expect(project.metadata.title).toBe(originalTitle); // unchanged since 123 is not a string
+  });
+
+  it('should return 400 when no project', async () => {
+    const { sdk, sentResponses } = createMockSdk(null);
+    sdk.getProject = () => null;
+    sdk.ensureProject = async () => null;
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { title: 'Test' });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(400);
+    expect(sentResponses[0].data.error).toContain('No project data');
+  });
+
+  it('should call markDirty and flushProject', async () => {
+    const project = makeTestProject();
+    const { sdk, sentResponses } = createMockSdk(project);
+    let dirtyKeys: string[] = [];
+    let flushed = false;
+    sdk.markDirty = (keys: string[]) => { dirtyKeys = keys; };
+    sdk.flushProject = async () => { flushed = true; };
+    const handler = setupRoutes(sdk);
+
+    const req = mockReq('POST', { title: 'Persisted Title' });
+    await handler(req, {}, '/update-metadata');
+
+    expect(sentResponses[0].status).toBe(200);
+    expect(dirtyKeys).toContain('metadata');
+    expect(flushed).toBe(true);
+  });
+});

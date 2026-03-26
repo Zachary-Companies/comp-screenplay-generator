@@ -1177,31 +1177,80 @@ const ProgramMonitor = memo(function ProgramMonitor() {
   }, [state.duration, dispatch]);
 
   // Mouse wheel zoom on preview (Ctrl/Cmd + scroll)
+  const zoomSteps = [10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 85, 100, 110, 125, 140, 150, 175, 200, 225, 250, 300, 350, 400, 500];
   useEffect(() => {
     const wrap = canvasWrapRef.current;
     if (!wrap) return;
     const handler = (e: WheelEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
-      const steps = [50, 100, 200];
-      const cur = state.previewZoom === 'fit' ? 0 : Number(state.previewZoom);
+      const isFitMode = typeof state.previewZoom === 'string';
+      const cur = isFitMode ? 0 : Number(state.previewZoom);
       if (e.deltaY < 0) {
-        if (state.previewZoom === 'fit') dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: 50 });
-        else if (cur < 200) {
-          const idx = steps.indexOf(cur);
-          dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: idx >= 0 && idx < steps.length - 1 ? steps[idx + 1] : Math.min(200, cur + 50) });
+        // Zoom in
+        if (isFitMode) dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: zoomSteps[0] });
+        else {
+          const next = zoomSteps.find(s => s > cur);
+          if (next) dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: next });
         }
       } else {
-        if (cur <= 50) dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: 'fit' });
-        else {
-          const idx = steps.indexOf(cur);
-          dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: idx > 0 ? steps[idx - 1] : Math.max(50, cur - 50) });
-        }
+        // Zoom out
+        const prev = [...zoomSteps].reverse().find(s => s < cur);
+        if (prev) dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: prev });
+        else dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: 'fit' });
       }
     };
     wrap.addEventListener('wheel', handler, { passive: false });
     return () => wrap.removeEventListener('wheel', handler);
   }, [state.previewZoom, dispatch]);
+
+  // Drag-to-pan — works at any zoom level (not just overflow)
+  const [isDragging, setIsDragging] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const panRef = useRef({ x: 0, y: 0 });
+  // Reset pan when zoom changes
+  useEffect(() => { setPanOffset({ x: 0, y: 0 }); panRef.current = { x: 0, y: 0 }; }, [state.previewZoom]);
+
+  useEffect(() => {
+    const wrap = canvasWrapRef.current;
+    if (!wrap || state.previewZoom === 'fit') return;
+
+    let startX = 0, startY = 0, startPanX = 0, startPanY = 0, dragging = false;
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      dragging = true;
+      setIsDragging(true);
+      startX = e.clientX;
+      startY = e.clientY;
+      startPanX = panRef.current.x;
+      startPanY = panRef.current.y;
+      e.preventDefault();
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const newPan = { x: startPanX + dx, y: startPanY + dy };
+      panRef.current = newPan;
+      setPanOffset(newPan);
+    };
+
+    const onMouseUp = () => {
+      dragging = false;
+      setIsDragging(false);
+    };
+
+    wrap.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      wrap.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [state.previewZoom]);
 
   const pct = (state.currentTime / state.duration) * 100;
 
@@ -1211,14 +1260,25 @@ const ProgramMonitor = memo(function ProgramMonitor() {
         <span className="ed-preview-label">Program Monitor</span>
         <div className="ed-preview-toolbar-right">
           <select className="ed-preview-zoom-select" value={String(state.previewZoom)}
-            onChange={e => dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: e.target.value === 'fit' ? 'fit' : Number(e.target.value) })}
+            onChange={e => { const v = e.target.value; dispatch({ type: 'SET_PREVIEW_ZOOM', zoom: ['fit', 'fit-width', 'fit-height'].includes(v) ? v : Number(v) }); }}
             aria-label="Preview zoom">
-            <option value="fit">Fit</option><option value="50">50%</option><option value="100">100%</option><option value="200">200%</option>
+            <option value="fit">Fit</option>
+            <option value="fit-width">Fit Width</option>
+            <option value="fit-height">Fit Height</option>
+            {zoomSteps.map(z => <option key={z} value={z}>{z}%</option>)}
           </select>
         </div>
       </div>
-      <div ref={canvasWrapRef} className={`ed-preview-canvas-wrap${state.previewZoom !== 'fit' ? ' ed-preview-canvas-wrap--scrollable' : ''}`}>
-        <div className="ed-preview-canvas" style={state.previewZoom !== 'fit' ? { width: Math.round(560 * (Number(state.previewZoom) / 100)), height: Math.round(315 * (Number(state.previewZoom) / 100)), maxWidth: 'none', flexShrink: 0 } : undefined}>
+      <div ref={canvasWrapRef} className={`ed-preview-canvas-wrap${state.previewZoom !== 'fit' ? ' ed-preview-canvas-wrap--scrollable' : ''}`} style={state.previewZoom !== 'fit' ? { cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden' } : undefined}>
+        <div className="ed-preview-canvas" style={
+          typeof state.previewZoom === 'number'
+            ? { width: Math.round(560 * (state.previewZoom / 100)), height: Math.round(315 * (state.previewZoom / 100)), maxWidth: 'none', flexShrink: 0, transform: `translate(${panOffset.x}px, ${panOffset.y}px)`, transition: isDragging ? 'none' : 'transform 0.1s ease-out' }
+            : state.previewZoom === 'fit-width'
+              ? { width: '100%', height: 'auto', maxWidth: 'none', transform: `translate(${panOffset.x}px, ${panOffset.y}px)`, transition: isDragging ? 'none' : 'transform 0.1s ease-out' }
+              : state.previewZoom === 'fit-height'
+                ? { width: 'auto', height: '100%', maxWidth: 'none', transform: `translate(${panOffset.x}px, ${panOffset.y}px)`, transition: isDragging ? 'none' : 'transform 0.1s ease-out' }
+                : undefined
+        }>
           {previewVideoPath && (
             <video
               className="ed-preview-image"
