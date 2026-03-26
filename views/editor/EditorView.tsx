@@ -30,6 +30,8 @@ import {
   MEDIA_COLORS, TRACK_HEIGHT, SCENE_LANE_HEIGHT, PX_PER_SEC, KEYFRAMEABLE,
 } from './editorStore';
 
+import { findPrevClipStart, findNextClipStart } from './clip-navigation';
+
 // ── Context ──────────────────────────────────────────────────
 
 interface EditorContextValue {
@@ -557,7 +559,10 @@ const EditorTopBar = memo(function EditorTopBar({ onSave }: { onSave: () => void
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1v14"/><path d="M4 5h8M4 11h8"/></svg>
           </button>
           <div className="ed-transport-divider" />
-          <button className="ed-transport-btn" onClick={() => dispatch({ type: 'SET_TIME', time: 0 })} title="Skip to start" aria-label="Skip to start">
+          <button className="ed-transport-btn" onClick={() => {
+            const starts = state.clips.filter(c => c.trackId === 'visuals').map(c => c.startTime);
+            dispatch({ type: 'SET_TIME', time: findPrevClipStart(starts, state.currentTime) });
+          }} title="Previous clip" aria-label="Previous clip">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M3 3h2v10H3zM7 8l7-5v10z"/></svg>
           </button>
           <button className={`ed-transport-btn ed-transport-play${state.playing ? ' playing' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_PLAY' })} title="Play/Pause (Space)" aria-label={state.playing ? 'Pause' : 'Play'} aria-pressed={state.playing}>
@@ -567,7 +572,11 @@ const EditorTopBar = memo(function EditorTopBar({ onSave }: { onSave: () => void
               <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
             )}
           </button>
-          <button className="ed-transport-btn" onClick={() => dispatch({ type: 'SET_TIME', time: state.duration })} title="Skip to end" aria-label="Skip to end">
+          <button className="ed-transport-btn" onClick={() => {
+            const starts = state.clips.filter(c => c.trackId === 'visuals').map(c => c.startTime);
+            const next = findNextClipStart(starts, state.currentTime);
+            if (next !== null) dispatch({ type: 'SET_TIME', time: next });
+          }} title="Next clip" aria-label="Next clip">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M11 3h2v10h-2zM2 3l7 5-7 5z"/></svg>
           </button>
           <div className="ed-transport-divider" />
@@ -623,7 +632,7 @@ function PanelToggle({ side, collapsed, onToggle }: { side: 'left' | 'right'; co
 
 // ── Sidebar ─────────────────────────────────────────────────
 
-const SIDEBAR_TABS = ['story','assets','characters','scenes','audio','render'] as const;
+const SIDEBAR_TABS = ['render'] as const;
 
 const EditorSidebar = memo(function EditorSidebar() {
   const { state, dispatch } = useEditor();
@@ -664,7 +673,8 @@ function StoryTab() {
 
 function StorySceneItem({ scene, index }: { scene: EditorScene; index: number }) {
   const { state, dispatch } = useEditor();
-  const sceneClips = state.clips.filter(c => c.startTime >= scene.startTime && c.startTime < scene.startTime + scene.duration);
+  const childSet = useMemo(() => new Set(scene.children || []), [scene.children]);
+  const sceneClips = state.clips.filter(c => c.elementId ? childSet.has(c.elementId) : (c.startTime >= scene.startTime && c.startTime < scene.startTime + scene.duration));
   const dialogClips = sceneClips.filter(c => c.trackId === 'dialog');
   const hasAllAudio = dialogClips.length > 0 && dialogClips.every(c => c.elementId && state.dialogAudioMap[c.elementId]);
   const { generate, generating, progress, missingVoices } = useGenerateSceneAudio(scene);
@@ -1310,14 +1320,17 @@ const ProgramMonitor = memo(function ProgramMonitor() {
           <div className="ed-preview-scrubber-thumb" style={{ left: `${pct}%` }} />
         </div>
         <button className="ed-preview-ctrl-btn" onClick={() => {
-          const cuts = state.clips.flatMap(c => [c.startTime, c.startTime + c.duration]).sort((a, b) => a - b);
-          let prev = 0; for (const t of cuts) { if (t < state.currentTime - 0.05) prev = t; }
-          dispatch({ type: 'SET_TIME', time: prev });
-        }} title="Previous cut (↑)" aria-label="Previous cut">⏮</button>
+          const starts = state.clips.filter(c => c.trackId === 'visuals').map(c => c.startTime);
+          dispatch({ type: 'SET_TIME', time: findPrevClipStart(starts, state.currentTime) });
+        }} title="Previous clip (↑)" aria-label="Previous clip">⏮</button>
         <button className="ed-preview-ctrl-btn" onClick={() => {
-          const cuts = state.clips.flatMap(c => [c.startTime, c.startTime + c.duration]).sort((a, b) => a - b);
-          for (const t of cuts) { if (t > state.currentTime + 0.05) { dispatch({ type: 'SET_TIME', time: t }); return; } }
-        }} title="Next cut (↓)" aria-label="Next cut">⏭</button>
+          console.log('[ClipNav]', state.clips.length, 'clips, trackIds:', [...new Set(state.clips.map(c => c.trackId))], 'first 3 starts:', state.clips.slice(0,3).map(c => ({id:c.id?.slice(0,15), track:c.trackId, start:c.startTime})));
+          const starts = state.clips.filter(c => c.trackId === 'visuals').map(c => c.startTime);
+          console.log('[ClipNav] visual starts:', starts.length, 'first 5:', starts.slice(0,5));
+          const next = findNextClipStart(starts, state.currentTime);
+          console.log('[ClipNav] currentTime:', state.currentTime, 'next:', next);
+          if (next !== null) dispatch({ type: 'SET_TIME', time: next });
+        }} title="Next clip (↓)" aria-label="Next clip">⏭</button>
       </div>
     </div>
   );

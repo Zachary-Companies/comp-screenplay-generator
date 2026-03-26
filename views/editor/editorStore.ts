@@ -183,7 +183,7 @@ export const initialEditorState: EditorState = {
   selectedClipIds: [],
   selectedTrackId: null,
   clipboard: null,
-  sidebarTab: 'story',
+  sidebarTab: 'render',
   inspectorTab: 'clip',
   tracks: [],
   clips: [],
