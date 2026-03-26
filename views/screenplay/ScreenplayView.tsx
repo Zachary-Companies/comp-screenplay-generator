@@ -259,9 +259,11 @@ function ShotGalleryLink({ shot, pipelineId, genCount }: { shot: SceneShot; pipe
       <button
         onClick={e => { e.stopPropagation(); setShowGallery(true); }}
         style={{
-          fontSize: 9, color: '#7c3aed', background: 'none', border: 'none',
-          cursor: 'pointer', padding: 0, textDecoration: 'underline', textAlign: 'center',
+          flex: 1, fontSize: 9, fontWeight: 500, color: '#a78bfa', cursor: 'pointer',
+          padding: '2px 6px', borderRadius: 3, textAlign: 'center', whiteSpace: 'nowrap',
+          background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)',
         }}
+        title="Browse image versions"
       >
         {genCount} versions
       </button>
@@ -1169,22 +1171,52 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                         </select>
                       </div>
                     )}
-                    {/* Regen / Generate button */}
-                    {(linkedShot || shotElem) && !isGen && (
+                    {/* Row 1: Image + Video + Edit Prompt buttons */}
+                    {(linkedShot || shotElem) && (
                       <div style={{ display: 'flex', gap: 3, width: '100%' }}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleGeneratePrevis(sid); }}
-                          style={{
-                            flex: 1, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
-                            background: previsImgPath ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.15)',
-                            border: `1px solid rgba(139,92,246,${previsImgPath ? '0.15' : '0.3'})`,
-                            color: '#a78bfa', cursor: 'pointer', whiteSpace: 'nowrap',
-                            textAlign: 'center',
-                          }}
-                          title={previsImgPath ? 'Generate another version' : 'Generate previs image'}
-                        >
-                          {previsImgPath ? 'Regen' : 'Generate'}
-                        </button>
+                        {!isGen ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); const sid = linkedShot?.id || shotElem?.id || ''; if (sid) handleGeneratePrevis(sid); }}
+                            style={{
+                              flex: 1, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
+                              background: previsImgPath ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.15)',
+                              border: `1px solid rgba(139,92,246,${previsImgPath ? '0.15' : '0.3'})`,
+                              color: '#a78bfa', cursor: 'pointer', whiteSpace: 'nowrap',
+                              textAlign: 'center',
+                            }}
+                            title={previsImgPath ? 'Generate another image' : 'Generate previs image'}
+                          >Image</button>
+                        ) : (
+                          <span style={{ flex: 1, fontSize: 10, color: '#a78bfa', fontWeight: 500, textAlign: 'center' }}>Generating...</span>
+                        )}
+                        {motionApproach !== 'ken-burns' && (
+                          !isGenVideo ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const sid = linkedShot?.id || shotElem?.id || '';
+                                const prevElemId = prevShotElem?.id || prevGroup?.shotElem?.id;
+                                const nextGroup = gi + 1 < groups.length ? groups[gi + 1] : null;
+                                const nextElemId = nextGroup?.shotElem?.id;
+                                if (sid) setVideoPromptModal({
+                                  elementId: sid,
+                                  prevLastFrameElementId: prevElemId,
+                                  nextFirstFrameElementId: nextElemId,
+                                });
+                              }}
+                              style={{
+                                flex: 1, fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
+                                background: 'rgba(6,182,212,0.15)',
+                                border: '1px solid rgba(6,182,212,0.3)',
+                                color: '#22d3ee', cursor: 'pointer', whiteSpace: 'nowrap',
+                                textAlign: 'center',
+                              }}
+                              title="Generate AI video clip (Veo 3.1)"
+                            >Video</button>
+                          ) : (
+                            <span style={{ flex: 1, fontSize: 10, color: '#22d3ee', fontWeight: 500, textAlign: 'center' }}>Generating...</span>
+                          )
+                        )}
                         {previsImgPath && (
                           <button
                             onClick={(e) => {
@@ -1203,53 +1235,17 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                         )}
                       </div>
                     )}
-                    {isGen && (
-                      <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 500, textAlign: 'center' }}>Generating...</span>
-                    )}
-                    {/* Gen Video button */}
-                    {motionApproach !== 'ken-burns' && (linkedShot || shotElem) && !isGenVideo && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const sid = linkedShot?.id || shotElem?.id || '';
-                          const prevElemId = prevShotElem?.id || prevGroup?.shotElem?.id;
-                          const nextGroup = gi + 1 < groups.length ? groups[gi + 1] : null;
-                          const nextElemId = nextGroup?.shotElem?.id;
-                          if (sid) setVideoPromptModal({
-                            elementId: sid,
-                            prevLastFrameElementId: prevElemId,
-                            nextFirstFrameElementId: nextElemId,
-                          });
-                        }}
-                        style={{
-                          fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
-                          background: 'rgba(6,182,212,0.15)',
-                          border: '1px solid rgba(6,182,212,0.3)',
-                          color: '#22d3ee', cursor: 'pointer', whiteSpace: 'nowrap', width: '100%',
-                          textAlign: 'center',
-                        }}
-                        title="Generate AI video clip (Veo 3.1)"
-                      >
-                        🎬 {videoPath ? 'Regen Video' : 'Gen Video'}
-                      </button>
-                    )}
-                    {isGenVideo && (
-                      <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 500, textAlign: 'center' }}>Generating video...</span>
-                    )}
-                    {/* Video chain duration indicator + continue button */}
+                    {/* Video chain duration indicator */}
                     {(shotInfo.videoGenerations?.length || 0) > 0 && !isGenVideo && (() => {
-                      // Calculate slot duration from dialogue audio (no compact timing needed)
                       const audioSlotDur = computeSlotDuration(group.contentElems, dialogDurationMap);
-                      // Use audio-calculated slot, fall back to linkedShot.duration from compact timing
                       const slotDur = audioSlotDur > 0 ? audioSlotDur : (linkedShot?.duration || 0);
                       const gapInfo = computeVideoGapInfo(
                         shotInfo.videoGenerations, shotInfo.videoChain,
                         shotInfo.selectedVideoGenerationId, slotDur,
                       );
-                      const showContinue = gapInfo.totalVideoDur > 0;
-                      return showContinue ? (
+                      const showDuration = gapInfo.totalVideoDur > 0;
+                      return showDuration ? (
                         <div style={{ marginTop: 2 }}>
-                          {/* Duration comparison + progress bar */}
                           {slotDur > 0 && (
                             <div style={{ marginBottom: 3 }}>
                               <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
@@ -1267,56 +1263,73 @@ function SceneElements({ scene, charMap, locMap, pipelineId, globalAspectRatio, 
                               {gapInfo.totalVideoDur.toFixed(1)}s{gapInfo.chainLength > 1 ? ` (${gapInfo.chainLength} clips)` : ''} — no dialogue audio yet
                             </div>
                           )}
-                          <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const sid = linkedShot?.id || shotElem?.id || '';
-                              const prevElemIdC = prevShotElem?.id || prevGroup?.shotElem?.id;
-                              const nextGroupC = gi + 1 < groups.length ? groups[gi + 1] : null;
-                              const nextElemIdC = nextGroupC?.shotElem?.id;
-                              if (sid) setVideoPromptModal({
-                                elementId: sid, continueChain: true,
-                                prevLastFrameElementId: prevElemIdC,
-                                nextFirstFrameElementId: nextElemIdC,
-                              });
-                            }}
-                            style={{
-                              fontSize: 8, padding: '1px 5px', borderRadius: 3,
-                              background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)',
-                              color: '#a78bfa', cursor: 'pointer',
-                            }}
-                            title="Generate continuation from last frame — opens prompt editor"
-                          >⟳ Continue</button>
-                          </div>
                         </div>
                       ) : null;
                     })()}
-                    {/* Image gallery link */}
-                    {genCount > 1 && !isGen && (
-                      <ShotGalleryLink shot={galleryShot || linkedShot!} pipelineId={pipelineId} genCount={genCount} />
-                    )}
-                    {/* Video gallery link */}
-                    {(shotInfo.videoGenerations?.length || 0) > 0 && !isGenVideo && (
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setVideoGallery({
-                            elementId: shotElem?.id || group.id,
-                            videoGenerations: shotInfo.videoGenerations || [],
-                            selectedVideoId: shotInfo.selectedVideoGenerationId,
-                          });
-                        }}
-                        style={{
-                          fontSize: 10, color: '#22d3ee', textDecoration: 'underline',
-                          textAlign: 'center', display: 'block',
-                        }}
-                      >
-                        🎬 {shotInfo.videoGenerations!.length} video{shotInfo.videoGenerations!.length !== 1 ? 's' : ''}
-                      </a>
-                    )}
+                    {/* Row 2: Continue + Versions + Videos buttons */}
+                    {(() => {
+                      const hasVideos = (shotInfo.videoGenerations?.length || 0) > 0 && !isGenVideo;
+                      const hasVersions = genCount > 1 && !isGen;
+                      const audioSlotDur2 = computeSlotDuration(group.contentElems, dialogDurationMap);
+                      const slotDur2 = audioSlotDur2 > 0 ? audioSlotDur2 : (linkedShot?.duration || 0);
+                      const gapInfo2 = hasVideos ? computeVideoGapInfo(
+                        shotInfo.videoGenerations, shotInfo.videoChain,
+                        shotInfo.selectedVideoGenerationId, slotDur2,
+                      ) : null;
+                      const showContinue = hasVideos && gapInfo2 && gapInfo2.totalVideoDur > 0;
+                      if (!showContinue && !hasVersions && !hasVideos) return null;
+                      const btnStyle = {
+                        fontSize: 9, fontWeight: 500 as const, padding: '2px 6px', borderRadius: 3,
+                        cursor: 'pointer', whiteSpace: 'nowrap' as const, textAlign: 'center' as const,
+                      };
+                      return (
+                        <div style={{ display: 'flex', gap: 3, width: '100%' }}>
+                          {showContinue && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const sid = linkedShot?.id || shotElem?.id || '';
+                                const prevElemIdC = prevShotElem?.id || prevGroup?.shotElem?.id;
+                                const nextGroupC = gi + 1 < groups.length ? groups[gi + 1] : null;
+                                const nextElemIdC = nextGroupC?.shotElem?.id;
+                                if (sid) setVideoPromptModal({
+                                  elementId: sid, continueChain: true,
+                                  prevLastFrameElementId: prevElemIdC,
+                                  nextFirstFrameElementId: nextElemIdC,
+                                });
+                              }}
+                              style={{
+                                ...btnStyle, flex: 1,
+                                background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+                                color: '#a78bfa',
+                              }}
+                              title="Generate continuation from last frame"
+                            >⟳ Continue</button>
+                          )}
+                          {hasVersions && (
+                            <ShotGalleryLink shot={galleryShot || linkedShot!} pipelineId={pipelineId} genCount={genCount} />
+                          )}
+                          {hasVideos && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setVideoGallery({
+                                  elementId: shotElem?.id || group.id,
+                                  videoGenerations: shotInfo.videoGenerations || [],
+                                  selectedVideoId: shotInfo.selectedVideoGenerationId,
+                                });
+                              }}
+                              style={{
+                                ...btnStyle, flex: 1,
+                                background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)',
+                                color: '#22d3ee',
+                              }}
+                              title="Browse video generations"
+                            >🎬 {shotInfo.videoGenerations!.length} video{shotInfo.videoGenerations!.length !== 1 ? 's' : ''}</button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Reference editor panel — renders OUTSIDE the thumbnail */}
