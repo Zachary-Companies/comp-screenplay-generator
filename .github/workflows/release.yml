@@ -1,0 +1,51 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install all dependencies
+        run: npm ci
+
+      - name: Build views and routes
+        run: npm run build
+
+      - name: Remove dev dependencies
+        run: |
+          rm -rf node_modules
+          npm ci --production
+
+      - name: Create release zip
+        run: |
+          REPO_NAME=$(basename $(git remote get-url origin) .git)
+          cd ..
+          zip -r "${REPO_NAME}.zip" "$(basename $OLDPWD)" \
+            -x "$(basename $OLDPWD)/.git/*" \
+            -x "$(basename $OLDPWD)/.github/*" \
+            -x "$(basename $OLDPWD)/node_modules/.cache/*"
+          mv "${REPO_NAME}.zip" "$OLDPWD/"
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_NAME=$(basename $(git remote get-url origin) .git)
+          gh release upload "${{ github.ref_name }}" "${REPO_NAME}.zip" --clobber
