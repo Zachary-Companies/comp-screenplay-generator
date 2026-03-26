@@ -5,3 +5,6 @@ node_modules/
 !pipeline.json
 .DS_Store
 .env
+pipeline.json.backup
+tools/llm-proxy/woodbury-llm-proxy
+tools/llm-proxy/~/
