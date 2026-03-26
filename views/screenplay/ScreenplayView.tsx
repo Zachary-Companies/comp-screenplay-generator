@@ -3256,6 +3256,12 @@ function Toolbar({ projectData, onAction, motionApproach }: {
           🎬 Generate All Videos
         </button>
       )}
+      <button onClick={() => onAction('export-fountain')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/20 transition-colors">
+        📄 Fountain
+      </button>
+      <button onClick={() => onAction('export-lookbook')} className="px-3 py-1.5 rounded-md text-xs font-medium bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/20 transition-colors">
+        📸 Lookbook
+      </button>
     </div>
   );
 }
@@ -3577,6 +3583,42 @@ function ScreenplayViewInner() {
           }
 
           await pipeline.reload();
+          setTimeout(() => setActionStatus(null), 3000);
+          break;
+        }
+        case 'export-fountain': {
+          setActionStatus('Exporting Fountain...');
+          const efRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/export-fountain`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          const efData = await efRes.json();
+          if (efData.text && efData.filename) {
+            const blob = new Blob([efData.text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = efData.filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            setActionStatus(`Exported: ${efData.filename}`);
+          }
+          setTimeout(() => setActionStatus(null), 3000);
+          break;
+        }
+        case 'export-lookbook': {
+          setActionStatus('Generating Lookbook...');
+          const elRes = await fetch(`/api/app/${encodeURIComponent(pipelineId)}/export-lookbook`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          const elData = await elRes.json();
+          if (elData.filePath) {
+            window.open(`/api/file?path=${encodeURIComponent(elData.filePath)}`, '_blank');
+            setActionStatus(`Generated: ${elData.filename}`);
+          }
           setTimeout(() => setActionStatus(null), 3000);
           break;
         }

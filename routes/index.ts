@@ -3544,6 +3544,361 @@ export default function setupRoutes(sdk: PipelineRouteSdk) {
       return true;
     }
 
+    // ── Export: Fountain ───────────────────────────────────────
+    if (req.method === 'POST' && subPath === '/export-fountain') {
+      const project = sdk.getProject() || await sdk.ensureProject();
+      if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+      const text = buildFountainText(project);
+      const folder = await sdk.getProjectFolder();
+      const exportDir = sdk.join(folder, 'exports');
+      await sdk.mkdir(exportDir);
+      const slug = (project.metadata?.title || 'screenplay').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const filename = slug + '.fountain';
+      const filePath = sdk.join(exportDir, filename);
+      await sdk.writeFile(filePath, text);
+      sdk.sendJson(res, 200, { filePath, filename, text });
+      return true;
+    }
+
+    // ── Export: Lookbook HTML ────────────────────────────────────
+    if (req.method === 'POST' && subPath === '/export-lookbook') {
+      try {
+        const project = sdk.getProject() || await sdk.ensureProject();
+        if (!project) { sdk.sendJson(res, 400, { error: 'No project data' }); return true; }
+        const folder = await sdk.getProjectFolder();
+        const html = buildLookbookHtml(project, sdk);
+        const exportDir = sdk.join(folder, 'exports');
+        await sdk.mkdir(exportDir);
+        const slug = (project.metadata?.title || 'screenplay').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const filename = slug + '-lookbook.html';
+        const filePath = sdk.join(exportDir, filename);
+        await sdk.writeFile(filePath, html);
+        // Return filePath only (html can be very large for JSON), client opens via /api/file
+        sdk.sendJson(res, 200, { filePath, filename });
+      } catch (err: any) {
+        sdk.sendJson(res, 500, { error: 'Lookbook export failed: ' + (err.message || String(err)) });
+      }
+      return true;
+    }
+
     return false;
   };
+}
+
+// ── Fountain text builder ──────────────────────────────────────
+function buildFountainText(project: any): string {
+  const lines: string[] = [];
+  const meta = project.metadata || {};
+
+  // Title page — only valid Fountain keys: Title, Author, Credit, Source, Draft date, Contact, Copyright, Notes
+  const str = (v: any): string => {
+    if (v == null) return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number') return String(v);
+    if (Array.isArray(v)) return v.map((x: any) => typeof x === 'string' ? x : x?.name || String(x)).join(', ');
+    if (typeof v === 'object') return v.name || JSON.stringify(v);
+    return String(v);
+  };
+  if (meta.title) lines.push(`Title: ${str(meta.title)}`);
+  if (meta.author) lines.push(`Author: ${str(meta.author)}`);
+  if (meta.draftDate) lines.push(`Draft date: ${str(meta.draftDate)}`);
+  else lines.push(`Draft date: ${new Date().toISOString().slice(0, 10)}`);
+  // Genre/logline go into Notes (the only freeform Fountain title page field)
+  const notes: string[] = [];
+  if (meta.genre) notes.push(str(meta.genre));
+  if (meta.logline) notes.push(str(meta.logline));
+  if (notes.length) lines.push(`Notes: ${notes.join(' — ')}`);
+  lines.push('', ''); // blank line separates title page from body
+
+  const elements = project.elements || [];
+  const sections = project.sections || [];
+
+  // Build a flat list of scene sections with their sceneHeading + elementStart
+  const flatScenes = flattenSectionsForExport(sections);
+
+  // Build a set of element indices that start a new scene
+  const sceneStartMap = new Map<number, any>();
+  for (const s of flatScenes) {
+    if (s.elementStart != null) sceneStartMap.set(s.elementStart, s);
+  }
+
+  // Walk all elements, inserting scene headings at the right points
+  for (let i = 0; i < elements.length; i++) {
+    const scene = sceneStartMap.get(i);
+    if (scene) {
+      lines.push(''); // blank line before scene heading
+      const heading = scene.sceneHeading;
+      if (heading?.prefix && heading?.location) {
+        const tod = heading.timeOfDay ? ` - ${heading.timeOfDay}` : '';
+        lines.push(`${heading.prefix}. ${heading.location}${tod}`);
+      } else if (heading?.location) {
+        lines.push(`.${heading.location}`); // forced scene heading
+      } else {
+        lines.push(`.${scene.title || 'SCENE'}`);
+      }
+      lines.push('');
+    }
+
+    const elem = elements[i];
+    if (!elem) continue;
+
+    switch (elem.type) {
+      case 'dialogue': {
+        const charName = (elem.characterName || 'UNKNOWN').toUpperCase();
+        lines.push(charName);
+        if (elem.modifiers?.length) {
+          lines.push(`(${elem.modifiers[0]})`);
+        }
+        const dLines = elem.lines || [elem.content || ''];
+        for (const dl of dLines) {
+          lines.push(dl);
+        }
+        lines.push('');
+        break;
+      }
+      case 'action': {
+        lines.push(elem.content || '');
+        lines.push('');
+        break;
+      }
+      case 'transition': {
+        const txt = (elem.content || '').toUpperCase();
+        if (!txt.endsWith('TO:')) {
+          lines.push(`> ${txt}`);
+        } else {
+          lines.push(txt); // Fountain auto-recognizes lines ending in TO:
+        }
+        lines.push('');
+        break;
+      }
+      case 'shot': {
+        // Shots render as action text in Fountain
+        const desc = elem.shotText || elem.content || '';
+        if (desc) {
+          lines.push(desc);
+          lines.push('');
+        }
+        break;
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function flattenSectionsForExport(sections: any[]): any[] {
+  const result: any[] = [];
+  for (const s of sections) {
+    if (s.type === 'scene') result.push(s);
+    if (Array.isArray(s.children)) result.push(...flattenSectionsForExport(s.children));
+  }
+  return result;
+}
+
+// ── Lookbook HTML builder ──────────────────────────────────────
+function buildLookbookHtml(project: any, sdk: PipelineRouteSdk): string {
+  const meta = project.metadata || {};
+  const characters = project.characters || [];
+  const locations = project.locations || [];
+  const scenes = project.scenes || [];
+  const assets = project.assets?.assets || [];
+
+  const esc = (s: any): string => { const v = s == null ? '' : typeof s === 'string' ? s : typeof s === 'number' ? String(s) : Array.isArray(s) ? s.join(', ') : JSON.stringify(s); return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  const imgUrl = (path: string) => path ? `/api/file?path=${encodeURIComponent(path)}` : '';
+
+  // Gather character headshots from assets
+  const charImageMap: Record<string, string> = {};
+  for (const c of characters) {
+    if (c.imagePath) charImageMap[c.id] = c.imagePath;
+  }
+  for (const a of assets) {
+    if (a.type === 'character-headshot' && a.metadata?.characterId) {
+      charImageMap[a.metadata.characterId] = a.filePath;
+    }
+  }
+
+  // Gather location images
+  const locImageMap: Record<string, string> = {};
+  for (const l of locations) {
+    if (l.imagePath) locImageMap[l.id] = l.imagePath;
+  }
+  for (const a of assets) {
+    if ((a.type === 'landscape' || a.type === 'location-landscape') && a.metadata?.locationId) {
+      locImageMap[a.metadata.locationId] = a.filePath;
+    }
+  }
+
+  const parts: string[] = [];
+
+  parts.push(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(meta.title || 'Lookbook')} — Lookbook</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #0f0d1a; color: #e2e8f0; line-height: 1.6; }
+  .page { padding: 48px 40px; max-width: 1000px; margin: 0 auto; }
+  .page-break { page-break-after: always; margin-bottom: 48px; }
+  h1 { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  h2 { font-size: 28px; font-weight: 600; color: #c4b5fd; margin-bottom: 20px; border-bottom: 1px solid rgba(139,92,246,0.3); padding-bottom: 8px; }
+  h3 { font-size: 18px; font-weight: 600; color: #a78bfa; margin-bottom: 12px; }
+  .subtitle { font-size: 18px; color: #94a3b8; font-style: italic; margin-bottom: 16px; }
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tag { background: rgba(139,92,246,0.15); color: #c4b5fd; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+  .meta-row { font-size: 14px; color: #94a3b8; margin-bottom: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .card-body { padding: 16px; }
+  .card-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: #94a3b8; }
+  .scene-heading { font-size: 14px; font-weight: 700; color: #22d3ee; text-transform: uppercase; margin-bottom: 8px; }
+  .previs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .previs-card { border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+  .previs-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+  .previs-caption { padding: 8px; font-size: 11px; color: #94a3b8; }
+  .synopsis-item { margin-bottom: 8px; padding-left: 12px; border-left: 2px solid rgba(139,92,246,0.3); }
+  .synopsis-title { font-weight: 600; color: #e2e8f0; font-size: 14px; }
+  .synopsis-desc { font-size: 13px; color: #64748b; }
+
+  @media print {
+    body { background: #fff; color: #1e293b; }
+    .page { padding: 24px 20px; }
+    h1 { color: #0f172a; }
+    h2 { color: #6d28d9; border-color: #e5e7eb; }
+    h3 { color: #7c3aed; }
+    .subtitle { color: #475569; }
+    .tag { background: #f3f4f6; color: #6d28d9; border: 1px solid #e5e7eb; }
+    .meta-row { color: #475569; }
+    .card { border-color: #e5e7eb; background: #fafafa; }
+    .card-title { color: #0f172a; }
+    .card-desc { color: #475569; }
+    .scene-heading { color: #0891b2; }
+    .previs-card { border-color: #e5e7eb; }
+    .previs-caption { color: #475569; }
+    .synopsis-title { color: #0f172a; }
+    .synopsis-desc { color: #475569; }
+    .synopsis-item { border-color: #e5e7eb; }
+  }
+</style>
+</head>
+<body>`);
+
+  // ── Title page ──
+  parts.push(`<div class="page page-break">`);
+  parts.push(`<div style="display:flex;flex-direction:column;justify-content:center;min-height:80vh">`);
+  parts.push(`<h1>${esc(meta.title || 'Untitled')}</h1>`);
+  if (meta.logline) parts.push(`<p class="subtitle">${esc(meta.logline)}</p>`);
+  parts.push(`<div class="tags">`);
+  // genre/tone/audience can be string, string[], or object
+  const tagList = (v: any): string[] => {
+    if (!v) return [];
+    if (typeof v === 'string') return [v];
+    if (Array.isArray(v)) return v.map((x: any) => typeof x === 'string' ? x : x?.name || x?.label || String(x)).filter(Boolean);
+    return [String(v)];
+  };
+  for (const t of tagList(meta.genre)) parts.push(`<span class="tag">${esc(t)}</span>`);
+  for (const t of tagList(meta.tone)) parts.push(`<span class="tag">${esc(t)}</span>`);
+  for (const t of tagList(meta.audience)) parts.push(`<span class="tag">${esc(t)}</span>`);
+  parts.push(`</div>`);
+  // author can be string, string[], or [{name, role}]
+  const authorStr = (() => {
+    if (!meta.author) return '';
+    if (typeof meta.author === 'string') return meta.author;
+    if (Array.isArray(meta.author)) return meta.author.map((a: any) => typeof a === 'string' ? a : a?.name || '').filter(Boolean).join(' & ');
+    return String(meta.author);
+  })();
+  if (authorStr) parts.push(`<p class="meta-row">Written by ${esc(authorStr)}</p>`);
+  if (meta.runtimeMinutes) parts.push(`<p class="meta-row">Estimated runtime: ${meta.runtimeMinutes} minutes</p>`);
+  parts.push(`<p class="meta-row">${scenes.length} Scenes · ${characters.length} Characters · ${locations.length} Locations</p>`);
+  parts.push(`</div></div>`);
+
+  // ── Synopsis ──
+  if (scenes.length > 0) {
+    parts.push(`<div class="page page-break">`);
+    parts.push(`<h2>Synopsis</h2>`);
+    for (const scene of scenes) {
+      parts.push(`<div class="synopsis-item">`);
+      parts.push(`<div class="synopsis-title">${esc(scene.title || 'Scene')}</div>`);
+      if (scene.actions?.length) {
+        const actionText = typeof scene.actions[0] === 'string' ? scene.actions[0] : String(scene.actions[0]?.content || scene.actions[0] || '');
+        parts.push(`<div class="synopsis-desc">${esc(actionText.substring(0, 200))}${actionText.length > 200 ? '...' : ''}</div>`);
+      }
+      parts.push(`</div>`);
+    }
+    parts.push(`</div>`);
+  }
+
+  // ── Characters ──
+  if (characters.length > 0) {
+    parts.push(`<div class="page page-break">`);
+    parts.push(`<h2>Characters</h2>`);
+    parts.push(`<div class="grid">`);
+    for (const c of characters) {
+      const img = charImageMap[c.id];
+      parts.push(`<div class="card">`);
+      if (img) parts.push(`<img src="${esc(imgUrl(img))}" alt="${esc(c.displayName || c.name)}">`);
+      parts.push(`<div class="card-body">`);
+      parts.push(`<div class="card-title">${esc(c.displayName || c.name)}</div>`);
+      if (c.description) parts.push(`<div class="card-desc">${esc(c.description)}</div>`);
+      if (c.arc) parts.push(`<div class="card-desc" style="margin-top:6px;color:#a78bfa"><strong>Arc:</strong> ${esc(c.arc)}</div>`);
+      parts.push(`</div></div>`);
+    }
+    parts.push(`</div></div>`);
+  }
+
+  // ── Locations ──
+  if (locations.length > 0) {
+    parts.push(`<div class="page page-break">`);
+    parts.push(`<h2>Locations</h2>`);
+    parts.push(`<div class="grid">`);
+    for (const l of locations) {
+      const img = locImageMap[l.id];
+      parts.push(`<div class="card">`);
+      if (img) parts.push(`<img src="${esc(imgUrl(img))}" alt="${esc(l.name)}">`);
+      parts.push(`<div class="card-body">`);
+      parts.push(`<div class="card-title">${esc(l.name)}</div>`);
+      if (l.description) parts.push(`<div class="card-desc">${esc(l.description)}</div>`);
+      parts.push(`</div></div>`);
+    }
+    parts.push(`</div></div>`);
+  }
+
+  // ── Key Frames (Previs by Scene) ──
+  const scenesWithPrevis = scenes.filter((s: any) => s.shots?.some((sh: any) => sh.previsPath));
+  if (scenesWithPrevis.length > 0) {
+    parts.push(`<div class="page">`);
+    parts.push(`<h2>Key Frames</h2>`);
+    for (const scene of scenesWithPrevis) {
+      const shotsWithPrevis = (scene.shots || []).filter((sh: any) => sh.previsPath);
+      if (shotsWithPrevis.length === 0) continue;
+      parts.push(`<div class="scene-heading">${esc(scene.title || 'Scene')}</div>`);
+      parts.push(`<div class="previs-grid">`);
+      for (const sh of shotsWithPrevis) {
+        parts.push(`<div class="previs-card">`);
+        parts.push(`<img src="${esc(imgUrl(sh.previsPath))}" alt="${esc(sh.description || '')}">`);
+        parts.push(`<div class="previs-caption">${sh.shotType ? `<strong>${esc(sh.shotType)}</strong> — ` : ''}${esc((sh.description || '').substring(0, 120))}</div>`);
+        parts.push(`</div>`);
+      }
+      parts.push(`</div>`);
+    }
+    parts.push(`</div>`);
+  }
+
+  // ── Print support ──
+  parts.push(`
+<div class="print-bar no-print" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;gap:8px">
+  <button onclick="window.print()" style="padding:10px 20px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">🖨 Print / Save as PDF</button>
+</div>
+<style>@media print { .no-print { display: none !important; } }</style>
+<script>
+  if (new URLSearchParams(window.location.search).has('print')) {
+    window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 600); });
+  }
+</script>`);
+
+  parts.push(`</body></html>`);
+  return parts.join('\n');
 }
